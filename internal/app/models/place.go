@@ -13,11 +13,11 @@ type Place struct {
 	Status        string     `db:"status"`
 	Ownership     string     `db:"ownership"`
 	Name          string     `db:"name"`
-	Description   string     `db:"description"`
+	Description   *string    `db:"description"`
 	Coords        Coords     `db:"coords"`
 	Address       string     `db:"address"`
-	Website       string     `db:"website"`
-	Phone         string     `db:"phone"`
+	Website       *string    `db:"website"`
+	Phone         *string    `db:"phone"`
 	UpdatedAt     time.Time  `db:"updated_at"`
 	CreatedAt     time.Time  `db:"created_at"`
 }

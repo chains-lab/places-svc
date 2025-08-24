@@ -18,7 +18,7 @@ CREATE TABLE place_types  (
     "name"       VARCHAR(256)   PRIMARY KEY,
     "category"   place_category NOT NULL,
     "updated_at" TIMESTAMP      NOT NULL DEFAULT now(),
-    "created_at" TIMESTAMP      NOT NULL DEFAULT now(),
+    "created_at" TIMESTAMP      NOT NULL DEFAULT now()
 );
 
 CREATE TYPE "place_statuses" AS ENUM (
@@ -29,8 +29,8 @@ CREATE TYPE "place_statuses" AS ENUM (
 
 CREATE TYPE "place_ownership" AS ENUM (
     'distributor',
-    'municipality',
-    'unclaimed'
+    'municipality'
+--  'unclaimed' TODO: future use
 );
 
 CREATE TABLE "places" (
@@ -39,18 +39,28 @@ CREATE TABLE "places" (
     "type"           VARCHAR(256)           NOT NULL REFERENCES place_types(name) ON DELETE RESTRICT,
     "status"         place_statuses         NOT NULL,
     "ownership"      place_ownership        NOT NULL,
-    "name"           VARCHAR                NOT NULL,
-    "description"    VARCHAR                NOT NULL,
     "coords"         geography(POINT, 4326) NOT NULL,
-    "address"        VARCHAR                NOT NULL,
-    "website"        VARCHAR                NOT NULL,
-    "phone"          VARCHAR                NOT NULL,
+
+    "website"        VARCHAR,
+    "phone"          VARCHAR,
     "updated_at"     TIMESTAMP              NOT NULL DEFAULT now(),
     "created_at"     TIMESTAMP              NOT NULL DEFAULT now()
 );
+
+CREATE TABLE "place_details" (
+    "place_id"    UUID NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+    "language"    VARCHAR(16) NOT NULL,
+    "name"        VARCHAR    NOT NULL,
+    "address"     VARCHAR    NOT NULL,
+    "description" VARCHAR,
+
+    PRIMARY KEY (place_id, language)
+);
+
 -- +migration Down
 DROP TABLE IF EXISTS "places" CASCADE;
 DROP TABLE IF EXISTS "place_types" CASCADE;
+DROP TABLE IF EXISTS "place_details" CASCADE;
 
 DROP TYPE IF EXISTS "place_category";
 DROP TYPE IF EXISTS "place_statuses";

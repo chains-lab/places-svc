@@ -3,15 +3,33 @@ package enum
 import "fmt"
 
 const (
-	PlaceCategoryOther      = "other"      // Other category
-	PlaceCategoryRestaurant = "restaurant" // Restaurant category
-	PlaceCategoryStore      = "store"      // Store category
+	PlaceCategoryFodAndDrinks           = "food and drinks"
+	PlaceCategoryShops                  = "shops"
+	PlaceCategoryServices               = "services"
+	PlaceCategoryHotelsAndAccommodation = "hotels and accommodation"
+	PlaceCategoryActiveLeisure          = "active leisure"
+	PlaceCategoryReligion               = "religion"
+	PlaceCategoryOfficeAndFactories     = "office and factories"
+	PlaceCategoryResidenceBuildings     = "residence buildings"
+	PlaceCategoryEducation              = "education"
+	PlaceCategoryHealthcare             = "healthcare"
+	PlaceCategoryTransport              = "transport"
+	PlaceCategoryCulture                = "culture"
 )
 
 var placeCategories = []string{
-	PlaceCategoryOther,
-	PlaceCategoryRestaurant,
-	PlaceCategoryStore,
+	PlaceCategoryFodAndDrinks,
+	PlaceCategoryShops,
+	PlaceCategoryServices,
+	PlaceCategoryHotelsAndAccommodation,
+	PlaceCategoryActiveLeisure,
+	PlaceCategoryReligion,
+	PlaceCategoryOfficeAndFactories,
+	PlaceCategoryResidenceBuildings,
+	PlaceCategoryEducation,
+	PlaceCategoryHealthcare,
+	PlaceCategoryTransport,
+	PlaceCategoryCulture,
 }
 
 // ErrorPlaceCategoryNotSupported is returned when the provided place category is not supported.

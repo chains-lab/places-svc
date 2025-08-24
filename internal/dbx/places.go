@@ -18,13 +18,10 @@ type Place struct {
 	Type          string     `db:"type"`
 	Status        string     `db:"status"`
 	Ownership     string     `db:"ownership"`
-	Name          string     `db:"name"`
-	Description   string     `db:"description"`
 	Lon           float64    `db:"lon"`
 	Lat           float64    `db:"lat"`
-	Address       string     `db:"address"`
-	Website       string     `db:"website"`
-	Phone         string     `db:"phone"`
+	Website       *string    `db:"website"`
+	Phone         *string    `db:"phone"`
 	UpdatedAt     time.Time  `db:"updated_at"`
 	CreatedAt     time.Time  `db:"created_at"`
 }
@@ -44,13 +41,12 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 		db: db,
 		selector: b.Select(
 			"id",
+			"distributor_id",
 			"type",
+			"ownership",
 			"status",
-			"name",
-			"description",
 			"ST_X(coords::geometry) AS lon",
 			"ST_Y(coords::geometry) AS lat",
-			"address",
 			"website",
 			"phone",
 			"updated_at",
@@ -67,6 +63,9 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	var (
 		p             Place
 		distributorID *uuid.UUID
+		description   *string
+		website       *string
+		phone         *string
 	)
 	if err := scanner.Scan(
 		&p.ID,
@@ -74,13 +73,11 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		&p.Type,
 		&p.Status,
 		&p.Ownership,
-		&p.Name,
-		&p.Description,
+		&description,
 		&p.Lon,
 		&p.Lat,
-		&p.Address,
-		&p.Website,
-		&p.Phone,
+		&website,
+		&phone,
 		&p.UpdatedAt,
 		&p.CreatedAt,
 	); err != nil {
@@ -101,21 +98,22 @@ func (q PlacesQ) New() PlacesQ { return NewPlacesQ(q.db) }
 
 func (q PlacesQ) Insert(ctx context.Context, in Place) error {
 	vals := map[string]any{
-		"id":          in.ID,
-		"type":        in.Type,
-		"status":      in.Status,
-		"ownership":   in.Ownership,
-		"name":        in.Name,
-		"description": in.Description,
-		"coords":      sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Lon, in.Lat),
-		"address":     in.Address,
-		"website":     in.Website,
-		"phone":       in.Phone,
-		"updated_at":  in.UpdatedAt,
-		"created_at":  in.CreatedAt,
+		"id":         in.ID,
+		"type":       in.Type,
+		"status":     in.Status,
+		"ownership":  in.Ownership,
+		"coords":     sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Lon, in.Lat),
+		"updated_at": in.UpdatedAt,
+		"created_at": in.CreatedAt,
 	}
 	if in.DistributorID != nil {
 		vals["distributor_id"] = in.DistributorID
+	}
+	if in.Website != nil {
+		vals["website"] = in.Website
+	}
+	if in.Phone != nil {
+		vals["phone"] = in.Phone
 	}
 	qry, args, err := q.inserter.SetMap(vals).ToSql()
 	if err != nil {
