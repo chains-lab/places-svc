@@ -14,15 +14,14 @@ const placesTable = "places"
 
 type Place struct {
 	ID            uuid.UUID  `db:"id"`
-	CityID        uuid.UUID  `db:"city_id"`
-	DistributorID *uuid.UUID `db:"distributor_id"` // nullable
-	TypeID        uuid.UUID  `db:"type_id"`
-	Ownership     string     `db:"ownership"`
+	DistributorID *uuid.UUID `db:"distributor_id"`
+	Type          string     `db:"type"`
 	Status        string     `db:"status"`
-	Lon           float64    `db:"lon"`
-	Lat           float64    `db:"lat"`
+	Ownership     string     `db:"ownership"`
 	Name          string     `db:"name"`
 	Description   string     `db:"description"`
+	Lon           float64    `db:"lon"`
+	Lat           float64    `db:"lat"`
 	Address       string     `db:"address"`
 	Website       string     `db:"website"`
 	Phone         string     `db:"phone"`
@@ -45,15 +44,12 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 		db: db,
 		selector: b.Select(
 			"id",
-			"city_id",
-			"distributor_id",
-			"type_id",
-			"ownership",
+			"type",
 			"status",
-			"ST_X(coords::geometry) AS lon",
-			"ST_Y(coords::geometry) AS lat",
 			"name",
 			"description",
+			"ST_X(coords::geometry) AS lon",
+			"ST_Y(coords::geometry) AS lat",
 			"address",
 			"website",
 			"phone",
@@ -63,11 +59,35 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 		updater:  b.Update(placesTable),
 		inserter: b.Insert(placesTable),
 		deleter:  b.Delete(placesTable),
-		counter:  b.Select("COUNT(*) AS count").From(placesTable + " p"),
+		counter:  b.Select("COUNT(*) AS count").From(placesTable),
 	}
 }
 
-func (q PlacesQ) New() PlacesQ { return NewPlacesQ(q.db) }
+func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
+	var (
+		p             Place
+		distributorID *uuid.UUID
+	)
+	if err := scanner.Scan(
+		&p.ID,
+		distributorID,
+		&p.Type,
+		&p.Status,
+		&p.Ownership,
+		&p.Name,
+		&p.Description,
+		&p.Lon,
+		&p.Lat,
+		&p.Address,
+		&p.Website,
+		&p.Phone,
+		&p.UpdatedAt,
+		&p.CreatedAt,
+	); err != nil {
+		return Place{}, err
+	}
+	return p, nil
+}
 
 func (q PlacesQ) applyConditions(conditions ...sq.Sqlizer) PlacesQ {
 	q.selector = q.selector.Where(conditions)
@@ -77,22 +97,25 @@ func (q PlacesQ) applyConditions(conditions ...sq.Sqlizer) PlacesQ {
 	return q
 }
 
+func (q PlacesQ) New() PlacesQ { return NewPlacesQ(q.db) }
+
 func (q PlacesQ) Insert(ctx context.Context, in Place) error {
 	vals := map[string]any{
-		"id":             in.ID,
-		"city_id":        in.CityID,
-		"distributor_id": in.DistributorID,
-		"type_id":        in.TypeID,
-		"ownership":      in.Ownership,
-		"status":         in.Status,
-		"coords":         sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Lon, in.Lat),
-		"name":           in.Name,
-		"description":    in.Description,
-		"address":        in.Address,
-		"website":        in.Website,
-		"phone":          in.Phone,
-		"updated_at":     in.UpdatedAt,
-		"created_at":     in.CreatedAt,
+		"id":          in.ID,
+		"type":        in.Type,
+		"status":      in.Status,
+		"ownership":   in.Ownership,
+		"name":        in.Name,
+		"description": in.Description,
+		"coords":      sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Lon, in.Lat),
+		"address":     in.Address,
+		"website":     in.Website,
+		"phone":       in.Phone,
+		"updated_at":  in.UpdatedAt,
+		"created_at":  in.CreatedAt,
+	}
+	if in.DistributorID != nil {
+		vals["distributor_id"] = in.DistributorID
 	}
 	qry, args, err := q.inserter.SetMap(vals).ToSql()
 	if err != nil {
@@ -155,14 +178,14 @@ func (q PlacesQ) Update(ctx context.Context, in map[string]any) error {
 	if v, ok := in["distributor_id"]; ok {
 		vals["distributor_id"] = v
 	}
-	if v, ok := in["type_id"]; ok {
-		vals["type_id"] = v
-	}
-	if v, ok := in["ownership"]; ok {
-		vals["ownership"] = v
+	if v, ok := in["type"]; ok {
+		vals["type"] = v
 	}
 	if v, ok := in["status"]; ok {
 		vals["status"] = v
+	}
+	if v, ok := in["ownership"]; ok {
+		vals["ownership"] = v
 	}
 	if v, ok := in["name"]; ok {
 		vals["name"] = v
@@ -179,7 +202,6 @@ func (q PlacesQ) Update(ctx context.Context, in map[string]any) error {
 	if v, ok := in["phone"]; ok {
 		vals["phone"] = v
 	}
-	// обновление координат, если переданы оба
 	if lon, ok := in["lon"]; ok {
 		if lat, ok2 := in["lat"]; ok2 {
 			vals["coords"] = sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", lon, lat)
@@ -224,28 +246,24 @@ func (q PlacesQ) FilterID(id uuid.UUID) PlacesQ {
 	return q.applyConditions(sq.Eq{"id": id})
 }
 
-func (q PlacesQ) FilterCityID(id uuid.UUID) PlacesQ {
-	return q.applyConditions(sq.Eq{"city_id": id})
+func (q PlacesQ) FilterDistributorID(distributorID uuid.UUID) PlacesQ {
+	return q.applyConditions(sq.Eq{"distributor_id": distributorID})
 }
 
-func (q PlacesQ) FilterDistributorID(id uuid.UUID) PlacesQ {
-	return q.applyConditions(sq.Eq{"distributor_id": id})
-}
-
-func (q PlacesQ) FilterTypeID(id uuid.UUID) PlacesQ {
-	return q.applyConditions(sq.Eq{"type_id": id})
-}
-
-func (q PlacesQ) FilterOwnership(v string) PlacesQ {
-	return q.applyConditions(sq.Eq{"ownership": v})
+func (q PlacesQ) FilterType(placeType string) PlacesQ {
+	return q.applyConditions(sq.Eq{"type": placeType})
 }
 
 func (q PlacesQ) FilterStatus(v string) PlacesQ {
 	return q.applyConditions(sq.Eq{"status": v})
 }
 
+func (q PlacesQ) FilterOwnership(v string) PlacesQ {
+	return q.applyConditions(sq.Eq{"ownership": v})
+}
+
 func (q PlacesQ) LikeName(name string) PlacesQ {
-	return q.applyConditions(sq.Expr("p.name ILIKE ?", fmt.Sprintf("%%%s%%", name)))
+	return q.applyConditions(sq.Expr("name ILIKE ?", fmt.Sprintf("%%%s%%", name)))
 }
 
 func (q PlacesQ) WithinRadius(lon, lat float64, meters float64) PlacesQ {
@@ -264,7 +282,6 @@ func (q PlacesQ) OrderByDistanceFrom(lon, lat float64) PlacesQ {
 
 func (q PlacesQ) Page(limit, offset uint64) PlacesQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
-	q.counter = q.counter.Limit(limit).Offset(offset)
 	return q
 }
 
@@ -283,38 +300,4 @@ func (q PlacesQ) Count(ctx context.Context) (uint64, error) {
 		return 0, fmt.Errorf("scan count %s: %w", placesTable, err)
 	}
 	return n, nil
-}
-
-func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
-	var (
-		p      Place
-		distNS sql.NullString
-	)
-	if err := scanner.Scan(
-		&p.ID,
-		&p.CityID,
-		&distNS,
-		&p.TypeID,
-		&p.Ownership,
-		&p.Status,
-		&p.Lon,
-		&p.Lat,
-		&p.Name,
-		&p.Description,
-		&p.Address,
-		&p.Website,
-		&p.Phone,
-		&p.UpdatedAt,
-		&p.CreatedAt,
-	); err != nil {
-		return Place{}, err
-	}
-	if distNS.Valid && distNS.String != "" {
-		u, err := uuid.Parse(distNS.String)
-		if err != nil {
-			return Place{}, fmt.Errorf("invalid distributor_id: %w", err)
-		}
-		p.DistributorID = &u
-	}
-	return p, nil
 }
