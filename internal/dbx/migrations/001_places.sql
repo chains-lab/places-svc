@@ -1,6 +1,6 @@
 -- +migration Up
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS "postgis";
 
 CREATE TYPE "place_category" AS ENUM (
     'food and drinks',
@@ -14,7 +14,7 @@ CREATE TYPE "place_category" AS ENUM (
     'education'
 );
 
-CREATE TABLE place_types  (
+CREATE TABLE "place_types"  (
     "name"       VARCHAR(256)   PRIMARY KEY,
     "category"   place_category NOT NULL,
     "updated_at" TIMESTAMP      NOT NULL DEFAULT now(),
@@ -28,30 +28,36 @@ CREATE TYPE "place_statuses" AS ENUM (
 );
 
 CREATE TYPE "place_ownership" AS ENUM (
-    'distributor',
-    'municipality'
---  'unclaimed' TODO: future use
+    'private',
+    'common'
 );
 
 CREATE TABLE "places" (
-    "id"             UUID                   PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "id"             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "city_id"        UUID NOT NULL,
     "distributor_id" UUID,
-    "type"           VARCHAR(256)           NOT NULL REFERENCES place_types(name) ON DELETE RESTRICT,
     "status"         place_statuses         NOT NULL,
-    "ownership"      place_ownership        NOT NULL,
+    "type"           VARCHAR(255)           NOT NULL REFERENCES place_types(name) ON DELETE RESTRICT,
+    "verified"       BOOLEAN                NOT NULL DEFAULT FALSE,
     "coords"         geography(POINT, 4326) NOT NULL,
+    "ownership"      place_ownership        NOT NULL,
 
-    "website"        VARCHAR,
-    "phone"          VARCHAR,
+    "website"        VARCHAR(255),
+    "phone"          VARCHAR(255),
+
     "updated_at"     TIMESTAMP              NOT NULL DEFAULT now(),
     "created_at"     TIMESTAMP              NOT NULL DEFAULT now()
 );
 
+CREATE TYPE "language_code" AS ENUM (
+    'en','uk','ru'
+);
+
 CREATE TABLE "place_details" (
-    "place_id"    UUID NOT NULL REFERENCES places(id) ON DELETE CASCADE,
-    "language"    VARCHAR(16) NOT NULL,
-    "name"        VARCHAR    NOT NULL,
-    "address"     VARCHAR    NOT NULL,
+    "place_id"    UUID          NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+    "language"    language_code NOT NULL,
+    "name"        VARCHAR       NOT NULL,
+    "address"     VARCHAR       NOT NULL,
     "description" VARCHAR,
 
     PRIMARY KEY (place_id, language)
@@ -67,3 +73,4 @@ DROP TYPE IF EXISTS "place_statuses";
 DROP TYPE IF EXISTS "place_ownership";
 
 DROP EXTENSION IF EXISTS "uuid-ossp";
+DROP EXTENSION IF EXISTS "postgis";
