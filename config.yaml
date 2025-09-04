@@ -7,7 +7,7 @@ server:
 
 database:
   sql:
-    url: "postgresql://postgres:postgres@db:XXXX/postgres?sslmode=disable"
+    url: "postgresql://postgres:postgres@localhost:7777/postgres?sslmode=disable"
   redis:
     addr: "localhost:7200"
     password: "example"

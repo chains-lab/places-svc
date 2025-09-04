@@ -1,25 +1,26 @@
--- +migration Up
+-- +migrate Up
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "postgis";
 
-CREATE TYPE "place_category" AS ENUM (
-    'food and drinks',
-    'shops',
-    'services',
-    'hotels and accommodation',
-    'active leisure',
-    'religion',
-    'offices and factories',
-    'residential buildings',
-    'education'
+CREATE TABLE place_categories (
+    id          VARCHAR(50) PRIMARY KEY,
+    name        VARCHAR(50) NOT NULL UNIQUE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+
+    CHECK (id ~ '^[a-z_]{1,50}$')
 );
 
-CREATE TABLE "place_types"  (
-    "name"       VARCHAR(256)   PRIMARY KEY,
-    "category"   place_category NOT NULL,
-    "updated_at" TIMESTAMP      NOT NULL DEFAULT now(),
-    "created_at" TIMESTAMP      NOT NULL DEFAULT now()
+CREATE TABLE place_types (
+    id           VARCHAR(50) PRIMARY KEY,
+    category_id  VARCHAR(50) NOT NULL REFERENCES place_categories(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    name         VARCHAR(50) NOT NULL UNIQUE,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+
+    CHECK (id ~ '^[a-z_]{1,50}$')
 );
+
 
 CREATE TYPE "place_statuses" AS ENUM (
     'active',
@@ -36,17 +37,18 @@ CREATE TABLE "places" (
     "id"             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     "city_id"        UUID NOT NULL,
     "distributor_id" UUID,
+    "type_id"        VARCHAR(50) NOT NULL REFERENCES place_types(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+
     "status"         place_statuses         NOT NULL,
-    "type"           VARCHAR(255)           NOT NULL REFERENCES place_types(name) ON DELETE RESTRICT,
     "verified"       BOOLEAN                NOT NULL DEFAULT FALSE,
-    "coords"         geography(POINT, 4326) NOT NULL,
     "ownership"      place_ownership        NOT NULL,
+    "point"          geography(POINT, 4326) NOT NULL,
 
     "website"        VARCHAR(255),
     "phone"          VARCHAR(255),
 
-    "updated_at"     TIMESTAMP              NOT NULL DEFAULT now(),
-    "created_at"     TIMESTAMP              NOT NULL DEFAULT now()
+    "created_at"     TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "updated_at"     TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')
 );
 
 CREATE TYPE "language_code" AS ENUM (
@@ -60,17 +62,21 @@ CREATE TABLE "place_details" (
     "address"     VARCHAR       NOT NULL,
     "description" VARCHAR,
 
+    "created_at"   TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "updated_at"   TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+
     PRIMARY KEY (place_id, language)
 );
 
--- +migration Down
+-- +migrate Down
+DROP TABLE IF EXISTS "place_details" CASCADE;
 DROP TABLE IF EXISTS "places" CASCADE;
 DROP TABLE IF EXISTS "place_types" CASCADE;
-DROP TABLE IF EXISTS "place_details" CASCADE;
+DROP TABLE IF EXISTS "place_categories" CASCADE;
 
-DROP TYPE IF EXISTS "place_category";
 DROP TYPE IF EXISTS "place_statuses";
 DROP TYPE IF EXISTS "place_ownership";
+DROP TYPE IF EXISTS "language_code";
 
 DROP EXTENSION IF EXISTS "uuid-ossp";
 DROP EXTENSION IF EXISTS "postgis";

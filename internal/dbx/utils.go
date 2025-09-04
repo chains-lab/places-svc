@@ -10,9 +10,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type txKeyType struct{}
+type TxKeyType struct{}
 
-var txKey = txKeyType{}
+var TxKey = TxKeyType{}
 
 //go:embed migrations/*.sql
 var Migrations embed.FS

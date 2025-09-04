@@ -9,7 +9,6 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/chains-lab/logium"
-	"github.com/chains-lab/places-svc/internal/api"
 	"github.com/chains-lab/places-svc/internal/app"
 	"github.com/chains-lab/places-svc/internal/config"
 	"github.com/chains-lab/places-svc/internal/dbx"
@@ -54,7 +53,7 @@ func Run(args []string) bool {
 
 	switch cmd {
 	case serviceCmd.FullCommand():
-		err = api.Start(ctx, cfg, log, &application)
+		StartServices(ctx, cfg, log, &wg, &application)
 	case migrateUpCmd.FullCommand():
 		err = dbx.MigrateUp(cfg)
 	case migrateDownCmd.FullCommand():
