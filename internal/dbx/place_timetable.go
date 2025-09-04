@@ -128,6 +128,7 @@ func (q PlaceTimetablesQ) Delete(ctx context.Context) error {
 	} else {
 		_, err = q.db.ExecContext(ctx, query, args...)
 	}
+
 	return err
 }
 
@@ -136,6 +137,7 @@ func (q PlaceTimetablesQ) FilterByID(id uuid.UUID) PlaceTimetablesQ {
 	q.updater = q.updater.Where(sq.Eq{"id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"id": id})
 	q.counter = q.counter.Where(sq.Eq{"id": id})
+
 	return q
 }
 
@@ -144,6 +146,7 @@ func (q PlaceTimetablesQ) FilterByPlaceID(placeID uuid.UUID) PlaceTimetablesQ {
 	q.updater = q.updater.Where(sq.Eq{"place_id": placeID})
 	q.deleter = q.deleter.Where(sq.Eq{"place_id": placeID})
 	q.counter = q.counter.Where(sq.Eq{"place_id": placeID})
+
 	return q
 }
 
@@ -181,6 +184,7 @@ func (q PlaceTimetablesQ) FilterBetween(start, end int) PlaceTimetablesQ {
 	q.updater = q.updater.Where(cond)
 	q.deleter = q.deleter.Where(cond)
 	q.counter = q.counter.Where(cond)
+
 	return q
 }
 
@@ -206,5 +210,6 @@ func (q PlaceTimetablesQ) Count(ctx context.Context) (int, error) {
 
 func (q PlaceTimetablesQ) Page(offset, limit uint64) PlaceTimetablesQ {
 	q.selector = q.selector.Offset(offset).Limit(limit)
+
 	return q
 }

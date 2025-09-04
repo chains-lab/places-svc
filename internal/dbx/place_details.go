@@ -135,6 +135,7 @@ func (q PlaceDetailsQ) Select(ctx context.Context) ([]PlaceDetails, error) {
 		}
 		out = append(out, pd)
 	}
+
 	return out, rows.Err()
 }
 
@@ -201,6 +202,7 @@ func (q PlaceDetailsQ) FilterPlaceID(id uuid.UUID) PlaceDetailsQ {
 	q.updater = q.updater.Where(sq.Eq{"place_id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"place_id": id})
 	q.counter = q.counter.Where(sq.Eq{"place_id": id})
+
 	return q
 }
 
@@ -209,6 +211,7 @@ func (q PlaceDetailsQ) FilterByLanguage(language string) PlaceDetailsQ {
 	q.updater = q.updater.Where(sq.Eq{"language": language})
 	q.deleter = q.deleter.Where(sq.Eq{"language": language})
 	q.counter = q.counter.Where(sq.Eq{"language": language})
+
 	return q
 }
 
@@ -217,6 +220,7 @@ func (q PlaceDetailsQ) FilterByName(name string) PlaceDetailsQ {
 	q.updater = q.updater.Where(sq.Eq{"name": name})
 	q.deleter = q.deleter.Where(sq.Eq{"name": name})
 	q.counter = q.counter.Where(sq.Eq{"name": name})
+
 	return q
 }
 
@@ -225,6 +229,7 @@ func (q PlaceDetailsQ) FilterByAddress(address string) PlaceDetailsQ {
 	q.updater = q.updater.Where(sq.Eq{"address": address})
 	q.deleter = q.deleter.Where(sq.Eq{"address": address})
 	q.counter = q.counter.Where(sq.Eq{"address": address})
+
 	return q
 }
 
@@ -252,5 +257,6 @@ func (q PlaceDetailsQ) Count(ctx context.Context) (int, error) {
 
 func (q PlaceDetailsQ) Page(offset, limit uint64) PlaceDetailsQ {
 	q.selector = q.selector.Offset(offset).Limit(limit)
+
 	return q
 }

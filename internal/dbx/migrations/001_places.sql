@@ -5,16 +5,18 @@ CREATE EXTENSION IF NOT EXISTS "postgis";
 CREATE TABLE place_categories (
     id          VARCHAR(50) PRIMARY KEY,
     name        VARCHAR(50) NOT NULL UNIQUE,
+
     created_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
 
     CHECK (id ~ '^[a-z_]{1,50}$')
 );
 
-CREATE TABLE place_types (
+CREATE TABLE place_kinds (
     id           VARCHAR(50) PRIMARY KEY,
     category_id  VARCHAR(50) NOT NULL REFERENCES place_categories(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     name         VARCHAR(50) NOT NULL UNIQUE,
+
     created_at   TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
 
@@ -37,7 +39,7 @@ CREATE TABLE "places" (
     "id"             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     "city_id"        UUID NOT NULL,
     "distributor_id" UUID,
-    "type_id"        VARCHAR(50) NOT NULL REFERENCES place_types(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    "type_id"        VARCHAR(50) NOT NULL REFERENCES place_kinds(id) ON DELETE RESTRICT ON UPDATE CASCADE,
 
     "status"         place_statuses         NOT NULL,
     "verified"       BOOLEAN                NOT NULL DEFAULT FALSE,
@@ -71,7 +73,7 @@ CREATE TABLE "place_details" (
 -- +migrate Down
 DROP TABLE IF EXISTS "place_details" CASCADE;
 DROP TABLE IF EXISTS "places" CASCADE;
-DROP TABLE IF EXISTS "place_types" CASCADE;
+DROP TABLE IF EXISTS "place_kinds" CASCADE;
 DROP TABLE IF EXISTS "place_categories" CASCADE;
 
 DROP TYPE IF EXISTS "place_statuses";

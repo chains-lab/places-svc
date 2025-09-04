@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/chains-lab/places-svc/internal/config/constant"
+	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/svc-errors/ape"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"

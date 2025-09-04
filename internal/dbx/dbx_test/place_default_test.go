@@ -14,6 +14,13 @@ import (
 func Test_Full_E2E_Using_Qs(t *testing.T) {
 	ctx := context.Background()
 	db := openDB(t)
+
+	mustExec(t, db, `DELETE FROM place_timetables`)
+	mustExec(t, db, `DELETE FROM place_details`)
+	mustExec(t, db, `DELETE FROM places`)
+	mustExec(t, db, `DELETE FROM place_kinds`)
+	mustExec(t, db, `DELETE FROM place_categories`)
+
 	now := time.Now().UTC()
 
 	// ---------- seed: category ----------
@@ -166,7 +173,7 @@ func Test_Full_E2E_Using_Qs(t *testing.T) {
 		}
 	}
 
-	// 3) CategoryID (JOIN place_types)
+	// 3) CategoryID (JOIN place_kinds)
 	{
 		rows, err := plQ.New().FilterCategoryID(cat.ID).Select(ctx)
 		if err != nil || len(rows) != 1 {

@@ -9,7 +9,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-const PlaceTypesTable = "place_types"
+const PlaceKindsTable = "place_kinds"
 
 type PlaceType struct {
 	ID         string    `db:"id"`
@@ -33,11 +33,11 @@ func NewPlaceTypesQ(db *sql.DB) TypesQ {
 
 	return TypesQ{
 		db:       db,
-		selector: b.Select("*").From(PlaceTypesTable),
-		inserter: b.Insert(PlaceTypesTable),
-		updater:  b.Update(PlaceTypesTable),
-		deleter:  b.Delete(PlaceTypesTable),
-		counter:  b.Select("COUNT(*) AS count").From(PlaceTypesTable),
+		selector: b.Select("*").From(PlaceKindsTable),
+		inserter: b.Insert(PlaceKindsTable),
+		updater:  b.Update(PlaceKindsTable),
+		deleter:  b.Delete(PlaceKindsTable),
+		counter:  b.Select("COUNT(*) AS count").From(PlaceKindsTable),
 	}
 }
 
@@ -54,7 +54,7 @@ func (q TypesQ) Insert(ctx context.Context, in PlaceType) error {
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
 	if err != nil {
-		return fmt.Errorf("building insert query for %s: %w", PlaceTypesTable, err)
+		return fmt.Errorf("building insert query for %s: %w", PlaceKindsTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -69,7 +69,7 @@ func (q TypesQ) Insert(ctx context.Context, in PlaceType) error {
 func (q TypesQ) Get(ctx context.Context) (PlaceType, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return PlaceType{}, fmt.Errorf("building select query for %s: %w", PlaceTypesTable, err)
+		return PlaceType{}, fmt.Errorf("building select query for %s: %w", PlaceKindsTable, err)
 	}
 
 	var out PlaceType
@@ -87,6 +87,7 @@ func (q TypesQ) Get(ctx context.Context) (PlaceType, error) {
 		&out.CreatedAt,
 		&out.UpdatedAt,
 	)
+
 	return out, err
 }
 
@@ -95,7 +96,7 @@ func (q TypesQ) Select(ctx context.Context) ([]PlaceType, error) {
 
 	query, args, err := q.selector.ToSql()
 	if err != nil {
-		return out, fmt.Errorf("building select query for %s: %w", PlaceTypesTable, err)
+		return out, fmt.Errorf("building select query for %s: %w", PlaceKindsTable, err)
 	}
 
 	var rows *sql.Rows
@@ -105,7 +106,7 @@ func (q TypesQ) Select(ctx context.Context) ([]PlaceType, error) {
 		rows, err = q.db.QueryContext(ctx, query, args...)
 	}
 	if err != nil {
-		return out, fmt.Errorf("querying select for %s: %w", PlaceTypesTable, err)
+		return out, fmt.Errorf("querying select for %s: %w", PlaceKindsTable, err)
 	}
 	defer rows.Close()
 
@@ -118,13 +119,13 @@ func (q TypesQ) Select(ctx context.Context) ([]PlaceType, error) {
 			&t.CreatedAt,
 			&t.UpdatedAt,
 		); err != nil {
-			return out, fmt.Errorf("scanning row for %s: %w", PlaceTypesTable, err)
+			return out, fmt.Errorf("scanning row for %s: %w", PlaceKindsTable, err)
 		}
 		out = append(out, t)
 	}
 
 	if err = rows.Err(); err != nil {
-		return out, fmt.Errorf("iterating rows for %s: %w", PlaceTypesTable, err)
+		return out, fmt.Errorf("iterating rows for %s: %w", PlaceKindsTable, err)
 	}
 
 	return out, nil
@@ -153,7 +154,7 @@ func (q TypesQ) Update(ctx context.Context, params PlaceUpdateParams) error {
 
 	query, args, err := q.updater.SetMap(values).ToSql()
 	if err != nil {
-		return fmt.Errorf("building update query for %s: %w", PlaceTypesTable, err)
+		return fmt.Errorf("building update query for %s: %w", PlaceKindsTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -168,7 +169,7 @@ func (q TypesQ) Update(ctx context.Context, params PlaceUpdateParams) error {
 func (q TypesQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
-		return fmt.Errorf("building delete query for %s: %w", PlaceTypesTable, err)
+		return fmt.Errorf("building delete query for %s: %w", PlaceKindsTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -185,6 +186,7 @@ func (q TypesQ) FilterByID(id string) TypesQ {
 	q.updater = q.updater.Where(sq.Eq{"id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"id": id})
 	q.counter = q.counter.Where(sq.Eq{"id": id})
+
 	return q
 }
 
@@ -193,13 +195,14 @@ func (q TypesQ) FilterByCategoryID(category string) TypesQ {
 	q.updater = q.updater.Where(sq.Eq{"category_id": category})
 	q.deleter = q.deleter.Where(sq.Eq{"category_id": category})
 	q.counter = q.counter.Where(sq.Eq{"category_id": category})
+
 	return q
 }
 
 func (q TypesQ) Count(ctx context.Context) (int, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
-		return 0, fmt.Errorf("building count query for %s: %w", PlaceTypesTable, err)
+		return 0, fmt.Errorf("building count query for %s: %w", PlaceKindsTable, err)
 	}
 
 	var count int
@@ -211,7 +214,7 @@ func (q TypesQ) Count(ctx context.Context) (int, error) {
 	}
 
 	if err := row.Scan(&count); err != nil {
-		return 0, fmt.Errorf("scanning count for %s: %w", PlaceTypesTable, err)
+		return 0, fmt.Errorf("scanning count for %s: %w", PlaceKindsTable, err)
 	}
 
 	return count, nil
@@ -219,5 +222,6 @@ func (q TypesQ) Count(ctx context.Context) (int, error) {
 
 func (q TypesQ) Page(limit, offset uint64) TypesQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
+
 	return q
 }

@@ -95,6 +95,7 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		return Place{}, err
 	}
 	p.Point = orb.Point{lon, lat}
+
 	return p, nil
 }
 
@@ -148,6 +149,7 @@ func (q PlacesQ) Get(ctx context.Context) (Place, error) {
 	} else {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
+
 	return scanPlaceRow(row)
 }
 
@@ -176,6 +178,7 @@ func (q PlacesQ) Select(ctx context.Context) ([]Place, error) {
 		}
 		out = append(out, m)
 	}
+
 	return out, rows.Err()
 }
 
@@ -264,6 +267,7 @@ func (q PlacesQ) FilterByID(id uuid.UUID) PlacesQ {
 	q.counter = q.counter.Where(sq.Eq{"p.id": id})
 	q.updater = q.updater.Where(sq.Eq{"id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"id": id})
+
 	return q
 }
 
@@ -272,6 +276,7 @@ func (q PlacesQ) FilterByCityID(cityID uuid.UUID) PlacesQ {
 	q.counter = q.counter.Where(sq.Eq{"p.city_id": cityID})
 	q.updater = q.updater.Where(sq.Eq{"city_id": cityID})
 	q.deleter = q.deleter.Where(sq.Eq{"city_id": cityID})
+
 	return q
 }
 
@@ -287,14 +292,16 @@ func (q PlacesQ) FilterByDistributorID(distributorID uuid.NullUUID) PlacesQ {
 		q.updater = q.updater.Where(sq.Eq{"distributor_id": distributorID})
 		q.deleter = q.deleter.Where(sq.Eq{"distributor_id": distributorID})
 	}
+
 	return q
 }
 
-func (q PlacesQ) FilterByTypeID(typeID string) PlacesQ {
+func (q PlacesQ) FilterByTypeID(typeID ...string) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.type_id": typeID})
 	q.counter = q.counter.Where(sq.Eq{"p.type_id": typeID})
 	q.updater = q.updater.Where(sq.Eq{"type_id": typeID})
 	q.deleter = q.deleter.Where(sq.Eq{"type_id": typeID})
+
 	return q
 }
 
@@ -303,6 +310,7 @@ func (q PlacesQ) FilterByStatus(status ...string) PlacesQ {
 	q.counter = q.counter.Where(sq.Eq{"p.status": status})
 	q.updater = q.updater.Where(sq.Eq{"status": status})
 	q.deleter = q.deleter.Where(sq.Eq{"status": status})
+
 	return q
 }
 
@@ -311,6 +319,7 @@ func (q PlacesQ) FilterByVerified(verified bool) PlacesQ {
 	q.counter = q.counter.Where(sq.Eq{"p.verified": verified})
 	q.updater = q.updater.Where(sq.Eq{"verified": verified})
 	q.deleter = q.deleter.Where(sq.Eq{"verified": verified})
+
 	return q
 }
 
@@ -319,30 +328,56 @@ func (q PlacesQ) FilterByOwnership(ownership ...string) PlacesQ {
 	q.counter = q.counter.Where(sq.Eq{"p.ownership": ownership})
 	q.updater = q.updater.Where(sq.Eq{"ownership": ownership})
 	q.deleter = q.deleter.Where(sq.Eq{"ownership": ownership})
+
 	return q
 }
 
 func (q PlacesQ) FilterWithinRadiusMeters(point orb.Point, radiusM uint64) PlacesQ {
 	p := sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", point[0], point[1])
 	cond := sq.Expr("ST_DWithin(p.point, ?, ?)", p, radiusM)
+
 	q.selector = q.selector.Where(cond)
 	q.counter = q.counter.Where(cond)
+
 	return q
 }
 
-func (q PlacesQ) FilterCategoryID(categoryID string) PlacesQ {
-	join := fmt.Sprintf("%s t ON t.id = p.type_id", PlaceTypesTable)
+func (q PlacesQ) FilterWithinBBox(minLon, minLat, maxLon, maxLat float64) PlacesQ {
+	env := sq.Expr("ST_MakeEnvelope(?, ?, ?, ?, 4326)", minLon, minLat, maxLon, maxLat)
+	cond := sq.Expr("ST_Within(p.point::geometry, ?)", env)
+
+	q.selector = q.selector.Where(cond)
+	q.counter = q.counter.Where(cond)
+	q.updater = q.updater.Where(cond)
+	q.deleter = q.deleter.Where(cond)
+	return q
+}
+
+func (q PlacesQ) FilterWithinPolygonWKT(polyWKT string) PlacesQ {
+	poly := sq.Expr("ST_SetSRID(ST_GeomFromText(?), 4326)", polyWKT)
+	cond := sq.Expr("ST_Within(p.point::geometry, ?)", poly)
+
+	q.selector = q.selector.Where(cond)
+	q.counter = q.counter.Where(cond)
+	q.updater = q.updater.Where(cond)
+	q.deleter = q.deleter.Where(cond)
+	return q
+}
+
+func (q PlacesQ) FilterCategoryID(categoryID ...string) PlacesQ {
+	join := fmt.Sprintf("%s t ON t.id = p.type_id", PlaceKindsTable)
 
 	q.selector = q.selector.LeftJoin(join).Where(sq.Eq{"t.category_id": categoryID})
 	q.counter = q.counter.LeftJoin(join).Where(sq.Eq{"t.category_id": categoryID})
 
 	sub := sq.
 		Select("1").
-		From(PlaceTypesTable + " t").
+		From(PlaceKindsTable + " t").
 		Where(sq.Expr("t.id = places.type_id")).
 		Where(sq.Eq{"t.category_id": categoryID})
 
 	subSQL, subArgs, _ := sub.ToSql()
+
 	q.updater = q.updater.Where(sq.Expr("EXISTS ("+subSQL+")", subArgs...))
 	q.deleter = q.deleter.Where(sq.Expr("EXISTS ("+subSQL+")", subArgs...))
 
@@ -350,27 +385,33 @@ func (q PlacesQ) FilterCategoryID(categoryID string) PlacesQ {
 }
 
 func (q PlacesQ) FilterNameLike(name string) PlacesQ {
-	pattern := "%" + name + "%"
-	// JOIN для selector/counter — на alias p
+	pattern := fmt.Sprintf("%s%%", name)
+
 	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeDetailsTable)
+
 	q.selector = q.selector.LeftJoin(join).Where("pd.name ILIKE ?", pattern).Distinct()
 	q.counter = q.counter.LeftJoin(join).Where("pd.name ILIKE ?", pattern).Distinct()
 
-	// EXISTS для updater/deleter — на реальное имя places
 	sub := sq.Select("1").
 		From(placeDetailsTable+" pd").
 		Where("pd.place_id = places.id").
 		Where("pd.name ILIKE ?", pattern)
+
 	subSQL, subArgs, _ := sub.ToSql()
+
 	expr := sq.Expr("EXISTS ("+subSQL+")", subArgs...)
+
 	q.updater = q.updater.Where(expr)
 	q.deleter = q.deleter.Where(expr)
+
 	return q
 }
 
 func (q PlacesQ) FilterAddressLike(addr string) PlacesQ {
-	pattern := "%" + addr + "%"
+	pattern := fmt.Sprintf("%s%%", addr)
+
 	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeDetailsTable)
+
 	q.selector = q.selector.LeftJoin(join).Where("pd.address ILIKE ?", pattern).Distinct()
 	q.counter = q.counter.LeftJoin(join).Where("pd.address ILIKE ?", pattern).Distinct()
 
@@ -378,10 +419,14 @@ func (q PlacesQ) FilterAddressLike(addr string) PlacesQ {
 		From(placeDetailsTable+" pd").
 		Where("pd.place_id = places.id").
 		Where("pd.address ILIKE ?", pattern)
+
 	subSQL, subArgs, _ := sub.ToSql()
+
 	expr := sq.Expr("EXISTS ("+subSQL+")", subArgs...)
+
 	q.updater = q.updater.Where(expr)
 	q.deleter = q.deleter.Where(expr)
+
 	return q
 }
 
@@ -399,7 +444,6 @@ func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
 	e := norm(end)
 
 	if s == e {
-		// Пустое окно: ничего не фильтруем, чтобы не «обнулять» выборку
 		return q
 	}
 
@@ -407,25 +451,22 @@ func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
 		colS := alias + ".start_min"
 		colE := alias + ".end_min"
 		if s < e {
-			// [colS, colE) OVERLAPS [s, e)  <=> colS < e AND colE > s
 			return sq.And{
 				sq.Lt{colS: e},
 				sq.Gt{colE: s},
 			}
 		}
-		// окно «через полночь»: пересечение с [s, week) ИЛИ [0, e)
 		return sq.Or{
-			sq.Gt{colE: s}, // пересечение с [s, week)
-			sq.Lt{colS: e}, // пересечение с [0, e)
+			sq.Gt{colE: s},
+			sq.Lt{colS: e},
 		}
 	}
 
-	// JOIN для selector/counter
 	join := fmt.Sprintf("%s pt ON pt.place_id = p.id", placeTimetablesTable)
+
 	q.selector = q.selector.LeftJoin(join).Where(buildOverlap("pt")).Distinct()
 	q.counter = q.counter.LeftJoin(join).Where(buildOverlap("pt")).Distinct()
 
-	// EXISTS для updater/deleter — с реальным именем таблицы places
 	sub := sq.
 		Select("1").
 		From(placeTimetablesTable + " pt").
@@ -446,7 +487,22 @@ func (q PlacesQ) OrderByCreatedAt(asc bool) PlacesQ {
 	if !asc {
 		dir = "DESC"
 	}
+
 	q.selector = q.selector.OrderBy("p.created_at " + dir)
+
+	return q
+}
+
+func (q PlacesQ) OrderByDistance(point orb.Point, asc bool) PlacesQ {
+	dir := "ASC"
+	if !asc {
+		dir = "DESC"
+	}
+
+	geog := sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", point[0], point[1])
+
+	q.selector = q.selector.OrderByClause("ST_Distance(p.point, ?) "+dir, geog)
+
 	return q
 }
 
@@ -473,5 +529,6 @@ func (q PlacesQ) Count(ctx context.Context) (uint64, error) {
 
 func (q PlacesQ) Page(limit, offset uint64) PlacesQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
+
 	return q
 }

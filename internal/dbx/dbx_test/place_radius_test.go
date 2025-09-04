@@ -85,7 +85,7 @@ func Test_Search_ByRadius_And_Joins(t *testing.T) {
 	mustExec(t, db, `DELETE FROM place_timetables`)
 	mustExec(t, db, `DELETE FROM place_details`)
 	mustExec(t, db, `DELETE FROM places`)
-	mustExec(t, db, `DELETE FROM place_types`)
+	mustExec(t, db, `DELETE FROM place_kinds`)
 	mustExec(t, db, `DELETE FROM place_categories`)
 
 	now := time.Now().UTC()

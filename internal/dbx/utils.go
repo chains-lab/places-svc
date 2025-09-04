@@ -30,6 +30,7 @@ func MigrateUp(cfg config.Config) error {
 		return errors.Wrap(err, "failed to applyConditions migrations")
 	}
 	logrus.WithField("applied", applied).Info("migrations applied")
+
 	return nil
 }
 
@@ -41,5 +42,6 @@ func MigrateDown(cfg config.Config) error {
 		return errors.Wrap(err, "failed to applyConditions migrations")
 	}
 	logrus.WithField("applied", applied).Info("migrations applied")
+
 	return nil
 }

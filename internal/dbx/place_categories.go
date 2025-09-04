@@ -144,6 +144,7 @@ func (q CategoryQ) Update(ctx context.Context, in UpdatePlaceCategoryParams) err
 	} else {
 		_, err = q.db.ExecContext(ctx, query, args...)
 	}
+
 	return err
 }
 
@@ -158,6 +159,7 @@ func (q CategoryQ) Delete(ctx context.Context) error {
 	} else {
 		_, err = q.db.ExecContext(ctx, query, args...)
 	}
+
 	return err
 }
 
@@ -166,12 +168,14 @@ func (q CategoryQ) FilterByID(id string) CategoryQ {
 	q.updater = q.updater.Where(sq.Eq{"id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"id": id})
 	q.counter = q.counter.Where(sq.Eq{"id": id})
+
 	return q
 }
 
 func (q CategoryQ) FilterNameLike(name string) CategoryQ {
 	q.selector = q.selector.Where("name ILIKE ?", "%"+name+"%")
 	q.counter = q.counter.Where("name ILIKE ?", "%"+name+"%")
+
 	return q
 }
 
@@ -192,10 +196,12 @@ func (q CategoryQ) Count(ctx context.Context) (int, error) {
 	if err := row.Scan(&count); err != nil {
 		return 0, err
 	}
+
 	return count, nil
 }
 
 func (q CategoryQ) Paginate(limit, offset uint64) CategoryQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
+
 	return q
 }
