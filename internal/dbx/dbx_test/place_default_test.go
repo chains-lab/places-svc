@@ -48,20 +48,20 @@ func Test_Full_E2E_Using_Qs(t *testing.T) {
 	}
 
 	// ---------- seed: type ----------
-	typ := dbx.PlaceType{ID: "test_cafe", CategoryID: cat.ID, Name: "Test Cafe", CreatedAt: now, UpdatedAt: now}
-	typQ := dbx.NewPlaceTypesQ(db)
+	typ := dbx.PlaceKind{Code: "test_cafe", CategoryCode: cat.ID, Name: "Test Cafe", CreatedAt: now, UpdatedAt: now}
+	typQ := dbx.NewPlaceKindsQ(db)
 	if err := typQ.Insert(ctx, typ); err != nil {
 		t.Fatalf("insert type: %v", err)
 	}
-	t.Cleanup(func() { _ = typQ.New().FilterByID(typ.ID).Delete(ctx) })
+	t.Cleanup(func() { _ = typQ.New().FilterByID(typ.Code).Delete(ctx) })
 
 	// verify select by category
 	{
-		types, err := typQ.New().FilterByCategoryID(cat.ID).Select(ctx)
+		types, err := typQ.New().FilterCategoryCode(cat.ID).Select(ctx)
 		if err != nil {
 			t.Fatalf("select types by category: %v", err)
 		}
-		if len(types) != 1 || types[0].ID != typ.ID {
+		if len(types) != 1 || types[0].Code != typ.Code {
 			t.Fatalf("unexpected types result: %+v", types)
 		}
 	}
@@ -71,7 +71,7 @@ func Test_Full_E2E_Using_Qs(t *testing.T) {
 		ID:            uuid.New(),
 		CityID:        uuid.New(),
 		DistributorID: uuid.NullUUID{}, // NULL
-		TypeID:        typ.ID,
+		TypeID:        typ.Code,
 		Status:        "active",
 		Verified:      true,
 		Ownership:     "private",
@@ -173,7 +173,7 @@ func Test_Full_E2E_Using_Qs(t *testing.T) {
 		}
 	}
 
-	// 3) CategoryID (JOIN place_kinds)
+	// 3) CategoryCode (JOIN place_kinds)
 	{
 		rows, err := plQ.New().FilterCategoryID(cat.ID).Select(ctx)
 		if err != nil || len(rows) != 1 {
@@ -230,7 +230,7 @@ func Test_Full_E2E_Using_Qs(t *testing.T) {
 		if n, err := plQ.New().FilterByStatus("active").Count(ctx); err != nil || n != 1 {
 			t.Fatalf("FilterByStatus count: n=%d err=%v", n, err)
 		}
-		if n, err := plQ.New().FilterByTypeID(typ.ID).Count(ctx); err != nil || n != 1 {
+		if n, err := plQ.New().FilterByTypeID(typ.Code).Count(ctx); err != nil || n != 1 {
 			t.Fatalf("FilterByTypeID count: n=%d err=%v", n, err)
 		}
 		if n, err := plQ.New().FilterByCityID(pl.CityID).Count(ctx); err != nil || n != 1 {

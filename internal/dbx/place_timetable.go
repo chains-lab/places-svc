@@ -42,7 +42,7 @@ func NewPlaceTimetablesQ(db *sql.DB) PlaceTimetablesQ {
 
 func (q PlaceTimetablesQ) New() PlaceTimetablesQ { return NewPlaceTimetablesQ(q.db) }
 
-func (q PlaceTimetablesQ) Insert(in PlaceTimetable) (sq.InsertBuilder, error) {
+func (q PlaceTimetablesQ) Insert(ctx context.Context, in PlaceTimetable) error {
 	values := map[string]interface{}{
 		"id":        in.ID,
 		"place_id":  in.PlaceID,
@@ -50,8 +50,18 @@ func (q PlaceTimetablesQ) Insert(in PlaceTimetable) (sq.InsertBuilder, error) {
 		"end_min":   in.EndMin,
 	}
 
-	query := q.inserter.SetMap(values)
-	return query, nil
+	query, args, err := q.inserter.SetMap(values).ToSql()
+	if err != nil {
+		return fmt.Errorf("building insert query for %s: %w", placeTimetablesTable, err)
+	}
+
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		_, err = tx.ExecContext(ctx, query, args...)
+	} else {
+		_, err = q.db.ExecContext(ctx, query, args...)
+	}
+
+	return err
 }
 
 func (q PlaceTimetablesQ) Get(ctx context.Context) (PlaceTimetable, error) {

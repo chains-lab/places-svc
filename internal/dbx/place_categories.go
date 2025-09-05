@@ -12,10 +12,17 @@ import (
 const placeCategoriesTable = "place_categories"
 
 type PlaceCategory struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	UpdatedAt time.Time `json:"updated_at"`
-	CreatedAt time.Time `json:"created_at"`
+	Code      string            `db:"code"`
+	Status    string            `db:"status"`
+	Icon      string            `db:"icon"`
+	Locale    LocaleForCategory `db:"locales"`
+	UpdatedAt time.Time         `db:"updated_at"`
+	CreatedAt time.Time         `db:"created_at"`
+}
+
+type LocaleForCategory struct {
+	Locale string `db:"locale"`
+	Name   string `db:"name"`
 }
 
 type CategoryQ struct {
@@ -44,8 +51,9 @@ func (q CategoryQ) New() CategoryQ { return NewCategoryQ(q.db) }
 
 func (q CategoryQ) Insert(ctx context.Context, in PlaceCategory) error {
 	values := map[string]interface{}{
-		"id":         in.ID,
-		"name":       in.Name,
+		"code":       in.Code,
+		"status":     in.Status,
+		"icon":       in.Icon,
 		"created_at": in.CreatedAt,
 		"updated_at": in.UpdatedAt,
 	}
@@ -64,27 +72,49 @@ func (q CategoryQ) Insert(ctx context.Context, in PlaceCategory) error {
 	return err
 }
 
+func scanPlaceCategory(scanner interface{ Scan(dest ...any) error }) (PlaceCategory, error) {
+	var pc PlaceCategory
+	var locName, locLocale sql.NullString
+
+	err := scanner.Scan(
+		&pc.Code,
+		&pc.Status,
+		&pc.Icon,
+		&pc.CreatedAt,
+		&pc.UpdatedAt,
+		&locName,
+		&locLocale,
+	)
+	if err != nil {
+		return PlaceCategory{}, err
+	}
+
+	if locName.Valid && locLocale.Valid {
+		pc.Locale = LocaleForCategory{
+			Locale: locLocale.String,
+			Name:   locName.String,
+		}
+	} else {
+		pc.Locale = LocaleForCategory{}
+	}
+
+	return pc, nil
+}
+
 func (q CategoryQ) Get(ctx context.Context) (PlaceCategory, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
 		return PlaceCategory{}, fmt.Errorf("build select query for %s: %w", placeCategoriesTable, err)
 	}
 
-	var out PlaceCategory
 	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)
 	} else {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
-	err = row.Scan(
-		&out.ID,
-		&out.Name,
-		&out.CreatedAt,
-		&out.UpdatedAt,
-	)
 
-	return out, err
+	return scanPlaceCategory(row)
 }
 
 func (q CategoryQ) Select(ctx context.Context) ([]PlaceCategory, error) {
@@ -106,23 +136,19 @@ func (q CategoryQ) Select(ctx context.Context) ([]PlaceCategory, error) {
 
 	var out []PlaceCategory
 	for rows.Next() {
-		var m PlaceCategory
-		if err := rows.Scan(
-			&m.ID,
-			&m.Name,
-			&m.CreatedAt,
-			&m.UpdatedAt,
-		); err != nil {
+		pc, err := scanPlaceCategory(rows)
+		if err != nil {
 			return nil, err
 		}
-		out = append(out, m)
+		out = append(out, pc)
 	}
 
 	return out, rows.Err()
 }
 
 type UpdatePlaceCategoryParams struct {
-	Name      *string
+	Status    *string
+	Icon      *string
 	UpdatedAt time.Time
 }
 
@@ -130,8 +156,11 @@ func (q CategoryQ) Update(ctx context.Context, in UpdatePlaceCategoryParams) err
 	values := map[string]interface{}{
 		"updated_at": in.UpdatedAt,
 	}
-	if in.Name != nil {
-		values["name"] = *in.Name
+	if in.Status != nil {
+		values["status"] = *in.Status
+	}
+	if in.Icon != nil {
+		values["icon"] = *in.Icon
 	}
 
 	query, args, err := q.updater.SetMap(values).ToSql()
@@ -163,18 +192,56 @@ func (q CategoryQ) Delete(ctx context.Context) error {
 	return err
 }
 
-func (q CategoryQ) FilterByID(id string) CategoryQ {
-	q.selector = q.selector.Where(sq.Eq{"id": id})
-	q.updater = q.updater.Where(sq.Eq{"id": id})
-	q.deleter = q.deleter.Where(sq.Eq{"id": id})
-	q.counter = q.counter.Where(sq.Eq{"id": id})
+func (q CategoryQ) WithLocale(locale string) CategoryQ {
+	base := placeCategoriesTable
+	i18n := PlaceCategoryLocalesTable
+
+	subq := fmt.Sprintf(`
+		LATERAL (
+			SELECT i.name, i.locale
+			FROM %s i
+			WHERE i.category_code = %s.code
+			  AND i.locale IN ($1, 'en')
+			ORDER BY CASE
+				WHEN i.locale = $1 THEN 1
+				WHEN i.locale = 'en' THEN 2
+				ELSE 3
+			END
+			LIMIT 1
+		) loc
+	`, i18n, base)
+
+	q.selector = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
+		Select(
+			base+".code",
+			base+".status",
+			base+".created_at",
+			base+".updated_at",
+			"loc.name AS loc_name",
+			"loc.locale AS loc_locale",
+		).
+		From(base).
+		LeftJoin(subq + " ON TRUE")
+
+	q.selector = q.selector.PlaceholderFormat(sq.Dollar).RunWith(q.db).Suffix("", locale)
 
 	return q
 }
 
-func (q CategoryQ) FilterNameLike(name string) CategoryQ {
-	q.selector = q.selector.Where("name ILIKE ?", "%"+name+"%")
-	q.counter = q.counter.Where("name ILIKE ?", "%"+name+"%")
+func (q CategoryQ) FilterCode(code string) CategoryQ {
+	q.selector = q.selector.Where(sq.Eq{"code": code})
+	q.updater = q.updater.Where(sq.Eq{"code": code})
+	q.deleter = q.deleter.Where(sq.Eq{"code": code})
+	q.counter = q.counter.Where(sq.Eq{"code": code})
+
+	return q
+}
+
+func (q CategoryQ) FilterStatus(status string) CategoryQ {
+	q.selector = q.selector.Where(sq.Eq{"status": status})
+	q.counter = q.counter.Where(sq.Eq{"status": status})
+	q.updater = q.updater.Where(sq.Eq{"status": status})
+	q.deleter = q.deleter.Where(sq.Eq{"status": status})
 
 	return q
 }
@@ -200,7 +267,7 @@ func (q CategoryQ) Count(ctx context.Context) (int, error) {
 	return count, nil
 }
 
-func (q CategoryQ) Paginate(limit, offset uint64) CategoryQ {
+func (q CategoryQ) Page(limit, offset uint64) CategoryQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
 
 	return q

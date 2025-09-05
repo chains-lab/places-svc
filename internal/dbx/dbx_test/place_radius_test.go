@@ -13,30 +13,6 @@ import (
 	"github.com/paulmach/orb"
 )
 
-const databaseURL = "postgresql://postgres:postgres@localhost:7777/postgres?sslmode=disable"
-
-func strPtr(s string) *string { return &s }
-
-func openDB(t *testing.T) *sql.DB {
-	t.Helper()
-	db, err := sql.Open("postgres", databaseURL)
-	if err != nil {
-		t.Fatalf("open db: %v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
-	if err := db.Ping(); err != nil {
-		t.Fatalf("ping db: %v", err)
-	}
-	return db
-}
-
-func mustExec(t *testing.T, db *sql.DB, q string, args ...any) {
-	t.Helper()
-	if _, err := db.Exec(q, args...); err != nil {
-		t.Fatalf("exec failed: %v", err)
-	}
-}
-
 // корректно вставляет интервал расписания с учётом перелива через границу недели
 func insertTT(t *testing.T, db *sql.DB, placeID uuid.UUID, start, end int) {
 	t.Helper()
@@ -102,14 +78,14 @@ func Test_Search_ByRadius_And_Joins(t *testing.T) {
 	}
 
 	// 2) Тип
-	pt := dbx.PlaceType{
-		ID:         "cafe",
-		CategoryID: cat.ID,
-		Name:       "Cafe",
-		CreatedAt:  now,
-		UpdatedAt:  now,
+	pt := dbx.PlaceKind{
+		Code:         "cafe",
+		CategoryCode: cat.ID,
+		Name:         "Cafe",
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
-	if err := dbx.NewPlaceTypesQ(db).Insert(ctx, pt); err != nil {
+	if err := dbx.NewPlaceKindsQ(db).Insert(ctx, pt); err != nil {
 		t.Fatalf("insert type: %v", err)
 	}
 
@@ -118,7 +94,7 @@ func Test_Search_ByRadius_And_Joins(t *testing.T) {
 		ID:            uuid.New(),
 		CityID:        uuid.New(),
 		DistributorID: uuid.NullUUID{}, // NULL
-		TypeID:        pt.ID,
+		TypeID:        pt.Code,
 		Status:        "active",
 		Verified:      true,
 		Ownership:     "private",
