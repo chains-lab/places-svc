@@ -1,8 +1,12 @@
-package dbx
+package dbx_test
 
 import (
+	"context"
 	"database/sql"
 	"testing"
+	"time"
+
+	"github.com/chains-lab/places-svc/internal/dbx"
 )
 
 const databaseURL = "postgresql://postgres:postgres@localhost:7777/postgres?sslmode=disable"
@@ -26,5 +30,51 @@ func mustExec(t *testing.T, db *sql.DB, q string, args ...any) {
 	t.Helper()
 	if _, err := db.Exec(q, args...); err != nil {
 		t.Fatalf("exec failed: %v", err)
+	}
+}
+
+func setupClean(t *testing.T) {
+	t.Helper()
+	db := openDB(t)
+	// порядок важен из-за FK
+	mustExec(t, db, "DELETE FROM place_timetables")
+	mustExec(t, db, "DELETE FROM place_i18n")
+	mustExec(t, db, "DELETE FROM places")
+	mustExec(t, db, "DELETE FROM place_kind_i18n")
+	mustExec(t, db, "DELETE FROM place_category_i18n")
+	mustExec(t, db, "DELETE FROM place_kinds")
+	mustExec(t, db, "DELETE FROM place_categories")
+}
+
+func insertBaseCategory(t *testing.T, code string) {
+	t.Helper()
+	db := openDB(t)
+	now := time.Now().UTC()
+	err := dbx.NewCategoryQ(db).Insert(context.Background(), dbx.PlaceCategory{
+		Code:      code,
+		Status:    "active",
+		Icon:      "🧩",
+		CreatedAt: now,
+		UpdatedAt: now,
+	})
+	if err != nil {
+		t.Fatalf("insertBaseCategory(%s): %v", code, err)
+	}
+}
+
+func insertBaseKind(t *testing.T, code, catCode string) {
+	t.Helper()
+	db := openDB(t)
+	now := time.Now().UTC()
+	err := dbx.NewPlaceKindsQ(db).Insert(context.Background(), dbx.PlaceKind{
+		Code:         code,
+		CategoryCode: catCode,
+		Status:       "active",
+		Icon:         "🏷️",
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	})
+	if err != nil {
+		t.Fatalf("insertBaseKind(%s): %v", code, err)
 	}
 }

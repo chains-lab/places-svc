@@ -39,8 +39,19 @@ func NewPlaceKindsQ(db *sql.DB) KindsQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 	return KindsQ{
-		db:       db,
-		selector: b.Select("*").From(PlaceKindsTable),
+		db: db,
+		selector: b.
+			Select(
+				PlaceKindsTable+".code",
+				PlaceKindsTable+".category_code",
+				PlaceKindsTable+".status",
+				PlaceKindsTable+".icon",
+				PlaceKindsTable+".created_at",
+				PlaceKindsTable+".updated_at",
+				"NULL AS loc_name",
+				"NULL AS loc_locale",
+			).
+			From(PlaceKindsTable),
 		inserter: b.Insert(PlaceKindsTable),
 		updater:  b.Update(PlaceKindsTable),
 		deleter:  b.Delete(PlaceKindsTable),
@@ -235,39 +246,38 @@ func (q KindsQ) FilterStatus(status string) KindsQ {
 }
 
 func (q KindsQ) WithLocale(locale string) KindsQ {
-	base := PlaceKindsTable
-	i18n := PlaceKindLocalesTable
+	base := PlaceKindsTable       // "place_kinds"
+	i18n := PlaceKindLocalesTable // "place_kind_i18n"
 
-	subq := fmt.Sprintf(`
-		LATERAL (
-			SELECT i.name, i.locale
-			FROM %s i
-			WHERE i.kind_code = %s.code
-			  AND i.locale IN ($1, 'en')
-			ORDER BY CASE
-				WHEN i.locale = $1 THEN 1
-				WHEN i.locale = 'en' THEN 2
-				ELSE 3
-			END
-			LIMIT 1
-		) loc
-	`, i18n, base)
+	l := sanitizeLocale(locale)
+
+	col := func(field, alias string) sq.Sqlizer {
+		return sq.Expr(
+			`CASE
+				WHEN EXISTS (
+					SELECT 1 FROM `+i18n+` i
+					WHERE i.kind_code = k.code AND i.locale = ?
+				)
+				THEN (SELECT i.`+field+`  FROM `+i18n+` i  WHERE i.kind_code = k.code AND i.locale = ?)
+				ELSE (SELECT i2.`+field+` FROM `+i18n+` i2 WHERE i2.kind_code = k.code AND i2.locale = 'en')
+			END AS `+alias,
+			l, l,
+		)
+	}
 
 	q.selector = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select(
-			base+".code",
-			base+".category_code",
-			base+".status",
-			base+".icon",
-			base+".created_at",
-			base+".updated_at",
-			"loc.name AS loc_name",
-			"loc.locale AS loc_locale",
+			"k.code",
+			"k.category_code",
+			"k.status",
+			"k.icon",
+			"k.created_at",
+			"k.updated_at",
 		).
-		From(base).
-		LeftJoin(subq + " ON TRUE")
-
-	q.selector = q.selector.PlaceholderFormat(sq.Dollar).RunWith(q.db).Suffix("", locale)
+		// порядок для скана: loc_locale, loc_name
+		Column(col("name", "loc_name")).
+		Column(col("locale", "loc_locale")).
+		From(base + " AS k")
 
 	return q
 }

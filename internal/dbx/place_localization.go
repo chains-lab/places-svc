@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 )
 
-const placeDetailsTable = "place_details"
+const placeLocalizationTable = "place_i18n"
 
-type PlaceDetails struct {
+type PlaceLocale struct {
 	PlaceID     uuid.UUID      `db:"place_id"`
-	Language    string         `db:"language"`
+	Locale      string         `db:"locale"`
 	Name        string         `db:"name"`
 	Address     string         `db:"address"`
 	Description sql.NullString `db:"description"`
@@ -23,7 +23,7 @@ type PlaceDetails struct {
 	CreatedAt time.Time `db:"created_at"`
 }
 
-type PlaceDetailsQ struct {
+type PlaceLocalesQ struct {
 	db       *sql.DB
 	selector sq.SelectBuilder
 	inserter sq.InsertBuilder
@@ -32,25 +32,25 @@ type PlaceDetailsQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewPlaceDetailsQ(db *sql.DB) PlaceDetailsQ {
+func NewPlaceDetailsQ(db *sql.DB) PlaceLocalesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-	return PlaceDetailsQ{
+	return PlaceLocalesQ{
 		db:       db,
-		selector: b.Select("*").From(placeDetailsTable),
-		inserter: b.Insert(placeDetailsTable),
-		updater:  b.Update(placeDetailsTable),
-		deleter:  b.Delete(placeDetailsTable),
-		counter:  b.Select("COUNT(*) AS count").From(placeDetailsTable),
+		selector: b.Select("*").From(placeLocalizationTable),
+		inserter: b.Insert(placeLocalizationTable),
+		updater:  b.Update(placeLocalizationTable),
+		deleter:  b.Delete(placeLocalizationTable),
+		counter:  b.Select("COUNT(*) AS count").From(placeLocalizationTable),
 	}
 }
 
-func (q PlaceDetailsQ) New() PlaceDetailsQ { return NewPlaceDetailsQ(q.db) }
+func (q PlaceLocalesQ) New() PlaceLocalesQ { return NewPlaceDetailsQ(q.db) }
 
-func (q PlaceDetailsQ) Insert(ctx context.Context, in PlaceDetails) error {
+func (q PlaceLocalesQ) Insert(ctx context.Context, in PlaceLocale) error {
 	values := map[string]interface{}{
 		"place_id":    in.PlaceID,
-		"language":    in.Language,
+		"locale":      in.Locale,
 		"name":        in.Name,
 		"address":     in.Address,
 		"description": in.Description,
@@ -60,7 +60,7 @@ func (q PlaceDetailsQ) Insert(ctx context.Context, in PlaceDetails) error {
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
 	if err != nil {
-		return fmt.Errorf("failed to build insert query for %s: %w", placeDetailsTable, err)
+		return fmt.Errorf("failed to build insert query for %s: %w", placeLocalizationTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -72,13 +72,13 @@ func (q PlaceDetailsQ) Insert(ctx context.Context, in PlaceDetails) error {
 	return err
 }
 
-func (q PlaceDetailsQ) Get(ctx context.Context) (PlaceDetails, error) {
+func (q PlaceLocalesQ) Get(ctx context.Context) (PlaceLocale, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return PlaceDetails{}, fmt.Errorf("failed to build select query for %s: %w", placeDetailsTable, err)
+		return PlaceLocale{}, fmt.Errorf("failed to build select query for %s: %w", placeLocalizationTable, err)
 	}
 
-	var out PlaceDetails
+	var out PlaceLocale
 	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)
@@ -87,12 +87,12 @@ func (q PlaceDetailsQ) Get(ctx context.Context) (PlaceDetails, error) {
 	}
 	err = row.Scan(
 		&out.PlaceID,
-		&out.Language,
+		&out.Locale,
 		&out.Name,
 		&out.Address,
 		&out.Description,
-		&out.UpdatedAt,
 		&out.CreatedAt,
+		&out.UpdatedAt,
 	)
 	if err != nil {
 		return out, err
@@ -101,10 +101,10 @@ func (q PlaceDetailsQ) Get(ctx context.Context) (PlaceDetails, error) {
 	return out, nil
 }
 
-func (q PlaceDetailsQ) Select(ctx context.Context) ([]PlaceDetails, error) {
+func (q PlaceLocalesQ) Select(ctx context.Context) ([]PlaceLocale, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to build select query for %s: %w", placeDetailsTable, err)
+		return nil, fmt.Errorf("failed to build select query for %s: %w", placeLocalizationTable, err)
 	}
 
 	var rows *sql.Rows
@@ -118,12 +118,12 @@ func (q PlaceDetailsQ) Select(ctx context.Context) ([]PlaceDetails, error) {
 	}
 	defer rows.Close()
 
-	var out []PlaceDetails
+	var out []PlaceLocale
 	for rows.Next() {
-		var pd PlaceDetails
+		var pd PlaceLocale
 		err := rows.Scan(
 			&pd.PlaceID,
-			&pd.Language,
+			&pd.Locale,
 			&pd.Name,
 			&pd.Address,
 			&pd.Description,
@@ -131,7 +131,7 @@ func (q PlaceDetailsQ) Select(ctx context.Context) ([]PlaceDetails, error) {
 			&pd.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan row for %s: %w", placeDetailsTable, err)
+			return nil, fmt.Errorf("failed to scan row for %s: %w", placeLocalizationTable, err)
 		}
 		out = append(out, pd)
 	}
@@ -139,26 +139,26 @@ func (q PlaceDetailsQ) Select(ctx context.Context) ([]PlaceDetails, error) {
 	return out, rows.Err()
 }
 
-type UpdatePlaceDetailsParams struct {
+type UpdatePlaceLocaleParams struct {
 	Name        *string
 	Address     *string
 	Description *sql.NullString
 	UpdatedAt   time.Time
 }
 
-func (q PlaceDetailsQ) Update(ctx context.Context, params UpdatePlaceDetailsParams) error {
+func (q PlaceLocalesQ) Update(ctx context.Context, params UpdatePlaceLocaleParams) error {
 	updates := map[string]interface{}{
 		"updated_at": params.UpdatedAt,
 	}
 	if params.Name != nil {
-		updates["name"] = params.Name
+		updates["name"] = *params.Name
 	}
 	if params.Address != nil {
-		updates["address"] = params.Address
+		updates["address"] = *params.Address
 	}
 	if params.Description != nil {
 		if params.Description.Valid {
-			updates["description"] = params.Description
+			updates["description"] = params.Description.String
 		} else {
 			updates["description"] = nil
 		}
@@ -170,7 +170,7 @@ func (q PlaceDetailsQ) Update(ctx context.Context, params UpdatePlaceDetailsPara
 
 	query, args, err := q.updater.SetMap(updates).ToSql()
 	if err != nil {
-		return fmt.Errorf("failed to build update query for %s: %w", placeDetailsTable, err)
+		return fmt.Errorf("failed to build update query for %s: %w", placeLocalizationTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -182,10 +182,10 @@ func (q PlaceDetailsQ) Update(ctx context.Context, params UpdatePlaceDetailsPara
 	return err
 }
 
-func (q PlaceDetailsQ) Delete(ctx context.Context) error {
+func (q PlaceLocalesQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
-		return fmt.Errorf("failed to build delete query for %s: %w", placeDetailsTable, err)
+		return fmt.Errorf("failed to build delete query for %s: %w", placeLocalizationTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -197,7 +197,7 @@ func (q PlaceDetailsQ) Delete(ctx context.Context) error {
 	return err
 }
 
-func (q PlaceDetailsQ) FilterPlaceID(id uuid.UUID) PlaceDetailsQ {
+func (q PlaceLocalesQ) FilterPlaceID(id uuid.UUID) PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"place_id": id})
 	q.updater = q.updater.Where(sq.Eq{"place_id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"place_id": id})
@@ -206,16 +206,16 @@ func (q PlaceDetailsQ) FilterPlaceID(id uuid.UUID) PlaceDetailsQ {
 	return q
 }
 
-func (q PlaceDetailsQ) FilterByLanguage(language string) PlaceDetailsQ {
-	q.selector = q.selector.Where(sq.Eq{"language": language})
-	q.updater = q.updater.Where(sq.Eq{"language": language})
-	q.deleter = q.deleter.Where(sq.Eq{"language": language})
-	q.counter = q.counter.Where(sq.Eq{"language": language})
+func (q PlaceLocalesQ) FilterByLocale(locale string) PlaceLocalesQ {
+	q.selector = q.selector.Where(sq.Eq{"locale": locale})
+	q.updater = q.updater.Where(sq.Eq{"locale": locale})
+	q.deleter = q.deleter.Where(sq.Eq{"locale": locale})
+	q.counter = q.counter.Where(sq.Eq{"locale": locale})
 
 	return q
 }
 
-func (q PlaceDetailsQ) FilterByName(name string) PlaceDetailsQ {
+func (q PlaceLocalesQ) FilterByName(name string) PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"name": name})
 	q.updater = q.updater.Where(sq.Eq{"name": name})
 	q.deleter = q.deleter.Where(sq.Eq{"name": name})
@@ -224,7 +224,7 @@ func (q PlaceDetailsQ) FilterByName(name string) PlaceDetailsQ {
 	return q
 }
 
-func (q PlaceDetailsQ) FilterByAddress(address string) PlaceDetailsQ {
+func (q PlaceLocalesQ) FilterByAddress(address string) PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"address": address})
 	q.updater = q.updater.Where(sq.Eq{"address": address})
 	q.deleter = q.deleter.Where(sq.Eq{"address": address})
@@ -233,10 +233,10 @@ func (q PlaceDetailsQ) FilterByAddress(address string) PlaceDetailsQ {
 	return q
 }
 
-func (q PlaceDetailsQ) Count(ctx context.Context) (int, error) {
+func (q PlaceLocalesQ) Count(ctx context.Context) (int, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
-		return 0, fmt.Errorf("failed to build count query for %s: %w", placeDetailsTable, err)
+		return 0, fmt.Errorf("failed to build count query for %s: %w", placeLocalizationTable, err)
 	}
 
 	var count int
@@ -249,14 +249,14 @@ func (q PlaceDetailsQ) Count(ctx context.Context) (int, error) {
 
 	err = row.Scan(&count)
 	if err != nil {
-		return 0, fmt.Errorf("failed to scan count for %s: %w", placeDetailsTable, err)
+		return 0, fmt.Errorf("failed to scan count for %s: %w", placeLocalizationTable, err)
 	}
 
 	return count, nil
 }
 
-func (q PlaceDetailsQ) Page(offset, limit uint64) PlaceDetailsQ {
-	q.selector = q.selector.Offset(offset).Limit(limit)
+func (q PlaceLocalesQ) Page(offset, limit uint64) PlaceLocalesQ {
+	q.selector = q.selector.Limit(limit).Offset(offset)
 
 	return q
 }

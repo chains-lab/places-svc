@@ -173,20 +173,28 @@ func (q PlaceTimetablesQ) FilterBetween(start, end int) PlaceTimetablesQ {
 	s := norm(start)
 	e := norm(end)
 
+	// Пустое окно — возвращаем заведомо пусто
 	if s == e {
+		q.selector = q.selector.Where("1=0")
+		q.updater = q.updater.Where("1=0")
+		q.deleter = q.deleter.Where("1=0")
+		q.counter = q.counter.Where("1=0")
 		return q
 	}
 
 	var cond any
 	if s < e {
+		// Обычное окно [s, e): есть пересечение если start < e AND end > s
 		cond = sq.And{
-			sq.GtOrEq{"start_min": s},
-			sq.LtOrEq{"end_min": e},
+			sq.Lt{"start_min": e},
+			sq.Gt{"end_min": s},
 		}
 	} else {
+		// Окно “переваливает” через конец недели: [s, 10080) ∪ [0, e)
+		// Пересечение с окном если (end > s) OR (start < e)
 		cond = sq.Or{
-			sq.And{sq.GtOrEq{"start_min": s}},
-			sq.And{sq.LtOrEq{"end_min": e}},
+			sq.Gt{"end_min": s},
+			sq.Lt{"start_min": e},
 		}
 	}
 
@@ -194,7 +202,6 @@ func (q PlaceTimetablesQ) FilterBetween(start, end int) PlaceTimetablesQ {
 	q.updater = q.updater.Where(cond)
 	q.deleter = q.deleter.Where(cond)
 	q.counter = q.counter.Where(cond)
-
 	return q
 }
 

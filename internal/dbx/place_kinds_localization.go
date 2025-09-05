@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -15,9 +14,6 @@ type PlaceKindLocale struct {
 	KindCode string `db:"kind_code"`
 	Locale   string `db:"locale"`
 	Name     string `db:"name"`
-
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
 }
 
 type KindLocaleQ struct {
@@ -44,11 +40,9 @@ func (q KindLocaleQ) New() KindLocaleQ { return NewKindLocaleQ(q.db) }
 
 func (q KindLocaleQ) Insert(ctx context.Context, in PlaceKindLocale) error {
 	values := map[string]interface{}{
-		"kind_code":  in.KindCode,
-		"locale":     in.Locale,
-		"name":       in.Name,
-		"created_at": in.CreatedAt,
-		"updated_at": in.UpdatedAt,
+		"kind_code": in.KindCode,
+		"locale":    in.Locale,
+		"name":      in.Name,
 	}
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
@@ -67,17 +61,17 @@ func (q KindLocaleQ) Insert(ctx context.Context, in PlaceKindLocale) error {
 
 func (q KindLocaleQ) Upsert(ctx context.Context, in PlaceKindLocale) error {
 	query := fmt.Sprintf(`
-        INSERT INTO %s (kind_code, locale, name, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (kind_code, locale) DO UPDATE
-        SET name = EXCLUDED.name, updated_at = EXCLUDED.updated_at
-    `, PlaceKindLocalesTable)
+		INSERT INTO %s (kind_code, locale, name)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (kind_code, locale) DO UPDATE
+		SET name = EXCLUDED.name
+	`, PlaceKindLocalesTable)
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		_, err := tx.ExecContext(ctx, query, in.KindCode, in.Locale, in.Name, in.CreatedAt, in.UpdatedAt)
+		_, err := tx.ExecContext(ctx, query, in.KindCode, in.Locale, in.Name)
 		return err
 	}
-	_, err := q.db.ExecContext(ctx, query, in.KindCode, in.Locale, in.Name, in.CreatedAt, in.UpdatedAt)
+	_, err := q.db.ExecContext(ctx, query, in.KindCode, in.Locale, in.Name)
 	return err
 }
 
@@ -98,8 +92,6 @@ func (q KindLocaleQ) Get(ctx context.Context) (PlaceKindLocale, error) {
 		&out.KindCode,
 		&out.Locale,
 		&out.Name,
-		&out.CreatedAt,
-		&out.UpdatedAt,
 	)
 
 	return out, err
@@ -129,8 +121,6 @@ func (q KindLocaleQ) Select(ctx context.Context) ([]PlaceKindLocale, error) {
 			&item.KindCode,
 			&item.Locale,
 			&item.Name,
-			&item.CreatedAt,
-			&item.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -169,14 +159,11 @@ func (q KindLocaleQ) FilterNameLike(name string) KindLocaleQ {
 }
 
 type UpdateKindLocaleParams struct {
-	Name      *string
-	UpdatedAt time.Time
+	Name *string
 }
 
 func (q KindLocaleQ) Update(ctx context.Context, in UpdateKindLocaleParams) error {
-	values := map[string]interface{}{
-		"updated_at": in.UpdatedAt,
-	}
+	values := map[string]interface{}{}
 	if in.Name != nil {
 		values["name"] = *in.Name
 	}

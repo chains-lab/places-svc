@@ -3,6 +3,7 @@ package dbx
 import (
 	"database/sql"
 	"embed"
+	"regexp"
 
 	"github.com/chains-lab/places-svc/internal/config"
 	"github.com/pkg/errors"
@@ -13,6 +14,23 @@ import (
 type TxKeyType struct{}
 
 var TxKey = TxKeyType{}
+
+var reLocale = regexp.MustCompile(`^[a-z]{2}(-[A-Z]{2})?$`)
+
+func sanitizeLocale(l string) string {
+	if reLocale.MatchString(l) {
+		return l
+	}
+	return "en"
+}
+
+func (q CategoryQ) SelectorToSql() (string, []any, error) {
+	return q.selector.ToSql()
+}
+
+func (q PlacesQ) SelectorToSql() (string, []any, error) {
+	return q.selector.ToSql()
+}
 
 //go:embed migrations/*.sql
 var Migrations embed.FS

@@ -18,12 +18,14 @@ type Place struct {
 	ID            uuid.UUID     `db:"id"`
 	CityID        uuid.UUID     `db:"city_id"`
 	DistributorID uuid.NullUUID `db:"distributor_id"`
-	TypeID        string        `db:"type_id"`
+	TypeCode      string        `db:"type_code"`
 
 	Status    string    `db:"status"`
 	Verified  bool      `db:"verified"`
 	Ownership string    `db:"ownership"`
 	Point     orb.Point `db:"point"`
+
+	Locale PlaceLocale
 
 	Website sql.NullString `db:"website"`
 	Phone   sql.NullString `db:"phone"`
@@ -48,7 +50,7 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 		"p.id",
 		"p.city_id",
 		"p.distributor_id",
-		"p.type_id",
+		"p.type_code",
 		"p.status",
 		"p.verified",
 		"p.ownership",
@@ -58,6 +60,10 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 		"p.phone",
 		"p.created_at",
 		"p.updated_at",
+		"NULL AS loc_locale",
+		"NULL AS loc_name",
+		"NULL AS loc_address",
+		"NULL AS loc_description",
 	}
 
 	return PlacesQ{
@@ -74,14 +80,15 @@ func (q PlacesQ) New() PlacesQ { return NewPlacesQ(q.db) }
 
 func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	var (
-		p        Place
-		lon, lat float64
+		p                                              Place
+		lon, lat                                       float64
+		locLocale, locName, locAddress, locDescription sql.NullString
 	)
 	if err := scanner.Scan(
 		&p.ID,
 		&p.CityID,
 		&p.DistributorID,
-		&p.TypeID,
+		&p.TypeCode, // <— было TypeCode
 		&p.Status,
 		&p.Verified,
 		&p.Ownership,
@@ -91,9 +98,28 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		&p.Phone,
 		&p.CreatedAt,
 		&p.UpdatedAt,
+		&locLocale,
+		&locName,
+		&locAddress,
+		&locDescription,
 	); err != nil {
 		return Place{}, err
 	}
+
+	if locLocale.Valid {
+		p.Locale.Locale = locLocale.String
+	}
+	if locName.Valid {
+		p.Locale.Name = locName.String
+	}
+	if locAddress.Valid {
+		p.Locale.Address = locAddress.String
+	}
+	if locDescription.Valid {
+		p.Locale.Description.Valid = true
+		p.Locale.Description.String = locDescription.String
+	}
+
 	p.Point = orb.Point{lon, lat}
 
 	return p, nil
@@ -104,7 +130,7 @@ func (q PlacesQ) Insert(ctx context.Context, in Place) error {
 		"id":             in.ID,
 		"city_id":        in.CityID,
 		"distributor_id": in.DistributorID,
-		"type_id":        in.TypeID,
+		"type_code":      in.TypeCode,
 		"status":         in.Status,
 		"verified":       in.Verified,
 		"ownership":      in.Ownership,
@@ -183,7 +209,7 @@ func (q PlacesQ) Select(ctx context.Context) ([]Place, error) {
 }
 
 type UpdatePlaceParams struct {
-	typeID    *string
+	typeCode  *string
 	Status    *string
 	Verified  *bool
 	Ownership *string
@@ -199,8 +225,8 @@ func (q PlacesQ) Update(ctx context.Context, p UpdatePlaceParams) error {
 	values := map[string]interface{}{
 		"updated_at": p.UpdatedAt,
 	}
-	if p.typeID != nil {
-		values["type_id"] = *p.typeID
+	if p.typeCode != nil {
+		values["type_code"] = *p.typeCode
 	}
 	if p.Status != nil {
 		values["status"] = *p.Status
@@ -296,11 +322,11 @@ func (q PlacesQ) FilterByDistributorID(distributorID uuid.NullUUID) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterByTypeID(typeID ...string) PlacesQ {
-	q.selector = q.selector.Where(sq.Eq{"p.type_id": typeID})
-	q.counter = q.counter.Where(sq.Eq{"p.type_id": typeID})
-	q.updater = q.updater.Where(sq.Eq{"type_id": typeID})
-	q.deleter = q.deleter.Where(sq.Eq{"type_id": typeID})
+func (q PlacesQ) FilterByTypeCode(typeCode ...string) PlacesQ {
+	q.selector = q.selector.Where(sq.Eq{"p.type_code": typeCode})
+	q.counter = q.counter.Where(sq.Eq{"p.type_code": typeCode})
+	q.updater = q.updater.Where(sq.Eq{"type_code": typeCode})
+	q.deleter = q.deleter.Where(sq.Eq{"type_code": typeCode})
 
 	return q
 }
@@ -364,17 +390,17 @@ func (q PlacesQ) FilterWithinPolygonWKT(polyWKT string) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterCategoryID(categoryID ...string) PlacesQ {
-	join := fmt.Sprintf("%s t ON t.id = p.type_id", PlaceKindsTable)
+func (q PlacesQ) FilterCategoryCode(categoryCode ...string) PlacesQ {
+	join := fmt.Sprintf("%s t ON t.code = p.type_code", PlaceKindsTable)
 
-	q.selector = q.selector.LeftJoin(join).Where(sq.Eq{"t.category_id": categoryID})
-	q.counter = q.counter.LeftJoin(join).Where(sq.Eq{"t.category_id": categoryID})
+	q.selector = q.selector.LeftJoin(join).Where(sq.Eq{"t.category_code": categoryCode})
+	q.counter = q.counter.LeftJoin(join).Where(sq.Eq{"t.category_code": categoryCode})
 
 	sub := sq.
 		Select("1").
 		From(PlaceKindsTable + " t").
-		Where(sq.Expr("t.id = places.type_id")).
-		Where(sq.Eq{"t.category_id": categoryID})
+		Where(sq.Expr("t.code = places.type_code")).
+		Where(sq.Eq{"t.category_code": categoryCode})
 
 	subSQL, subArgs, _ := sub.ToSql()
 
@@ -385,15 +411,15 @@ func (q PlacesQ) FilterCategoryID(categoryID ...string) PlacesQ {
 }
 
 func (q PlacesQ) FilterNameLike(name string) PlacesQ {
-	pattern := fmt.Sprintf("%s%%", name)
+	pattern := "%" + name + "%"
 
-	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeDetailsTable)
+	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeLocalizationTable)
 
 	q.selector = q.selector.LeftJoin(join).Where("pd.name ILIKE ?", pattern).Distinct()
 	q.counter = q.counter.LeftJoin(join).Where("pd.name ILIKE ?", pattern).Distinct()
 
 	sub := sq.Select("1").
-		From(placeDetailsTable+" pd").
+		From(placeLocalizationTable+" pd").
 		Where("pd.place_id = places.id").
 		Where("pd.name ILIKE ?", pattern)
 
@@ -408,15 +434,15 @@ func (q PlacesQ) FilterNameLike(name string) PlacesQ {
 }
 
 func (q PlacesQ) FilterAddressLike(addr string) PlacesQ {
-	pattern := fmt.Sprintf("%s%%", addr)
+	pattern := "%" + addr + "%"
 
-	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeDetailsTable)
+	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeLocalizationTable)
 
 	q.selector = q.selector.LeftJoin(join).Where("pd.address ILIKE ?", pattern).Distinct()
 	q.counter = q.counter.LeftJoin(join).Where("pd.address ILIKE ?", pattern).Distinct()
 
 	sub := sq.Select("1").
-		From(placeDetailsTable+" pd").
+		From(placeLocalizationTable+" pd").
 		Where("pd.place_id = places.id").
 		Where("pd.address ILIKE ?", pattern)
 
@@ -478,6 +504,52 @@ func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
 
 	q.updater = q.updater.Where(expr)
 	q.deleter = q.deleter.Where(expr)
+
+	return q
+}
+
+func (q PlacesQ) WithLocale(locale string) PlacesQ {
+	base := placesTable
+	i18n := placeLocalizationTable
+
+	l := sanitizeLocale(locale)
+
+	col := func(field, alias string) sq.Sqlizer {
+		return sq.Expr(
+			`CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM `+i18n+` i
+                    WHERE i.place_id = p.id AND i.locale = ?
+                )
+                THEN (SELECT i.`+field+`  FROM `+i18n+` i  WHERE i.place_id = p.id AND i.locale = ?)
+                ELSE (SELECT i2.`+field+` FROM `+i18n+` i2 WHERE i2.place_id = p.id AND i2.locale = 'en')
+             END AS `+alias,
+			l, l, // ← первый ? для EXISTS, второй ? для THEN-подзапроса
+		)
+	}
+
+	q.selector = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
+		Select(
+			"p.id",
+			"p.city_id",
+			"p.distributor_id",
+			"p.type_code",
+			"p.status",
+			"p.verified",
+			"p.ownership",
+			"ST_X(p.point::geometry) AS point_lon",
+			"ST_Y(p.point::geometry) AS point_lat",
+			"p.website",
+			"p.phone",
+			"p.created_at",
+			"p.updated_at",
+		).
+		// порядок под scanPlaceRow: loc_locale, loc_name, loc_address, loc_description
+		Column(col("locale", "loc_locale")).
+		Column(col("name", "loc_name")).
+		Column(col("address", "loc_address")).
+		Column(col("description", "loc_description")).
+		From(base + " AS p")
 
 	return q
 }

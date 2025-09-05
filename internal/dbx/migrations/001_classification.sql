@@ -53,10 +53,10 @@ CREATE TABLE place_kind_i18n (
 );
 
 -- +migrate Down
-DROP TABLE IF EXISTS place_category_i18n CASCADE;
 DROP TABLE IF EXISTS place_kind_i18n CASCADE;
-DROP TABLE IF EXISTS place_categories CASCADE;
+DROP TABLE IF EXISTS place_category_i18n CASCADE;
 DROP TABLE IF EXISTS place_kinds CASCADE;
+DROP TABLE IF EXISTS place_categories CASCADE;
 
 DROP TYPE IF EXISTS kind_statuses;
 DROP TYPE IF EXISTS categories_statuses;

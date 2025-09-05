@@ -15,9 +15,6 @@ type PlaceCategoryLocale struct {
 	CategoryCode string `db:"category_code"`
 	Locale       string `db:"locale"`
 	Name         string `db:"name"`
-
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
 }
 
 type CategoryLocaleQ struct {
@@ -47,8 +44,6 @@ func (q CategoryLocaleQ) Insert(ctx context.Context, in PlaceCategoryLocale) err
 		"category_code": in.CategoryCode,
 		"locale":        in.Locale,
 		"name":          in.Name,
-		"created_at":    in.CreatedAt,
-		"updated_at":    in.UpdatedAt,
 	}
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
@@ -67,17 +62,17 @@ func (q CategoryLocaleQ) Insert(ctx context.Context, in PlaceCategoryLocale) err
 
 func (q CategoryLocaleQ) Upsert(ctx context.Context, in PlaceCategoryLocale) error {
 	query := fmt.Sprintf(`
-        INSERT INTO %s (category_code, locale, name, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (category_code, locale) DO UPDATE
-        SET name = EXCLUDED.name, updated_at = EXCLUDED.updated_at
+		INSERT INTO %s (category_code, locale, name)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (category_code, locale) DO UPDATE
+		SET name = EXCLUDED.name
     `, PlaceCategoryLocalesTable)
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		_, err := tx.ExecContext(ctx, query, in.CategoryCode, in.Locale, in.Name, in.CreatedAt, in.UpdatedAt)
+		_, err := tx.ExecContext(ctx, query, in.CategoryCode, in.Locale, in.Name)
 		return err
 	}
-	_, err := q.db.ExecContext(ctx, query, in.CategoryCode, in.Locale, in.Name, in.CreatedAt, in.UpdatedAt)
+	_, err := q.db.ExecContext(ctx, query, in.CategoryCode, in.Locale, in.Name)
 	return err
 }
 
@@ -98,8 +93,6 @@ func (q CategoryLocaleQ) Get(ctx context.Context) (PlaceCategoryLocale, error) {
 		&out.CategoryCode,
 		&out.Locale,
 		&out.Name,
-		&out.CreatedAt,
-		&out.UpdatedAt,
 	)
 
 	return out, err
@@ -129,8 +122,6 @@ func (q CategoryLocaleQ) Select(ctx context.Context) ([]PlaceCategoryLocale, err
 			&item.CategoryCode,
 			&item.Locale,
 			&item.Name,
-			&item.CreatedAt,
-			&item.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
