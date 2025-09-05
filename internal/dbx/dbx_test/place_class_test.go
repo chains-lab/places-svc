@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/chains-lab/places-svc/internal/dbx"
-	_ "github.com/lib/pq"
 )
 
 func TestPlaceClasses_Integration(t *testing.T) {
@@ -20,7 +19,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	mustExec(t, db, "DELETE FROM place_class_i18n")
 	mustExec(t, db, "DELETE FROM place_classes")
 
-	q := dbx.NewClassQ(db)
+	q := dbx.NewClassesQ(db)
 
 	// root: food
 	root := dbx.PlaceClass{
@@ -72,8 +71,11 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with uk: %v", err)
 	}
-	if got.Locale.Name != "Ресторан" {
-		t.Errorf("want 'Ресторан', got %q", got.Locale.Name)
+	if got.Name == nil || *got.Name != "Ресторан" {
+		t.Errorf("want 'Ресторан', got %#v", got.Name)
+	}
+	if got.Locale == nil || *got.Locale != "uk" {
+		t.Errorf("want locale 'uk', got %#v", got.Locale)
 	}
 
 	// WithLocale: fallback to en
@@ -81,12 +83,15 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with fr fallback: %v", err)
 	}
-	if got.Locale.Name != "Restaurant" {
-		t.Errorf("want fallback 'Restaurant', got %q", got.Locale.Name)
+	if got.Name == nil || *got.Name != "Restaurant" {
+		t.Errorf("want fallback 'Restaurant', got %#v", got.Name)
+	}
+	if got.Locale == nil || *got.Locale != "en" {
+		t.Errorf("want fallback locale 'en', got %#v", got.Locale)
 	}
 
 	// Descendants of food (without food itself)
-	desc, err := q.New().FilterFatherCodeCycle("food").OrderBy("code ASC").Select(ctx)
+	desc, err := q.New().FilterFatherCodeCycle("food").OrderBy("pc.code ASC").Select(ctx)
 	if err != nil {
 		t.Fatalf("select descendants: %v", err)
 	}
@@ -107,7 +112,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	}
 
 	// Pagination sanity
-	page, err := q.New().OrderBy("code ASC").Paginate(2, 0).Select(ctx)
+	page, err := q.New().OrderBy("pc.code ASC").Paginate(2, 0).Select(ctx)
 	if err != nil {
 		t.Fatalf("paginate: %v", err)
 	}
@@ -193,7 +198,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 	ctx := context.Background()
 	db := openDB(t)
 
-	q := dbx.NewClassQ(db)
+	q := dbx.NewClassesQ(db)
 
 	// roots: food, services
 	food := dbx.PlaceClass{Code: "food", Status: "active", Icon: "🍔"}
@@ -205,7 +210,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Fatalf("insert services: %v", err)
 	}
 
-	// i18n для просмотра локалей
+	// i18n
 	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)", "food", "en", "Food")
 	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)", "services", "en", "Services")
 
@@ -223,7 +228,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 	if err := q.Insert(ctx, cafe); err != nil {
 		t.Fatalf("insert cafe: %v", err)
 	}
-	// добавим uk-локаль для кафе через Upsert
+	// uk для кафе через Upsert
 	if err := dbx.NewClassLocaleQ(db).Upsert(ctx, dbx.PlaceClassLocale{
 		ClassCode: "cafe",
 		Locale:    "uk",
@@ -232,7 +237,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Fatalf("upsert cafe uk: %v", err)
 	}
 
-	// sanity: начальные пути
+	// sanity paths
 	gotFood, err := q.New().FilterCode("food").Get(ctx)
 	if err != nil {
 		t.Fatalf("get food: %v", err)
@@ -255,7 +260,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Fatalf("want path food.restaurant.cafe, got %q", gotCafe.Path)
 	}
 
-	// 1) Переназначаем родителя: restaurant -> services
+	// 1) reparent: restaurant -> services
 	newParent := "services"
 	if err := q.New().FilterCode("restaurant").Update(ctx, dbx.UpdatePlaceClassParams{
 		FatherCode: &newParent,
@@ -264,7 +269,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Fatalf("reparent restaurant under services: %v", err)
 	}
 
-	// Проверяем, что пересчитались пути у restaurant и у cafe (поддерево)
+	// subtree paths updated
 	gotRest, err = q.New().FilterCode("restaurant").Get(ctx)
 	if err != nil {
 		t.Fatalf("get restaurant after reparent: %v", err)
@@ -280,7 +285,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Fatalf("want path services.restaurant.cafe, got %q", gotCafe.Path)
 	}
 
-	// 2) Roots: должны вернуться только корни при FilterFatherCode(nil)
+	// 2) roots via FilterFatherCode(nil)
 	roots, err := q.New().FilterFatherCode(nil).OrderBy("pc.code ASC").Select(ctx)
 	if err != nil {
 		t.Fatalf("select roots: %v", err)
@@ -292,7 +297,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Fatalf("unexpected roots: %s, %s", roots[0].Code, roots[1].Code)
 	}
 
-	// 3) Нельзя удалить родителя, у которого есть дети (RESTRICT)
+	// 3) cannot delete parent with children (RESTRICT)
 	err = q.New().FilterCode("services").Delete(ctx)
 	if err == nil {
 		t.Fatalf("expected FK restriction when deleting parent with children")
@@ -302,12 +307,15 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Logf("delete parent failed as expected (driver msg): %v", err)
 	}
 
-	// 4) WithLocale('uk') для кафе — должен вернуть украинское имя
+	// 4) WithLocale('uk') for cafe
 	locCafe, err := q.New().WithLocale("uk").FilterCode("cafe").Get(ctx)
 	if err != nil {
 		t.Fatalf("get cafe with uk locale: %v", err)
 	}
-	if locCafe.Locale.Name != "Кав'ярня" {
-		t.Fatalf("want uk name `Кав'ярня`, got %q", locCafe.Locale.Name)
+	if locCafe.Name == nil || *locCafe.Name != "Кав'ярня" {
+		t.Fatalf("want uk name `Кав'ярня`, got %#v", locCafe.Name)
+	}
+	if locCafe.Locale == nil || *locCafe.Locale != "uk" {
+		t.Fatalf("want locale `uk`, got %#v", locCafe.Locale)
 	}
 }

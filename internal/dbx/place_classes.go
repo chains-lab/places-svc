@@ -17,17 +17,18 @@ type PlaceClass struct {
 	Status     string          `db:"status"`
 	Icon       string          `db:"icon"`
 	Path       string          `db:"path"` // ltree как text
-	Locale     LocaleForClass  `db:"locales"`
+	Locale     *string         `db:"locale"`
+	Name       *string         `db:"name"`
 	CreatedAt  time.Time       `db:"created_at"`
 	UpdatedAt  time.Time       `db:"updated_at"`
 }
 
-type LocaleForClass struct {
-	Locale string `db:"locale"`
-	Name   string `db:"name"`
-}
+//type LocaleForClass struct {
+//	Locale string `db:"locale"`
+//	Name   string `db:"name"`
+//}
 
-type ClassQ struct {
+type ClassesQ struct {
 	db       *sql.DB
 	selector sq.SelectBuilder
 	inserter sq.InsertBuilder
@@ -36,9 +37,9 @@ type ClassQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewClassQ(db *sql.DB) ClassQ {
+func NewClassesQ(db *sql.DB) ClassesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-	return ClassQ{
+	return ClassesQ{
 		db: db,
 		selector: b.Select(
 			"pc.code",
@@ -58,16 +59,20 @@ func NewClassQ(db *sql.DB) ClassQ {
 	}
 }
 
-func (q ClassQ) New() ClassQ { return NewClassQ(q.db) }
+func (q ClassesQ) New() ClassesQ { return NewClassesQ(q.db) }
 
-func (q ClassQ) Insert(ctx context.Context, in PlaceClass) error {
+func (q ClassesQ) Insert(ctx context.Context, in PlaceClass) error {
 	values := map[string]interface{}{
 		"code":   in.Code,
 		"status": in.Status,
 		"icon":   in.Icon,
 	}
 	if in.FatherCode != nil {
-		values["father_code"] = in.FatherCode.String // а не сам указатель
+		if in.FatherCode.Valid {
+			values["father_code"] = in.FatherCode.String
+		} else {
+			values["father_code"] = nil
+		}
 	} else {
 		values["father_code"] = nil
 	}
@@ -88,7 +93,7 @@ func (q ClassQ) Insert(ctx context.Context, in PlaceClass) error {
 func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (PlaceClass, error) {
 	var pc PlaceClass
 	var father sql.NullString
-	var locName, locLocale sql.NullString
+	var locName, locLocale *string
 
 	if err := scanner.Scan(
 		&pc.Code,
@@ -112,19 +117,13 @@ func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (PlaceClass, e
 	}
 
 	// Locale (пустая структура, если не найдено ни запрошенной, ни 'en')
-	if locName.Valid && locLocale.Valid {
-		pc.Locale = LocaleForClass{
-			Locale: locLocale.String,
-			Name:   locName.String,
-		}
-	} else {
-		pc.Locale = LocaleForClass{}
-	}
+	pc.Name = locName
+	pc.Locale = locLocale
 
 	return pc, nil
 }
 
-func (q ClassQ) Get(ctx context.Context) (PlaceClass, error) {
+func (q ClassesQ) Get(ctx context.Context) (PlaceClass, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
 		return PlaceClass{}, fmt.Errorf("build select query for %s: %w", PlaceClassesTable, err)
@@ -138,7 +137,7 @@ func (q ClassQ) Get(ctx context.Context) (PlaceClass, error) {
 	return scanPlaceClass(row)
 }
 
-func (q ClassQ) Select(ctx context.Context) ([]PlaceClass, error) {
+func (q ClassesQ) Select(ctx context.Context) ([]PlaceClass, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("build select query for %s: %w", PlaceClassesTable, err)
@@ -172,7 +171,7 @@ type UpdatePlaceClassParams struct {
 	UpdatedAt  time.Time
 }
 
-func (q ClassQ) Update(ctx context.Context, in UpdatePlaceClassParams) error {
+func (q ClassesQ) Update(ctx context.Context, in UpdatePlaceClassParams) error {
 	values := map[string]interface{}{
 		"updated_at": in.UpdatedAt,
 	}
@@ -198,7 +197,7 @@ func (q ClassQ) Update(ctx context.Context, in UpdatePlaceClassParams) error {
 	return err
 }
 
-func (q ClassQ) Delete(ctx context.Context) error {
+func (q ClassesQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
 		return fmt.Errorf("build delete query for %s: %w", PlaceClassesTable, err)
@@ -211,7 +210,7 @@ func (q ClassQ) Delete(ctx context.Context) error {
 	return err
 }
 
-func (q ClassQ) FilterCode(code string) ClassQ {
+func (q ClassesQ) FilterCode(code string) ClassesQ {
 	q.selector = q.selector.Where(sq.Eq{"pc.code": code})
 	q.updater = q.updater.Where(sq.Eq{"pc.code": code})
 	q.deleter = q.deleter.Where(sq.Eq{"code": code})
@@ -219,7 +218,7 @@ func (q ClassQ) FilterCode(code string) ClassQ {
 	return q
 }
 
-func (q ClassQ) FilterFatherCode(code *string) ClassQ {
+func (q ClassesQ) FilterFatherCode(code *string) ClassesQ {
 	if code == nil {
 		q.selector = q.selector.Where("pc.father_code IS NULL")
 		q.updater = q.updater.Where("pc.father_code IS NULL")
@@ -234,7 +233,7 @@ func (q ClassQ) FilterFatherCode(code *string) ClassQ {
 	return q
 }
 
-func (q ClassQ) FilterStatus(status string) ClassQ {
+func (q ClassesQ) FilterStatus(status string) ClassesQ {
 	q.selector = q.selector.Where(sq.Eq{"pc.status": status})
 	q.updater = q.updater.Where(sq.Eq{"pc.status": status})
 	q.deleter = q.deleter.Where(sq.Eq{"status": status})
@@ -242,7 +241,7 @@ func (q ClassQ) FilterStatus(status string) ClassQ {
 	return q
 }
 
-func (q ClassQ) FilterFatherCodeCycle(code string) ClassQ {
+func (q ClassesQ) FilterFatherCodeCycle(code string) ClassesQ {
 	cond := sq.Expr(
 		"pc.path <@ (SELECT path FROM "+PlaceClassesTable+" WHERE code = ?) AND pc.code <> ?",
 		code, code,
@@ -254,7 +253,7 @@ func (q ClassQ) FilterFatherCodeCycle(code string) ClassQ {
 	return q
 }
 
-func (q ClassQ) WithLocale(locale string) ClassQ {
+func (q ClassesQ) WithLocale(locale string) ClassesQ {
 	base := PlaceClassesTable
 	i18n := PlaceClassLocalesTable
 	l := sanitizeLocale(locale)
@@ -289,12 +288,12 @@ func (q ClassQ) WithLocale(locale string) ClassQ {
 	return q
 }
 
-func (q ClassQ) OrderBy(orderBy string) ClassQ {
+func (q ClassesQ) OrderBy(orderBy string) ClassesQ {
 	q.selector = q.selector.OrderBy(orderBy)
 	return q
 }
 
-func (q ClassQ) Count(ctx context.Context) (int, error) {
+func (q ClassesQ) Count(ctx context.Context) (int, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("build count query for %s: %w", PlaceClassesTable, err)
@@ -312,7 +311,7 @@ func (q ClassQ) Count(ctx context.Context) (int, error) {
 	return cnt, nil
 }
 
-func (q ClassQ) Paginate(limit, offset uint64) ClassQ {
+func (q ClassesQ) Paginate(limit, offset uint64) ClassesQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
 	return q
 }

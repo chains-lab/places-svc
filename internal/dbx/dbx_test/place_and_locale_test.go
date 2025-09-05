@@ -19,7 +19,7 @@ func insertBaseKindInfra(t *testing.T) {
 	now := time.Now().UTC()
 
 	// root class: food
-	if err := dbx.NewClassQ(db).Insert(ctx, dbx.PlaceClass{
+	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.PlaceClass{
 		Code:      "food",
 		Status:    "active",
 		Icon:      "🍔",
@@ -28,9 +28,9 @@ func insertBaseKindInfra(t *testing.T) {
 		t.Fatalf("insert class food: %v", err)
 	}
 
-	// child class: restaurant -> food  (ВАЖНО: сначала создать класс, потом i18n)
+	// child class: restaurant -> food
 	parent := sql.NullString{String: "food", Valid: true}
-	if err := dbx.NewClassQ(db).Insert(ctx, dbx.PlaceClass{
+	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.PlaceClass{
 		Code:       "restaurant",
 		FatherCode: &parent,
 		Status:     "active",
@@ -40,7 +40,7 @@ func insertBaseKindInfra(t *testing.T) {
 		t.Fatalf("insert class restaurant: %v", err)
 	}
 
-	// i18n (en fallback) — теперь FK на place_classes уже пройдёт
+	// i18n (en fallback)
 	if err := dbx.NewClassLocaleQ(db).Insert(ctx, dbx.PlaceClassLocale{
 		ClassCode: "restaurant", Locale: "en", Name: "Restaurant",
 	}); err != nil {
@@ -88,12 +88,12 @@ func insertPlaceLocale(t *testing.T, placeID uuid.UUID, locale, name, addr strin
 
 func setupPlaceWithInfra(t *testing.T) (db *sql.DB, ctx context.Context, placeID uuid.UUID) {
 	t.Helper()
-	setupClean(t)          // из предыдущих тестов
-	insertBaseKindInfra(t) // создаёт category/kind: category "infra", kind "power_station" (пример)
+	setupClean(t)
+	insertBaseKindInfra(t)
 	db = openDB(t)
 	ctx = context.Background()
 	placeID = uuid.New()
-	insertPlace(t, placeID) // вставляет базовый place с type_code на существующий kind
+	insertPlace(t, placeID)
 	return
 }
 
@@ -119,8 +119,17 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with uk: %v", err)
 	}
-	if got.Locale.Locale != "uk" || got.Locale.Name != "Кавʼярня" || got.Locale.Address != "вул. Головна, 1" || got.Locale.Description.Valid {
-		t.Fatalf("expected uk locale with name/address and empty description, got: %+v", got.Locale)
+	if got.Locale == nil || *got.Locale != "uk" {
+		t.Fatalf("expected locale uk, got: %#v", got.Locale)
+	}
+	if got.Name == nil || *got.Name != "Кавʼярня" {
+		t.Fatalf("expected uk name, got: %#v", got.Name)
+	}
+	if got.Address == nil || *got.Address != "вул. Головна, 1" {
+		t.Fatalf("expected uk address, got: %#v", got.Address)
+	}
+	if got.Description != nil && got.Description.Valid {
+		t.Fatalf("expected uk description = NULL, got: %+v", *got.Description)
 	}
 
 	// 2) fallback: WithLocale("fr") → en
@@ -128,8 +137,17 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with fr (fallback): %v", err)
 	}
-	if got.Locale.Locale != "en" || got.Locale.Name != "Coffee House" || got.Locale.Address != "Main St 1" || !got.Locale.Description.Valid || got.Locale.Description.String != "Cozy place" {
-		t.Fatalf("expected fallback to en/\"Coffee House\", got: %+v", got.Locale)
+	if got.Locale == nil || *got.Locale != "en" {
+		t.Fatalf("expected fallback locale en, got: %#v", got.Locale)
+	}
+	if got.Name == nil || *got.Name != "Coffee House" {
+		t.Fatalf("expected name Coffee House, got: %#v", got.Name)
+	}
+	if got.Address == nil || *got.Address != "Main St 1" {
+		t.Fatalf("expected address Main St 1, got: %#v", got.Address)
+	}
+	if got.Description == nil || !got.Description.Valid || got.Description.String != "Cozy place" {
+		t.Fatalf("expected description 'Cozy place', got: %#v", got.Description)
 	}
 
 	// 3) Update uk через PlaceLocalesQ.Update
@@ -152,8 +170,14 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get after update uk: %v", err)
 	}
-	if got.Locale.Name != newName || got.Locale.Address != newAddr || !got.Locale.Description.Valid || got.Locale.Description.String != newDesc.String {
-		t.Fatalf("expected updated uk locale, got: %+v", got.Locale)
+	if got.Name == nil || *got.Name != newName {
+		t.Fatalf("expected updated uk name, got: %#v", got.Name)
+	}
+	if got.Address == nil || *got.Address != newAddr {
+		t.Fatalf("expected updated uk address, got: %#v", got.Address)
+	}
+	if got.Description == nil || !got.Description.Valid || got.Description.String != newDesc.String {
+		t.Fatalf("expected updated uk description, got: %#v", got.Description)
 	}
 
 	// 4) Delete uk → fallback на en
@@ -164,8 +188,8 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get after delete uk: %v", err)
 	}
-	if got.Locale.Locale != "en" || got.Locale.Name != "Coffee House" {
-		t.Fatalf("expected fallback en after delete uk, got: %+v", got.Locale)
+	if got.Locale == nil || *got.Locale != "en" || got.Name == nil || *got.Name != "Coffee House" {
+		t.Fatalf("expected fallback en after delete uk, got: locale=%#v name=%#v", got.Locale, got.Name)
 	}
 
 	// 5) Delete en тоже → теперь нет ни точного, ни fallback → пустые локали
@@ -176,17 +200,19 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get after delete en: %v", err)
 	}
-	if got.Locale.Locale != "" || got.Locale.Name != "" || got.Locale.Address != "" || got.Locale.Description.Valid {
-		t.Fatalf("expected empty locale after all i18n deleted, got: %+v", got.Locale)
+	if got.Locale != nil || got.Name != nil || got.Address != nil || (got.Description != nil && got.Description.Valid) {
+		t.Fatalf("expected empty locale after all i18n deleted, got: locale=%#v name=%#v addr=%#v desc=%#v",
+			got.Locale, got.Name, got.Address, got.Description)
 	}
 
-	// 6) Без WithLocale вообще → локальные поля пустые (заглушки NULL AS loc_*)
+	// 6) Без WithLocale вообще → локальные поля пустые (NULL AS loc_*)
 	got, err = dbx.NewPlacesQ(db).FilterByID(placeID).Get(ctx)
 	if err != nil {
 		t.Fatalf("get without WithLocale: %v", err)
 	}
-	if got.Locale.Locale != "" || got.Locale.Name != "" || got.Locale.Address != "" || got.Locale.Description.Valid {
-		t.Fatalf("expected empty locale without WithLocale, got: %+v", got.Locale)
+	if got.Locale != nil || got.Name != nil || got.Address != nil || (got.Description != nil && got.Description.Valid) {
+		t.Fatalf("expected empty locale without WithLocale, got: locale=%#v name=%#v addr=%#v desc=%#v",
+			got.Locale, got.Name, got.Address, got.Description)
 	}
 }
 
@@ -202,7 +228,7 @@ func TestPlaces_WithLocale_SQL_IsParameterized(t *testing.T) {
 	// en локаль
 	insertPlaceLocale(t, placeID, "en", "Coffee House", "Main St 1", sql.NullString{Valid: true, String: "Cozy"})
 
-	// ХЕЛПЕР: добавь в пакет dbx метод:
+	// Требуется метод в dbx:
 	// func (q PlacesQ) SelectorToSql() (string, []any, error) { return q.selector.ToSql() }
 	sqlStr, args, err := dbx.NewPlacesQ(db).WithLocale("uk").FilterByID(placeID).SelectorToSql()
 	if err != nil {
@@ -212,6 +238,7 @@ func TestPlaces_WithLocale_SQL_IsParameterized(t *testing.T) {
 	t.Logf("SQL: %s", sqlStr)
 	t.Logf("Args: %#v", args)
 
+	// как минимум два placeholder-а для locale (EXISTS и THEN), плюс id
 	if len(args) < 3 {
 		t.Fatalf("expected at least 3 args, got %#v", args)
 	}
@@ -219,6 +246,7 @@ func TestPlaces_WithLocale_SQL_IsParameterized(t *testing.T) {
 	for _, a := range args {
 		if s, ok := a.(string); ok && s == "uk" {
 			hasUK = true
+			break
 		}
 	}
 	if !hasUK {
@@ -237,8 +265,12 @@ func TestPlaces_InvalidLocale_SanitizedToEN(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with invalid locale: %v", err)
 	}
-	if got.Locale.Locale != "en" || got.Locale.Name != "Coffee House" || got.Locale.Address != "Main St 1" || !got.Locale.Description.Valid || got.Locale.Description.String != "Cozy place" {
-		t.Fatalf("expected sanitized to en fallback, got: %+v", got.Locale)
+	if got.Locale == nil || *got.Locale != "en" ||
+		got.Name == nil || *got.Name != "Coffee House" ||
+		got.Address == nil || *got.Address != "Main St 1" ||
+		got.Description == nil || !got.Description.Valid || got.Description.String != "Cozy place" {
+		t.Fatalf("expected sanitized to en fallback, got: locale=%#v name=%#v addr=%#v desc=%#v",
+			got.Locale, got.Name, got.Address, got.Description)
 	}
 }
 
@@ -256,14 +288,14 @@ func TestPlaces_PartialLocale_NoFieldMixing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with uk: %v", err)
 	}
-	if got.Locale.Locale != "uk" {
-		t.Fatalf("expected uk locale, got: %q", got.Locale.Locale)
+	if got.Locale == nil || *got.Locale != "uk" {
+		t.Fatalf("expected uk locale, got: %#v", got.Locale)
 	}
-	if got.Locale.Name != "Кавʼярня" || got.Locale.Address != "вул. Головна, 1" {
-		t.Fatalf("expected uk name/address, got: %+v", got.Locale)
+	if got.Name == nil || *got.Name != "Кавʼярня" || got.Address == nil || *got.Address != "вул. Головна, 1" {
+		t.Fatalf("expected uk name/address, got: name=%#v addr=%#v", got.Name, got.Address)
 	}
-	if got.Locale.Description.Valid {
-		t.Fatalf("expected uk.description = NULL (no mixing from en), got: %+v", got.Locale.Description)
+	if got.Description != nil && got.Description.Valid {
+		t.Fatalf("expected uk.description = NULL (no mixing from en), got: %#v", got.Description)
 	}
 }
 
@@ -309,8 +341,9 @@ func TestPlaces_Fallback_NoEN_NoExact_ReturnsEmptyLocale(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with de (no en, no exact): %v", err)
 	}
-	if got.Locale.Locale != "" || got.Locale.Name != "" || got.Locale.Address != "" || got.Locale.Description.Valid {
-		t.Fatalf("expected empty locale (no en & no exact), got: %+v", got.Locale)
+	if got.Locale != nil || got.Name != nil || got.Address != nil || (got.Description != nil && got.Description.Valid) {
+		t.Fatalf("expected empty locale (no en & no exact), got: locale=%#v name=%#v addr=%#v desc=%#v",
+			got.Locale, got.Name, got.Address, got.Description)
 	}
 }
 
@@ -326,8 +359,12 @@ func TestPlaces_OnlyOtherLocale_ExactVsEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with fr: %v", err)
 	}
-	if got.Locale.Locale != "fr" || got.Locale.Name != "Maison du Café" || got.Locale.Address != "Rue Principale 1" || !got.Locale.Description.Valid || got.Locale.Description.String != "Sympa" {
-		t.Fatalf("expected exact fr, got: %+v", got.Locale)
+	if got.Locale == nil || *got.Locale != "fr" ||
+		got.Name == nil || *got.Name != "Maison du Café" ||
+		got.Address == nil || *got.Address != "Rue Principale 1" ||
+		got.Description == nil || !got.Description.Valid || got.Description.String != "Sympa" {
+		t.Fatalf("expected exact fr, got: locale=%#v name=%#v addr=%#v desc=%#v",
+			got.Locale, got.Name, got.Address, got.Description)
 	}
 
 	// другая: WithLocale("uk") → ни exact (uk), ни en → пустые локали
@@ -335,7 +372,8 @@ func TestPlaces_OnlyOtherLocale_ExactVsEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get with uk (no en): %v", err)
 	}
-	if got.Locale.Locale != "" || got.Locale.Name != "" || got.Locale.Address != "" || got.Locale.Description.Valid {
-		t.Fatalf("expected empty locale (no en & no exact), got: %+v", got.Locale)
+	if got.Locale != nil || got.Name != nil || got.Address != nil || (got.Description != nil && got.Description.Valid) {
+		t.Fatalf("expected empty locale (no en & no exact), got: locale=%#v name=%#v addr=%#v desc=%#v",
+			got.Locale, got.Name, got.Address, got.Description)
 	}
 }

@@ -25,20 +25,16 @@ type Place struct {
 	Ownership string    `db:"ownership"`
 	Point     orb.Point `db:"point"`
 
-	Locale LocaleForPlace
+	Locale      *string         `db:"locale"`
+	Name        *string         `db:"name"`
+	Address     *string         `db:"address"`
+	Description *sql.NullString `db:"description"`
 
 	Website sql.NullString `db:"website"`
 	Phone   sql.NullString `db:"phone"`
 
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
-}
-
-type LocaleForPlace struct {
-	Locale      string         `db:"locale"`
-	Name        string         `db:"name"`
-	Address     string         `db:"address"`
-	Description sql.NullString `db:"description"`
 }
 
 type PlacesQ struct {
@@ -87,9 +83,10 @@ func (q PlacesQ) New() PlacesQ { return NewPlacesQ(q.db) }
 
 func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	var (
-		p                                              Place
-		lon, lat                                       float64
-		locLocale, locName, locAddress, locDescription sql.NullString
+		p                              Place
+		lon, lat                       float64
+		locLocale, locName, locAddress *string
+		locDescription                 *sql.NullString
 	)
 	if err := scanner.Scan(
 		&p.ID,
@@ -113,19 +110,10 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		return Place{}, err
 	}
 
-	if locLocale.Valid {
-		p.Locale.Locale = locLocale.String
-	}
-	if locName.Valid {
-		p.Locale.Name = locName.String
-	}
-	if locAddress.Valid {
-		p.Locale.Address = locAddress.String
-	}
-	if locDescription.Valid {
-		p.Locale.Description.Valid = true
-		p.Locale.Description.String = locDescription.String
-	}
+	p.Locale = locLocale
+	p.Name = locName
+	p.Address = locAddress
+	p.Description = locDescription
 
 	p.Point = orb.Point{lon, lat}
 
