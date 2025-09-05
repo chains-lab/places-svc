@@ -9,7 +9,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-const PlaceClassTable = "place_class"
+const PlaceClassesTable = "place_classes"
 
 type PlaceClass struct {
 	Code       string          `db:"code"`
@@ -39,12 +39,22 @@ type ClassQ struct {
 func NewClassQ(db *sql.DB) ClassQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 	return ClassQ{
-		db:       db,
-		selector: b.Select("code", "father_code", "status", "icon", "path", "created_at", "updated_at").From(PlaceClassTable),
-		inserter: b.Insert(PlaceClassTable),
-		updater:  b.Update(PlaceClassTable),
-		deleter:  b.Delete(PlaceClassTable),
-		counter:  b.Select("COUNT(*) AS count").From(PlaceClassTable),
+		db: db,
+		selector: b.Select(
+			"pc.code",
+			"pc.father_code",
+			"pc.status",
+			"pc.icon",
+			"pc.path",
+			"pc.created_at",
+			"pc.updated_at",
+			"NULL AS loc_name",
+			"NULL AS loc_locale",
+		).From(PlaceClassesTable + " AS pc"),
+		inserter: b.Insert(PlaceClassesTable),
+		updater:  b.Update(PlaceClassesTable + " AS pc"),
+		deleter:  b.Delete(PlaceClassesTable + " AS pc"),
+		counter:  b.Select("COUNT(*) AS count").From(PlaceClassesTable + " AS pc"),
 	}
 }
 
@@ -52,15 +62,19 @@ func (q ClassQ) New() ClassQ { return NewClassQ(q.db) }
 
 func (q ClassQ) Insert(ctx context.Context, in PlaceClass) error {
 	values := map[string]interface{}{
-		"code":        in.Code,
-		"father_code": in.FatherCode,
-		"status":      in.Status,
-		"icon":        in.Icon,
+		"code":   in.Code,
+		"status": in.Status,
+		"icon":   in.Icon,
+	}
+	if in.FatherCode != nil {
+		values["father_code"] = in.FatherCode.String // а не сам указатель
+	} else {
+		values["father_code"] = nil
 	}
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
 	if err != nil {
-		return fmt.Errorf("build insert query for %s: %w", PlaceClassTable, err)
+		return fmt.Errorf("build insert query for %s: %w", PlaceClassesTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -113,7 +127,7 @@ func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (PlaceClass, e
 func (q ClassQ) Get(ctx context.Context) (PlaceClass, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return PlaceClass{}, fmt.Errorf("build select query for %s: %w", PlaceClassTable, err)
+		return PlaceClass{}, fmt.Errorf("build select query for %s: %w", PlaceClassesTable, err)
 	}
 	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -127,7 +141,7 @@ func (q ClassQ) Get(ctx context.Context) (PlaceClass, error) {
 func (q ClassQ) Select(ctx context.Context) ([]PlaceClass, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("build select query for %s: %w", PlaceClassTable, err)
+		return nil, fmt.Errorf("build select query for %s: %w", PlaceClassesTable, err)
 	}
 	var rows *sql.Rows
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -174,7 +188,7 @@ func (q ClassQ) Update(ctx context.Context, in UpdatePlaceClassParams) error {
 
 	query, args, err := q.updater.SetMap(values).ToSql()
 	if err != nil {
-		return fmt.Errorf("build update query for %s: %w", PlaceClassTable, err)
+		return fmt.Errorf("build update query for %s: %w", PlaceClassesTable, err)
 	}
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		_, err = tx.ExecContext(ctx, query, args...)
@@ -187,7 +201,7 @@ func (q ClassQ) Update(ctx context.Context, in UpdatePlaceClassParams) error {
 func (q ClassQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
-		return fmt.Errorf("build delete query for %s: %w", PlaceClassTable, err)
+		return fmt.Errorf("build delete query for %s: %w", PlaceClassesTable, err)
 	}
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		_, err = tx.ExecContext(ctx, query, args...)
@@ -198,8 +212,8 @@ func (q ClassQ) Delete(ctx context.Context) error {
 }
 
 func (q ClassQ) FilterCode(code string) ClassQ {
-	q.selector = q.selector.Where(sq.Eq{"code": code})
-	q.updater = q.updater.Where(sq.Eq{"code": code})
+	q.selector = q.selector.Where(sq.Eq{"pc.code": code})
+	q.updater = q.updater.Where(sq.Eq{"pc.code": code})
 	q.deleter = q.deleter.Where(sq.Eq{"code": code})
 	q.counter = q.counter.Where(sq.Eq{"code": code})
 	return q
@@ -207,77 +221,71 @@ func (q ClassQ) FilterCode(code string) ClassQ {
 
 func (q ClassQ) FilterFatherCode(code *string) ClassQ {
 	if code == nil {
-		q.selector = q.selector.Where("father_code IS NULL")
-		q.updater = q.updater.Where("father_code IS NULL")
+		q.selector = q.selector.Where("pc.father_code IS NULL")
+		q.updater = q.updater.Where("pc.father_code IS NULL")
 		q.deleter = q.deleter.Where("father_code IS NULL")
 		q.counter = q.counter.Where("father_code IS NULL")
 		return q
 	}
-	q.selector = q.selector.Where(sq.Eq{"father_code": *code})
-	q.updater = q.updater.Where(sq.Eq{"father_code": *code})
+	q.selector = q.selector.Where(sq.Eq{"pc.father_code": *code})
+	q.updater = q.updater.Where(sq.Eq{"pc.father_code": *code})
 	q.deleter = q.deleter.Where(sq.Eq{"father_code": *code})
 	q.counter = q.counter.Where(sq.Eq{"father_code": *code})
 	return q
 }
 
-func (q ClassQ) FilterFatherCodeCycle(code string) ClassQ {
-	cond := sq.Expr(
-		fmt.Sprintf("path <@ (SELECT path FROM %s WHERE code = ?) AND code <> ?", PlaceClassTable),
-		code, code,
-	)
-
-	q.selector = q.selector.Where(cond)
-	q.updater = q.updater.Where(cond)
-	q.deleter = q.deleter.Where(cond)
-	q.counter = q.counter.Where(cond)
-
-	return q
-}
-
 func (q ClassQ) FilterStatus(status string) ClassQ {
-	q.selector = q.selector.Where(sq.Eq{"status": status})
-	q.updater = q.updater.Where(sq.Eq{"status": status})
+	q.selector = q.selector.Where(sq.Eq{"pc.status": status})
+	q.updater = q.updater.Where(sq.Eq{"pc.status": status})
 	q.deleter = q.deleter.Where(sq.Eq{"status": status})
 	q.counter = q.counter.Where(sq.Eq{"status": status})
 	return q
 }
 
-func (q ClassQ) WithLocale(locale string) ClassQ {
-	base := PlaceClassTable
-	i18n := PlaceClassLocalesTable
+func (q ClassQ) FilterFatherCodeCycle(code string) ClassQ {
+	cond := sq.Expr(
+		"pc.path <@ (SELECT path FROM "+PlaceClassesTable+" WHERE code = ?) AND pc.code <> ?",
+		code, code,
+	)
+	q.selector = q.selector.Where(cond)
+	q.updater = q.updater.Where(cond)
+	q.deleter = q.deleter.Where(cond)
+	q.counter = q.counter.Where(cond)
+	return q
+}
 
-	subq := fmt.Sprintf(`
-		LATERAL (
-			SELECT i.name, i.locale
-			FROM %s i
-			WHERE i.class_code = %s.code
-			  AND i.locale IN ($1, 'en')
-			ORDER BY CASE
-				WHEN i.locale = $1 THEN 1
-				WHEN i.locale = 'en' THEN 2
-				ELSE 3
-			END
-			LIMIT 1
-		) loc
-	`, i18n, base)
+func (q ClassQ) WithLocale(locale string) ClassQ {
+	base := PlaceClassesTable
+	i18n := PlaceClassLocalesTable
+	l := sanitizeLocale(locale)
+
+	col := func(field, alias string) sq.Sqlizer {
+		return sq.Expr(
+			`CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM `+i18n+` i
+                    WHERE i.class_code = pc.code AND i.locale = ?
+                )
+                THEN (SELECT i.`+field+` FROM `+i18n+` i  WHERE i.class_code = pc.code AND i.locale = ?)
+                ELSE (SELECT i2.`+field+` FROM `+i18n+` i2 WHERE i2.class_code = pc.code AND i2.locale = 'en')
+            END AS `+alias,
+			l, l,
+		)
+	}
 
 	q.selector = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
 		Select(
-			base+".code",
-			base+".father_code",
-			base+".status",
-			base+".icon",
-			base+".path",
-			base+".created_at",
-			base+".updated_at",
-			"loc.name   AS loc_name",
-			"loc.locale AS loc_locale",
+			"pc.code",
+			"pc.father_code",
+			"pc.status",
+			"pc.icon",
+			"pc.path",
+			"pc.created_at",
+			"pc.updated_at",
 		).
-		From(base).
-		LeftJoin(subq + " ON TRUE")
-
-	q.selector = q.selector.PlaceholderFormat(sq.Dollar).RunWith(q.db).Suffix("", locale)
-
+		Column(col("name", "loc_name")).
+		Column(col("locale", "loc_locale")).
+		From(base + " AS pc")
 	return q
 }
 
@@ -289,7 +297,7 @@ func (q ClassQ) OrderBy(orderBy string) ClassQ {
 func (q ClassQ) Count(ctx context.Context) (int, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
-		return 0, fmt.Errorf("build count query for %s: %w", PlaceClassTable, err)
+		return 0, fmt.Errorf("build count query for %s: %w", PlaceClassesTable, err)
 	}
 	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {

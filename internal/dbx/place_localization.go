@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -134,13 +133,10 @@ type UpdatePlaceLocaleParams struct {
 	Name        *string
 	Address     *string
 	Description *sql.NullString
-	UpdatedAt   time.Time
 }
 
 func (q PlaceLocalesQ) Update(ctx context.Context, params UpdatePlaceLocaleParams) error {
-	updates := map[string]interface{}{
-		"updated_at": params.UpdatedAt,
-	}
+	updates := map[string]interface{}{}
 	if params.Name != nil {
 		updates["name"] = *params.Name
 	}

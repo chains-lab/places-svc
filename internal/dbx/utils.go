@@ -24,7 +24,7 @@ func sanitizeLocale(l string) string {
 	return "en"
 }
 
-func (q CategoryQ) SelectorToSql() (string, []any, error) {
+func (q ClassQ) SelectorToSql() (string, []any, error) {
 	return q.selector.ToSql()
 }
 

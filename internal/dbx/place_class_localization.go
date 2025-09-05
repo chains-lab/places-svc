@@ -9,7 +9,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-const PlaceClassLocalesTable = "place_сlass_i18n"
+const PlaceClassLocalesTable = "place_class_i18n"
 
 type PlaceClassLocale struct {
 	ClassCode string `db:"class_code"`

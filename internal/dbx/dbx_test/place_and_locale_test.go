@@ -15,32 +15,36 @@ import (
 func insertBaseKindInfra(t *testing.T) {
 	t.Helper()
 	db := openDB(t)
+	ctx := context.Background()
 	now := time.Now().UTC()
 
-	// category
-	if err := dbx.NewCategoryQ(db).Insert(context.Background(), dbx.PlaceCategory{
+	// root class: food
+	if err := dbx.NewClassQ(db).Insert(ctx, dbx.PlaceClass{
 		Code:      "food",
 		Status:    "active",
 		Icon:      "🍔",
 		CreatedAt: now, UpdatedAt: now,
 	}); err != nil {
-		t.Fatalf("insert category: %v", err)
+		t.Fatalf("insert class food: %v", err)
 	}
-	// kind
-	if err := dbx.NewPlaceKindsQ(db).Insert(context.Background(), dbx.PlaceKind{
-		Code:         "restaurant",
-		CategoryCode: "food",
-		Status:       "active",
-		Icon:         "🍽️",
-		CreatedAt:    now, UpdatedAt: now,
+
+	// child class: restaurant -> food  (ВАЖНО: сначала создать класс, потом i18n)
+	parent := sql.NullString{String: "food", Valid: true}
+	if err := dbx.NewClassQ(db).Insert(ctx, dbx.PlaceClass{
+		Code:       "restaurant",
+		FatherCode: &parent,
+		Status:     "active",
+		Icon:       "🍽️",
+		CreatedAt:  now, UpdatedAt: now,
 	}); err != nil {
-		t.Fatalf("insert kind: %v", err)
+		t.Fatalf("insert class restaurant: %v", err)
 	}
-	// kind i18n (en fallback)
-	if err := dbx.NewKindLocaleQ(db).Insert(context.Background(), dbx.PlaceKindLocale{
-		KindCode: "restaurant", Locale: "en", Name: "Restaurant",
+
+	// i18n (en fallback) — теперь FK на place_classes уже пройдёт
+	if err := dbx.NewClassLocaleQ(db).Insert(ctx, dbx.PlaceClassLocale{
+		ClassCode: "restaurant", Locale: "en", Name: "Restaurant",
 	}); err != nil {
-		t.Fatalf("insert kind en: %v", err)
+		t.Fatalf("insert class_i18n restaurant en: %v", err)
 	}
 }
 
@@ -52,7 +56,7 @@ func insertPlace(t *testing.T, id uuid.UUID) {
 		ID:            id,
 		CityID:        uuid.New(),
 		DistributorID: uuid.NullUUID{}, // NULL
-		KindCode:      "restaurant",
+		Class:         "restaurant",
 		Status:        "active",
 		Verified:      true,
 		Ownership:     "private",
@@ -140,7 +144,6 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 			Name:        &newName,
 			Address:     &newAddr,
 			Description: &newDesc,
-			UpdatedAt:   time.Now().UTC(),
 		}); err != nil {
 		t.Fatalf("update uk: %v", err)
 	}

@@ -17,7 +17,7 @@ CREATE TABLE "places" (
     "id"             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     "city_id"        UUID NOT NULL,
     "distributor_id" UUID,
-    "kind_code"      VARCHAR(50) NOT NULL REFERENCES place_kinds(code) ON DELETE RESTRICT ON UPDATE CASCADE,
+    "class"          VARCHAR(50) NOT NULL REFERENCES place_classes(code) ON DELETE RESTRICT ON UPDATE CASCADE,
 
     "status"         place_statuses         NOT NULL,
     "verified"       BOOLEAN                NOT NULL DEFAULT FALSE,
