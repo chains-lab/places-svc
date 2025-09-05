@@ -18,20 +18,27 @@ type Place struct {
 	ID            uuid.UUID     `db:"id"`
 	CityID        uuid.UUID     `db:"city_id"`
 	DistributorID uuid.NullUUID `db:"distributor_id"`
-	TypeCode      string        `db:"type_code"`
+	KindCode      string        `db:"kind_code"`
 
 	Status    string    `db:"status"`
 	Verified  bool      `db:"verified"`
 	Ownership string    `db:"ownership"`
 	Point     orb.Point `db:"point"`
 
-	Locale PlaceLocale
+	Locale LocaleForPlace
 
 	Website sql.NullString `db:"website"`
 	Phone   sql.NullString `db:"phone"`
 
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
+}
+
+type LocaleForPlace struct {
+	Locale      string         `db:"locale"`
+	Name        string         `db:"name"`
+	Address     string         `db:"address"`
+	Description sql.NullString `db:"description"`
 }
 
 type PlacesQ struct {
@@ -50,7 +57,7 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 		"p.id",
 		"p.city_id",
 		"p.distributor_id",
-		"p.type_code",
+		"p.kind_code",
 		"p.status",
 		"p.verified",
 		"p.ownership",
@@ -88,7 +95,7 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		&p.ID,
 		&p.CityID,
 		&p.DistributorID,
-		&p.TypeCode, // <— было TypeCode
+		&p.KindCode, // <— было KindCode
 		&p.Status,
 		&p.Verified,
 		&p.Ownership,
@@ -130,7 +137,7 @@ func (q PlacesQ) Insert(ctx context.Context, in Place) error {
 		"id":             in.ID,
 		"city_id":        in.CityID,
 		"distributor_id": in.DistributorID,
-		"type_code":      in.TypeCode,
+		"kind_code":      in.KindCode,
 		"status":         in.Status,
 		"verified":       in.Verified,
 		"ownership":      in.Ownership,
@@ -209,7 +216,7 @@ func (q PlacesQ) Select(ctx context.Context) ([]Place, error) {
 }
 
 type UpdatePlaceParams struct {
-	typeCode  *string
+	KindCode  *string
 	Status    *string
 	Verified  *bool
 	Ownership *string
@@ -225,8 +232,8 @@ func (q PlacesQ) Update(ctx context.Context, p UpdatePlaceParams) error {
 	values := map[string]interface{}{
 		"updated_at": p.UpdatedAt,
 	}
-	if p.typeCode != nil {
-		values["type_code"] = *p.typeCode
+	if p.KindCode != nil {
+		values["kind_code"] = *p.KindCode
 	}
 	if p.Status != nil {
 		values["status"] = *p.Status
@@ -322,11 +329,11 @@ func (q PlacesQ) FilterByDistributorID(distributorID uuid.NullUUID) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterByTypeCode(typeCode ...string) PlacesQ {
-	q.selector = q.selector.Where(sq.Eq{"p.type_code": typeCode})
-	q.counter = q.counter.Where(sq.Eq{"p.type_code": typeCode})
-	q.updater = q.updater.Where(sq.Eq{"type_code": typeCode})
-	q.deleter = q.deleter.Where(sq.Eq{"type_code": typeCode})
+func (q PlacesQ) KIndCode(kindCode ...string) PlacesQ {
+	q.selector = q.selector.Where(sq.Eq{"p.kind_code": kindCode})
+	q.counter = q.counter.Where(sq.Eq{"p.kind_code": kindCode})
+	q.updater = q.updater.Where(sq.Eq{"kind_code": kindCode})
+	q.deleter = q.deleter.Where(sq.Eq{"kind_code": kindCode})
 
 	return q
 }
@@ -391,7 +398,7 @@ func (q PlacesQ) FilterWithinPolygonWKT(polyWKT string) PlacesQ {
 }
 
 func (q PlacesQ) FilterCategoryCode(categoryCode ...string) PlacesQ {
-	join := fmt.Sprintf("%s t ON t.code = p.type_code", PlaceKindsTable)
+	join := fmt.Sprintf("%s t ON t.code = p.kind_code", PlaceKindsTable)
 
 	q.selector = q.selector.LeftJoin(join).Where(sq.Eq{"t.category_code": categoryCode})
 	q.counter = q.counter.LeftJoin(join).Where(sq.Eq{"t.category_code": categoryCode})
@@ -399,7 +406,7 @@ func (q PlacesQ) FilterCategoryCode(categoryCode ...string) PlacesQ {
 	sub := sq.
 		Select("1").
 		From(PlaceKindsTable + " t").
-		Where(sq.Expr("t.code = places.type_code")).
+		Where(sq.Expr("t.code = places.kind_code")).
 		Where(sq.Eq{"t.category_code": categoryCode})
 
 	subSQL, subArgs, _ := sub.ToSql()
@@ -533,7 +540,7 @@ func (q PlacesQ) WithLocale(locale string) PlacesQ {
 			"p.id",
 			"p.city_id",
 			"p.distributor_id",
-			"p.type_code",
+			"p.kind_code",
 			"p.status",
 			"p.verified",
 			"p.ownership",

@@ -52,7 +52,7 @@ func insertPlace(t *testing.T, id uuid.UUID) {
 		ID:            id,
 		CityID:        uuid.New(),
 		DistributorID: uuid.NullUUID{}, // NULL
-		TypeCode:      "restaurant",
+		KindCode:      "restaurant",
 		Status:        "active",
 		Verified:      true,
 		Ownership:     "private",

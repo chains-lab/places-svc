@@ -4,19 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 )
 
-const PlaceKindLocalesTable = "place_kind_i18n"
+const PlaceClassLocalesTable = "place_сlass_i18n"
 
-type PlaceKindLocale struct {
-	KindCode string `db:"kind_code"`
-	Locale   string `db:"locale"`
-	Name     string `db:"name"`
+type PlaceClassLocale struct {
+	ClassCode string `db:"class_code"`
+	Locale    string `db:"locale"`
+	Name      string `db:"name"`
 }
 
-type KindLocaleQ struct {
+type ClassLocaleQ struct {
 	db       *sql.DB
 	selector sq.SelectBuilder
 	inserter sq.InsertBuilder
@@ -25,29 +26,29 @@ type KindLocaleQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewKindLocaleQ(db *sql.DB) KindLocaleQ {
+func NewClassLocaleQ(db *sql.DB) ClassLocaleQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-	return KindLocaleQ{
+	return ClassLocaleQ{
 		db:       db,
-		selector: b.Select("*").From(PlaceKindLocalesTable),
-		inserter: b.Insert(PlaceKindLocalesTable),
-		updater:  b.Update(PlaceKindLocalesTable),
-		deleter:  b.Delete(PlaceKindLocalesTable),
+		selector: b.Select("*").From(PlaceClassLocalesTable),
+		inserter: b.Insert(PlaceClassLocalesTable),
+		updater:  b.Update(PlaceClassLocalesTable),
+		deleter:  b.Delete(PlaceClassLocalesTable),
 	}
 }
 
-func (q KindLocaleQ) New() KindLocaleQ { return NewKindLocaleQ(q.db) }
+func (q ClassLocaleQ) New() ClassLocaleQ { return NewClassLocaleQ(q.db) }
 
-func (q KindLocaleQ) Insert(ctx context.Context, in PlaceKindLocale) error {
+func (q ClassLocaleQ) Insert(ctx context.Context, in PlaceClassLocale) error {
 	values := map[string]interface{}{
-		"kind_code": in.KindCode,
-		"locale":    in.Locale,
-		"name":      in.Name,
+		"class_code": in.ClassCode,
+		"locale":     in.Locale,
+		"name":       in.Name,
 	}
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
 	if err != nil {
-		return fmt.Errorf("building insert query for %s: %w", PlaceKindLocalesTable, err)
+		return fmt.Errorf("building insert query for %s: %w", PlaceClassLocalesTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -59,29 +60,29 @@ func (q KindLocaleQ) Insert(ctx context.Context, in PlaceKindLocale) error {
 	return err
 }
 
-func (q KindLocaleQ) Upsert(ctx context.Context, in PlaceKindLocale) error {
+func (q ClassLocaleQ) Upsert(ctx context.Context, in PlaceClassLocale) error {
 	query := fmt.Sprintf(`
-		INSERT INTO %s (kind_code, locale, name)
+		INSERT INTO %s (class_code, locale, name)
 		VALUES ($1, $2, $3)
-		ON CONFLICT (kind_code, locale) DO UPDATE
+		ON CONFLICT (class_code, locale) DO UPDATE
 		SET name = EXCLUDED.name
-	`, PlaceKindLocalesTable)
+    `, PlaceClassLocalesTable)
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		_, err := tx.ExecContext(ctx, query, in.KindCode, in.Locale, in.Name)
+		_, err := tx.ExecContext(ctx, query, in.ClassCode, in.Locale, in.Name)
 		return err
 	}
-	_, err := q.db.ExecContext(ctx, query, in.KindCode, in.Locale, in.Name)
+	_, err := q.db.ExecContext(ctx, query, in.ClassCode, in.Locale, in.Name)
 	return err
 }
 
-func (q KindLocaleQ) Get(ctx context.Context) (PlaceKindLocale, error) {
+func (q ClassLocaleQ) Get(ctx context.Context) (PlaceClassLocale, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return PlaceKindLocale{}, fmt.Errorf("building select query for %s: %w", PlaceKindLocalesTable, err)
+		return PlaceClassLocale{}, fmt.Errorf("building select query for %s: %w", PlaceClassLocalesTable, err)
 	}
 
-	var out PlaceKindLocale
+	var out PlaceClassLocale
 	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)
@@ -89,7 +90,7 @@ func (q KindLocaleQ) Get(ctx context.Context) (PlaceKindLocale, error) {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
 	err = row.Scan(
-		&out.KindCode,
+		&out.ClassCode,
 		&out.Locale,
 		&out.Name,
 	)
@@ -97,10 +98,10 @@ func (q KindLocaleQ) Get(ctx context.Context) (PlaceKindLocale, error) {
 	return out, err
 }
 
-func (q KindLocaleQ) Select(ctx context.Context) ([]PlaceKindLocale, error) {
+func (q ClassLocaleQ) Select(ctx context.Context) ([]PlaceClassLocale, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("building select query for %s: %w", PlaceKindLocalesTable, err)
+		return nil, fmt.Errorf("building select query for %s: %w", PlaceClassLocalesTable, err)
 	}
 
 	var rows *sql.Rows
@@ -114,11 +115,11 @@ func (q KindLocaleQ) Select(ctx context.Context) ([]PlaceKindLocale, error) {
 	}
 	defer rows.Close()
 
-	var out []PlaceKindLocale
+	var out []PlaceClassLocale
 	for rows.Next() {
-		var item PlaceKindLocale
+		var item PlaceClassLocale
 		err = rows.Scan(
-			&item.KindCode,
+			&item.ClassCode,
 			&item.Locale,
 			&item.Name,
 		)
@@ -131,16 +132,16 @@ func (q KindLocaleQ) Select(ctx context.Context) ([]PlaceKindLocale, error) {
 	return out, err
 }
 
-func (q KindLocaleQ) FilterKindCode(code string) KindLocaleQ {
-	q.selector = q.selector.Where(sq.Eq{"kind_code": code})
-	q.counter = q.counter.Where(sq.Eq{"kind_code": code})
-	q.updater = q.updater.Where(sq.Eq{"kind_code": code})
-	q.deleter = q.deleter.Where(sq.Eq{"kind_code": code})
+func (q ClassLocaleQ) FilterClassCode(code string) ClassLocaleQ {
+	q.selector = q.selector.Where(sq.Eq{"class_code": code})
+	q.counter = q.counter.Where(sq.Eq{"class_code": code})
+	q.updater = q.updater.Where(sq.Eq{"class_code": code})
+	q.deleter = q.deleter.Where(sq.Eq{"class_code": code})
 
 	return q
 }
 
-func (q KindLocaleQ) FilterLocale(locale string) KindLocaleQ {
+func (q ClassLocaleQ) FilterLocale(locale string) ClassLocaleQ {
 	q.selector = q.selector.Where(sq.Eq{"locale": locale})
 	q.counter = q.counter.Where(sq.Eq{"locale": locale})
 	q.updater = q.updater.Where(sq.Eq{"locale": locale})
@@ -149,7 +150,7 @@ func (q KindLocaleQ) FilterLocale(locale string) KindLocaleQ {
 	return q
 }
 
-func (q KindLocaleQ) FilterNameLike(name string) KindLocaleQ {
+func (q ClassLocaleQ) FilterNameLike(name string) ClassLocaleQ {
 	q.selector = q.selector.Where(sq.Like{"name": name})
 	q.counter = q.counter.Where(sq.Like{"name": name})
 	q.updater = q.updater.Where(sq.Like{"name": name})
@@ -158,19 +159,22 @@ func (q KindLocaleQ) FilterNameLike(name string) KindLocaleQ {
 	return q
 }
 
-type UpdateKindLocaleParams struct {
-	Name *string
+type UpdateClassLocaleParams struct {
+	Name      *string
+	UpdatedAt time.Time
 }
 
-func (q KindLocaleQ) Update(ctx context.Context, in UpdateKindLocaleParams) error {
-	values := map[string]interface{}{}
+func (q ClassLocaleQ) Update(ctx context.Context, in UpdateClassLocaleParams) error {
+	values := map[string]interface{}{
+		"updated_at": in.UpdatedAt,
+	}
 	if in.Name != nil {
 		values["name"] = *in.Name
 	}
 
 	query, args, err := q.updater.SetMap(values).ToSql()
 	if err != nil {
-		return fmt.Errorf("building update query for %s: %w", PlaceKindLocalesTable, err)
+		return fmt.Errorf("building update query for %s: %w", PlaceClassLocalesTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
@@ -182,10 +186,10 @@ func (q KindLocaleQ) Update(ctx context.Context, in UpdateKindLocaleParams) erro
 	return err
 }
 
-func (q KindLocaleQ) Delete(ctx context.Context) error {
+func (q ClassLocaleQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
-		return fmt.Errorf("building delete query for %s: %w", PlaceKindLocalesTable, err)
+		return fmt.Errorf("building delete query for %s: %w", PlaceClassLocalesTable, err)
 	}
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
