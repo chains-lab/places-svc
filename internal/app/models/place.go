@@ -23,8 +23,9 @@ type Place struct {
 	Name        string         `json:"name"`
 	Address     string         `json:"address"`
 	Description sql.NullString `json:"description"`
-	Website     *string        `json:"website"`
-	Phone       *string        `json:"phone"`
+
+	Website *string `json:"website"`
+	Phone   *string `json:"phone"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

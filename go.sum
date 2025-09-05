@@ -10,6 +10,8 @@ github.com/chains-lab/ape v0.4.11 h1:ZDz+CTKsrHFPaYSbDwuUaj/kFAkre3Jd6LugPW8MsqQ
 github.com/chains-lab/ape v0.4.11/go.mod h1:1xFb/pocztb1NW6ghAMJxuez/nausXgnHs+68pCzolI=
 github.com/chains-lab/logium v0.1.1 h1:C5ZroPavjzmqFxW6ajga++NhgpduudSd7uvgWiYZcxw=
 github.com/chains-lab/logium v0.1.1/go.mod h1:6FqyL1KnUmThTZpZt5UzvTSukH3vgz+bgWkODxa3hxw=
+github.com/chains-lab/pagi v0.1.4 h1:Gnh5XWR60d1Nfz6C7XuZpRH2zbCWqbkMRwz2UuB62L0=
+github.com/chains-lab/pagi v0.1.4/go.mod h1:Sd6bQC+IlZBggk78qI76Beed3yf5Yp+qPIwUpFTfTC0=
 github.com/chains-lab/svc-errors v0.2.2 h1:70aJpuCHhptxOXQTIntfSwG8xi0WmthSPUpj3o2F0ds=
 github.com/chains-lab/svc-errors v0.2.2/go.mod h1:+DJZ+olXjBFfb3CdJaaJl1XEmIrmtGty9d78t39IXxA=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -19,6 +21,8 @@ github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHk
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/fsnotify/fsnotify v1.8.0 h1:dAwr6QBTBZIkG8roQaJjGof0pp0EeF+tNV7YBP3F/8M=
 github.com/fsnotify/fsnotify v1.8.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
+github.com/go-chi/chi/v5 v5.2.2 h1:CMwsvRVTbXVytCk1Wd72Zy1LAsAh9GxMmSNWLHCG618=
+github.com/go-chi/chi/v5 v5.2.2/go.mod h1:L2yAIGWB3H+phAw1NxKwWM+7eUH/lU8pOMm5hHcoops=
 github.com/go-gorp/gorp/v3 v3.1.0 h1:ItKF/Vbuj31dmV4jxA1qblpSwkl9g1typ24xoe70IGs=
 github.com/go-gorp/gorp/v3 v3.1.0/go.mod h1:dLEjIyyRNiXvNZ8PSmzpt1GsWAUK8kjVhEpjH8TixEw=
 github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=

@@ -28,7 +28,7 @@ type PlaceLocalesQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewPlaceDetailsQ(db *sql.DB) PlaceLocalesQ {
+func NewPlaceLocalesQ(db *sql.DB) PlaceLocalesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 	return PlaceLocalesQ{
@@ -41,7 +41,7 @@ func NewPlaceDetailsQ(db *sql.DB) PlaceLocalesQ {
 	}
 }
 
-func (q PlaceLocalesQ) New() PlaceLocalesQ { return NewPlaceDetailsQ(q.db) }
+func (q PlaceLocalesQ) New() PlaceLocalesQ { return NewPlaceLocalesQ(q.db) }
 
 func (q PlaceLocalesQ) Insert(ctx context.Context, in PlaceLocale) error {
 	values := map[string]interface{}{

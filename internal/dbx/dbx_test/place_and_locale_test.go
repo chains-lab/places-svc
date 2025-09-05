@@ -19,8 +19,9 @@ func insertBaseKindInfra(t *testing.T) {
 	now := time.Now().UTC()
 
 	// root class: food
-	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.PlaceClass{
+	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.InsertPlaceClass{
 		Code:      "food",
+		Father:    sql.NullString{Valid: false},
 		Status:    "active",
 		Icon:      "🍔",
 		CreatedAt: now, UpdatedAt: now,
@@ -30,19 +31,19 @@ func insertBaseKindInfra(t *testing.T) {
 
 	// child class: restaurant -> food
 	parent := sql.NullString{String: "food", Valid: true}
-	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.PlaceClass{
-		Code:       "restaurant",
-		FatherCode: &parent,
-		Status:     "active",
-		Icon:       "🍽️",
-		CreatedAt:  now, UpdatedAt: now,
+	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.InsertPlaceClass{
+		Code:      "restaurant",
+		Father:    parent,
+		Status:    "active",
+		Icon:      "🍽️",
+		CreatedAt: now, UpdatedAt: now,
 	}); err != nil {
 		t.Fatalf("insert class restaurant: %v", err)
 	}
 
 	// i18n (en fallback)
 	if err := dbx.NewClassLocaleQ(db).Insert(ctx, dbx.PlaceClassLocale{
-		ClassCode: "restaurant", Locale: "en", Name: "Restaurant",
+		Class: "restaurant", Locale: "en", Name: "Restaurant",
 	}); err != nil {
 		t.Fatalf("insert class_i18n restaurant en: %v", err)
 	}
@@ -74,7 +75,7 @@ func insertPlace(t *testing.T, id uuid.UUID) {
 func insertPlaceLocale(t *testing.T, placeID uuid.UUID, locale, name, addr string, desc sql.NullString) {
 	t.Helper()
 	db := openDB(t)
-	err := dbx.NewPlaceDetailsQ(db).Insert(context.Background(), dbx.PlaceLocale{
+	err := dbx.NewPlaceLocalesQ(db).Insert(context.Background(), dbx.PlaceLocale{
 		PlaceID:     placeID,
 		Locale:      locale,
 		Name:        name,
@@ -155,7 +156,7 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	newAddr := "вул. Оновлена, 5"
 	newDesc := sql.NullString{Valid: true, String: "Оновлений опис"}
 
-	if err := dbx.NewPlaceDetailsQ(db).
+	if err := dbx.NewPlaceLocalesQ(db).
 		FilterPlaceID(placeID).
 		FilterByLocale("uk").
 		Update(ctx, dbx.UpdatePlaceLocaleParams{
@@ -181,7 +182,7 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	}
 
 	// 4) Delete uk → fallback на en
-	if err := dbx.NewPlaceDetailsQ(db).FilterPlaceID(placeID).FilterByLocale("uk").Delete(ctx); err != nil {
+	if err := dbx.NewPlaceLocalesQ(db).FilterPlaceID(placeID).FilterByLocale("uk").Delete(ctx); err != nil {
 		t.Fatalf("delete uk: %v", err)
 	}
 	got, err = dbx.NewPlacesQ(db).WithLocale("uk").FilterByID(placeID).Get(ctx)
@@ -193,7 +194,7 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	}
 
 	// 5) Delete en тоже → теперь нет ни точного, ни fallback → пустые локали
-	if err := dbx.NewPlaceDetailsQ(db).FilterPlaceID(placeID).FilterByLocale("en").Delete(ctx); err != nil {
+	if err := dbx.NewPlaceLocalesQ(db).FilterPlaceID(placeID).FilterByLocale("en").Delete(ctx); err != nil {
 		t.Fatalf("delete en: %v", err)
 	}
 	got, err = dbx.NewPlacesQ(db).WithLocale("fr").FilterByID(placeID).Get(ctx)

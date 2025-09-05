@@ -1,38 +1,38 @@
 -- +migrate Up
 CREATE EXTENSION IF NOT EXISTS ltree;
 
-CREATE TYPE class_statuses AS ENUM (
+CREATE TYPE place_class_statuses AS ENUM (
     'active',
-    'deprecated'
+    'inactive'
 );
 
 -- Основная таблица-дерево
 CREATE TABLE IF NOT EXISTS place_classes (
-    code         VARCHAR(16)   PRIMARY KEY,
-    father_code  VARCHAR(16)   NULL REFERENCES place_classes(code) ON DELETE RESTRICT ON UPDATE CASCADE,
-    status       class_statuses NOT NULL DEFAULT 'active',
-    icon         VARCHAR(255)  NOT NULL,
+    code         VARCHAR(16)          PRIMARY KEY,
+    father       VARCHAR(16)          NULL REFERENCES place_classes(code) ON DELETE RESTRICT ON UPDATE CASCADE,
+    status       place_class_statuses NOT NULL DEFAULT 'active',
+    icon         VARCHAR(255)         NOT NULL,
 
     path         LTREE         NOT NULL,      -- материализованный путь, напр. 'cars.suv.compact'
     created_at   TIMESTAMPTZ   NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
     updated_at   TIMESTAMPTZ   NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
 
     CHECK (code ~ '^[a-z_]{1,16}$'),
-    CHECK (father_code IS NULL OR father_code <> code)
+    CHECK (father IS NULL OR father <> code)
 );
 
 CREATE TABLE IF NOT EXISTS place_class_i18n (
-    class_code  VARCHAR(16) NOT NULL REFERENCES place_classes(code) ON DELETE CASCADE,
-    locale      TEXT        NOT NULL CHECK (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
-    name        VARCHAR(255) NOT NULL,
+    class  VARCHAR(16) NOT NULL REFERENCES place_classes(code) ON DELETE CASCADE,
+    locale TEXT        NOT NULL CHECK (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+    name   VARCHAR(255) NOT NULL,
 
-    PRIMARY KEY (class_code, locale),
+    PRIMARY KEY (class, locale),
     UNIQUE (name, locale)
 );
 
 -- 1) BEFORE INSERT/UPDATE: вычислить/пересчитать path
 --   - на INSERT: path = (parent.path || code) или просто code
---   - на UPDATE code/father_code: пересчитать path узла и всего поддерева
+--   - на UPDATE code/father: пересчитать path узла и всего поддерева
 --   - анти-цикл: запрещаем ставить parent из своего поддерева
 
 -- +migrate StatementBegin
@@ -46,10 +46,10 @@ DECLARE
 BEGIN
     IF TG_OP = 'INSERT' THEN
     -- получить путь родителя
-        IF NEW.father_code IS NOT NULL THEN
-            SELECT path INTO parent_path FROM place_classes WHERE code = NEW.father_code;
+        IF NEW.father IS NOT NULL THEN
+            SELECT path INTO parent_path FROM place_classes WHERE code = NEW.father;
             IF parent_path IS NULL THEN
-                RAISE EXCEPTION 'parent % not found for %', NEW.father_code, NEW.code;
+                RAISE EXCEPTION 'parent % not found for %', NEW.father, NEW.code;
             END IF;
             NEW.path := parent_path || NEW.code::ltree;
         ELSE
@@ -63,8 +63,8 @@ BEGIN
 
     -- UPDATE
     IF TG_OP = 'UPDATE' THEN
-    -- если ни code, ни father_code не менялись — просто обновим updated_at и выйдем
-        IF NEW.code = OLD.code AND COALESCE(NEW.father_code,'') = COALESCE(OLD.father_code,'') THEN
+    -- если ни code, ни father не менялись — просто обновим updated_at и выйдем
+        IF NEW.code = OLD.code AND COALESCE(NEW.father,'') = COALESCE(OLD.father,'') THEN
             NEW.updated_at := now() AT TIME ZONE 'UTC';
             RETURN NEW;
         END IF;
@@ -72,18 +72,18 @@ BEGIN
         old_path := OLD.path;
 
         -- анти-цикл: нельзя поставить родителя из своего поддерева
-        IF NEW.father_code IS NOT NULL THEN
+        IF NEW.father IS NOT NULL THEN
             PERFORM 1
             FROM place_classes p
-            WHERE p.code = NEW.father_code
+            WHERE p.code = NEW.father
                 AND p.path <@ old_path;  -- родитель лежит внутри нашего поддерева?
             IF FOUND THEN
-                RAISE EXCEPTION 'cycle detected: % cannot be parent of %', NEW.father_code, NEW.code;
+                RAISE EXCEPTION 'cycle detected: % cannot be parent of %', NEW.father, NEW.code;
             END IF;
 
-            SELECT path INTO parent_path FROM place_classes WHERE code = NEW.father_code;
+            SELECT path INTO parent_path FROM place_classes WHERE code = NEW.father;
             IF parent_path IS NULL THEN
-                RAISE EXCEPTION 'parent % not found for %', NEW.father_code, NEW.code;
+                RAISE EXCEPTION 'parent % not found for %', NEW.father, NEW.code;
             END IF;
             new_path := parent_path || NEW.code::ltree;
         ELSE
@@ -118,27 +118,27 @@ END;
 $pc$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_place_class_before_ins_upd_path
-BEFORE INSERT OR UPDATE OF code, father_code
+BEFORE INSERT OR UPDATE OF code, father
 ON place_classes
 FOR EACH ROW
 EXECUTE FUNCTION place_class_before_ins_upd_path();
 -- +migrate StatementEnd
 
 -- 2) AFTER UPDATE OF status: каскадная деактивация
---   Если узел стал deprecated, все потомки тоже становятся deprecated.
+--   Если узел стал inactive, все потомки тоже становятся inactive.
 --   (Т.к. дерево маленькое, допускаем повторные срабатывания у потомков — это ок.)
 
 -- +migrate StatementBegin
 CREATE FUNCTION place_class_after_update_status() RETURNS TRIGGER
 AS $pc$
 BEGIN
-    IF TG_OP = 'UPDATE' AND NEW.status = 'deprecated' AND OLD.status <> 'deprecated' THEN
+    IF TG_OP = 'UPDATE' AND NEW.status = 'inactive' AND OLD.status <> 'inactive' THEN
         UPDATE place_classes
-        SET status = 'deprecated',
+        SET status = 'inactive',
             updated_at = now() AT TIME ZONE 'UTC'
         WHERE path <@ NEW.path         -- селектим узел и всех потомков
             AND code <> NEW.code         -- кроме уже обновлённого
-            AND status <> 'deprecated';  -- обновляем только активных
+            AND status <> 'inactive';  -- обновляем только активных
     END IF;
 
     RETURN NEW;
@@ -153,11 +153,11 @@ FOR EACH ROW
 EXECUTE FUNCTION place_class_after_update_status();
 
 
--- 3) (опционально, но полезно) запретить активацию под предком-deprecated
---   Нельзя поставить active, если любой предок deprecated.
+-- 3) (опционально, но полезно) запретить активацию под предком-inactive
+--   Нельзя поставить active, если любой предок inactive.
 
 -- +migrate StatementBegin
-CREATE FUNCTION place_class_check_activate_under_deprecated() RETURNS TRIGGER
+CREATE FUNCTION place_class_check_activate_under_inactive() RETURNS TRIGGER
 AS $pc$
 DECLARE
     has_depr boolean;
@@ -169,11 +169,11 @@ BEGIN
             FROM place_classes anc
             WHERE NEW.path <@ anc.path   -- anc — предок NEW
                 AND anc.code <> NEW.code
-                AND anc.status = 'deprecated'
+                AND anc.status = 'inactive'
         ) INTO has_depr;
 
         IF has_depr THEN
-            RAISE EXCEPTION 'cannot activate node % under deprecated ancestor', NEW.code;
+            RAISE EXCEPTION 'cannot activate node % under inactive ancestor', NEW.code;
         END IF;
     END IF;
     RETURN NEW;
@@ -181,14 +181,14 @@ END;
 $pc$ LANGUAGE plpgsql;
 -- +migrate StatementEnd
 
-CREATE TRIGGER trg_place_class_check_activate_under_deprecated
+CREATE TRIGGER trg_place_class_check_activate_under_inactive
 BEFORE UPDATE OF status
 ON place_classes
 FOR EACH ROW
-EXECUTE FUNCTION place_class_check_activate_under_deprecated();
+EXECUTE FUNCTION place_class_check_activate_under_inactive();
 
 CREATE INDEX IF NOT EXISTS place_class_i18n_locale_idx ON place_class_i18n (locale, name);
-CREATE INDEX IF NOT EXISTS place_class_father_idx ON place_classes (father_code);
+CREATE INDEX IF NOT EXISTS place_class_father_idx ON place_classes (father);
 CREATE INDEX IF NOT EXISTS place_class_path_gist   ON place_classes USING GIST (path);
 CREATE INDEX IF NOT EXISTS place_class_status_idx  ON place_classes (status);
 
@@ -196,16 +196,16 @@ CREATE INDEX IF NOT EXISTS place_class_status_idx  ON place_classes (status);
 
 DROP TRIGGER IF EXISTS trg_place_class_before_ins_upd_path ON place_classes;
 DROP TRIGGER IF EXISTS trg_place_class_after_update_status ON place_classes;
-DROP TRIGGER IF EXISTS trg_place_class_check_activate_under_deprecated ON place_classes;
+DROP TRIGGER IF EXISTS trg_place_class_check_activate_under_inactive ON place_classes;
 
 DROP FUNCTION IF EXISTS place_class_before_ins_upd_path();
 DROP FUNCTION IF EXISTS place_class_after_update_status();
-DROP FUNCTION IF EXISTS place_class_check_activate_under_deprecated();
+DROP FUNCTION IF EXISTS place_class_check_activate_under_inactive();
 
 DROP TABLE IF EXISTS place_class_i18n;
 
 DROP TABLE IF EXISTS place_classes;
 
-DROP TYPE IF EXISTS class_statuses;
+DROP TYPE IF EXISTS place_class_statuses;
 
 DROP EXTENSION IF EXISTS ltree;

@@ -22,7 +22,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	q := dbx.NewClassesQ(db)
 
 	// root: food
-	root := dbx.PlaceClass{
+	root := dbx.InsertPlaceClass{
 		Code:   "food",
 		Status: "active",
 		Icon:   "🍔",
@@ -31,39 +31,39 @@ func TestPlaceClasses_Integration(t *testing.T) {
 		t.Fatalf("insert root: %v", err)
 	}
 	// i18n для root
-	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)",
+	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)",
 		"food", "en", "Food")
-	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)",
+	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)",
 		"food", "uk", "Їжа")
 
 	// child: restaurant -> food
 	parent := sql.NullString{String: "food", Valid: true}
-	child := dbx.PlaceClass{
-		Code:       "restaurant",
-		FatherCode: &parent,
-		Status:     "active",
-		Icon:       "🍽️",
+	child := dbx.InsertPlaceClass{
+		Code:   "restaurant",
+		Father: parent,
+		Status: "active",
+		Icon:   "🍽️",
 	}
 	if err := q.Insert(ctx, child); err != nil {
 		t.Fatalf("insert child: %v", err)
 	}
-	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)",
+	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)",
 		"restaurant", "en", "Restaurant")
-	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)",
+	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)",
 		"restaurant", "uk", "Ресторан")
 
 	// grandchild: cafe -> restaurant
 	parent2 := sql.NullString{String: "restaurant", Valid: true}
-	grand := dbx.PlaceClass{
-		Code:       "cafe",
-		FatherCode: &parent2,
-		Status:     "active",
-		Icon:       "☕",
+	grand := dbx.InsertPlaceClass{
+		Code:   "cafe",
+		Father: parent2,
+		Status: "active",
+		Icon:   "☕",
 	}
 	if err := q.Insert(ctx, grand); err != nil {
 		t.Fatalf("insert grandchild: %v", err)
 	}
-	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)",
+	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)",
 		"cafe", "en", "Cafe")
 
 	// WithLocale: uk
@@ -91,7 +91,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	}
 
 	// Descendants of food (without food itself)
-	desc, err := q.New().FilterFatherCodeCycle("food").OrderBy("pc.code ASC").Select(ctx)
+	desc, err := q.New().FilterFatherCycle("food").OrderBy("pc.code ASC").Select(ctx)
 	if err != nil {
 		t.Fatalf("select descendants: %v", err)
 	}
@@ -112,7 +112,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	}
 
 	// Pagination sanity
-	page, err := q.New().OrderBy("pc.code ASC").Paginate(2, 0).Select(ctx)
+	page, err := q.New().OrderBy("pc.code ASC").Page(2, 0).Select(ctx)
 	if err != nil {
 		t.Fatalf("paginate: %v", err)
 	}
@@ -160,8 +160,8 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	// Anti-cycle: try to move food under cafe
 	newParent := "cafe"
 	err = q.New().FilterCode("food").Update(ctx, dbx.UpdatePlaceClassParams{
-		FatherCode: &newParent,
-		UpdatedAt:  time.Now().UTC(),
+		Father:    &newParent,
+		UpdatedAt: time.Now().UTC(),
 	})
 	if err == nil {
 		t.Fatalf("expected cycle error moving root under its descendant")
@@ -201,38 +201,38 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 	q := dbx.NewClassesQ(db)
 
 	// roots: food, services
-	food := dbx.PlaceClass{Code: "food", Status: "active", Icon: "🍔"}
+	food := dbx.InsertPlaceClass{Code: "food", Status: "active", Icon: "🍔"}
 	if err := q.Insert(ctx, food); err != nil {
 		t.Fatalf("insert food: %v", err)
 	}
-	services := dbx.PlaceClass{Code: "services", Status: "active", Icon: "🧰"}
+	services := dbx.InsertPlaceClass{Code: "services", Status: "active", Icon: "🧰"}
 	if err := q.Insert(ctx, services); err != nil {
 		t.Fatalf("insert services: %v", err)
 	}
 
 	// i18n
-	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)", "food", "en", "Food")
-	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)", "services", "en", "Services")
+	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)", "food", "en", "Food")
+	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)", "services", "en", "Services")
 
 	// child: restaurant -> food
 	parentFood := sql.NullString{String: "food", Valid: true}
-	restaurant := dbx.PlaceClass{Code: "restaurant", FatherCode: &parentFood, Status: "active", Icon: "🍽️"}
+	restaurant := dbx.InsertPlaceClass{Code: "restaurant", Father: parentFood, Status: "active", Icon: "🍽️"}
 	if err := q.Insert(ctx, restaurant); err != nil {
 		t.Fatalf("insert restaurant: %v", err)
 	}
-	mustExec(t, db, "INSERT INTO place_class_i18n(class_code, locale, name) VALUES ($1,$2,$3)", "restaurant", "en", "Restaurant")
+	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)", "restaurant", "en", "Restaurant")
 
 	// grandchild: cafe -> restaurant
 	parentRest := sql.NullString{String: "restaurant", Valid: true}
-	cafe := dbx.PlaceClass{Code: "cafe", FatherCode: &parentRest, Status: "active", Icon: "☕"}
+	cafe := dbx.InsertPlaceClass{Code: "cafe", Father: parentRest, Status: "active", Icon: "☕"}
 	if err := q.Insert(ctx, cafe); err != nil {
 		t.Fatalf("insert cafe: %v", err)
 	}
 	// uk для кафе через Upsert
 	if err := dbx.NewClassLocaleQ(db).Upsert(ctx, dbx.PlaceClassLocale{
-		ClassCode: "cafe",
-		Locale:    "uk",
-		Name:      "Кав'ярня",
+		Class:  "cafe",
+		Locale: "uk",
+		Name:   "Кав'ярня",
 	}); err != nil {
 		t.Fatalf("upsert cafe uk: %v", err)
 	}
@@ -263,8 +263,8 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 	// 1) reparent: restaurant -> services
 	newParent := "services"
 	if err := q.New().FilterCode("restaurant").Update(ctx, dbx.UpdatePlaceClassParams{
-		FatherCode: &newParent,
-		UpdatedAt:  time.Now().UTC(),
+		Father:    &newParent,
+		UpdatedAt: time.Now().UTC(),
 	}); err != nil {
 		t.Fatalf("reparent restaurant under services: %v", err)
 	}
@@ -285,8 +285,10 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Fatalf("want path services.restaurant.cafe, got %q", gotCafe.Path)
 	}
 
-	// 2) roots via FilterFatherCode(nil)
-	roots, err := q.New().FilterFatherCode(nil).OrderBy("pc.code ASC").Select(ctx)
+	// 2) roots via FilterFather(nil)
+	roots, err := q.New().FilterFather(sql.NullString{
+		Valid: false,
+	}).OrderBy("pc.code ASC").Select(ctx)
 	if err != nil {
 		t.Fatalf("select roots: %v", err)
 	}

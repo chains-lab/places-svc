@@ -10,7 +10,7 @@ CREATE TYPE "place_statuses" AS ENUM (
 
 CREATE TYPE "place_ownership" AS ENUM (
     'private',
-    'common'
+    'public'
 );
 
 CREATE TABLE "places" (

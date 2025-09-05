@@ -12,9 +12,9 @@ import (
 const PlaceClassLocalesTable = "place_class_i18n"
 
 type PlaceClassLocale struct {
-	ClassCode string `db:"class_code"`
-	Locale    string `db:"locale"`
-	Name      string `db:"name"`
+	Class  string `db:"class"`
+	Locale string `db:"locale"`
+	Name   string `db:"name"`
 }
 
 type ClassLocaleQ struct {
@@ -39,14 +39,17 @@ func NewClassLocaleQ(db *sql.DB) ClassLocaleQ {
 
 func (q ClassLocaleQ) New() ClassLocaleQ { return NewClassLocaleQ(q.db) }
 
-func (q ClassLocaleQ) Insert(ctx context.Context, in PlaceClassLocale) error {
-	values := map[string]interface{}{
-		"class_code": in.ClassCode,
-		"locale":     in.Locale,
-		"name":       in.Name,
+func (q ClassLocaleQ) Insert(ctx context.Context, in ...PlaceClassLocale) error {
+	if len(in) == 0 {
+		return nil
 	}
 
-	query, args, err := q.inserter.SetMap(values).ToSql()
+	ins := q.inserter.Columns("class", "locale", "name")
+	for _, item := range in {
+		ins = ins.Values(item.Class, item.Locale, item.Name)
+	}
+
+	query, args, err := ins.ToSql()
 	if err != nil {
 		return fmt.Errorf("building insert query for %s: %w", PlaceClassLocalesTable, err)
 	}
@@ -56,23 +59,22 @@ func (q ClassLocaleQ) Insert(ctx context.Context, in PlaceClassLocale) error {
 	} else {
 		_, err = q.db.ExecContext(ctx, query, args...)
 	}
-
 	return err
 }
 
 func (q ClassLocaleQ) Upsert(ctx context.Context, in PlaceClassLocale) error {
 	query := fmt.Sprintf(`
-		INSERT INTO %s (class_code, locale, name)
+		INSERT INTO %s (class, locale, name)
 		VALUES ($1, $2, $3)
-		ON CONFLICT (class_code, locale) DO UPDATE
+		ON CONFLICT (class, locale) DO UPDATE
 		SET name = EXCLUDED.name
     `, PlaceClassLocalesTable)
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		_, err := tx.ExecContext(ctx, query, in.ClassCode, in.Locale, in.Name)
+		_, err := tx.ExecContext(ctx, query, in.Class, in.Locale, in.Name)
 		return err
 	}
-	_, err := q.db.ExecContext(ctx, query, in.ClassCode, in.Locale, in.Name)
+	_, err := q.db.ExecContext(ctx, query, in.Class, in.Locale, in.Name)
 	return err
 }
 
@@ -90,7 +92,7 @@ func (q ClassLocaleQ) Get(ctx context.Context) (PlaceClassLocale, error) {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
 	err = row.Scan(
-		&out.ClassCode,
+		&out.Class,
 		&out.Locale,
 		&out.Name,
 	)
@@ -119,7 +121,7 @@ func (q ClassLocaleQ) Select(ctx context.Context) ([]PlaceClassLocale, error) {
 	for rows.Next() {
 		var item PlaceClassLocale
 		err = rows.Scan(
-			&item.ClassCode,
+			&item.Class,
 			&item.Locale,
 			&item.Name,
 		)
@@ -132,11 +134,11 @@ func (q ClassLocaleQ) Select(ctx context.Context) ([]PlaceClassLocale, error) {
 	return out, err
 }
 
-func (q ClassLocaleQ) FilterClassCode(code string) ClassLocaleQ {
-	q.selector = q.selector.Where(sq.Eq{"class_code": code})
-	q.counter = q.counter.Where(sq.Eq{"class_code": code})
-	q.updater = q.updater.Where(sq.Eq{"class_code": code})
-	q.deleter = q.deleter.Where(sq.Eq{"class_code": code})
+func (q ClassLocaleQ) FilterClass(code string) ClassLocaleQ {
+	q.selector = q.selector.Where(sq.Eq{"class": code})
+	q.counter = q.counter.Where(sq.Eq{"class": code})
+	q.updater = q.updater.Where(sq.Eq{"class": code})
+	q.deleter = q.deleter.Where(sq.Eq{"class": code})
 
 	return q
 }
