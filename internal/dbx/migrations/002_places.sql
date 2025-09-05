@@ -38,9 +38,6 @@ CREATE TABLE place_i18n (
     "address"     VARCHAR    NOT NULL,
     "description" VARCHAR,
 
-    "created_at"   TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
-    "updated_at"   TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
-
     CHECK (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
     PRIMARY KEY (place_id, locale)
 );

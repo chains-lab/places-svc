@@ -18,9 +18,6 @@ type PlaceLocale struct {
 	Name        string         `db:"name"`
 	Address     string         `db:"address"`
 	Description sql.NullString `db:"description"`
-
-	UpdatedAt time.Time `db:"updated_at"`
-	CreatedAt time.Time `db:"created_at"`
 }
 
 type PlaceLocalesQ struct {
@@ -54,8 +51,6 @@ func (q PlaceLocalesQ) Insert(ctx context.Context, in PlaceLocale) error {
 		"name":        in.Name,
 		"address":     in.Address,
 		"description": in.Description,
-		"updated_at":  in.UpdatedAt,
-		"created_at":  in.CreatedAt,
 	}
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
@@ -91,8 +86,6 @@ func (q PlaceLocalesQ) Get(ctx context.Context) (PlaceLocale, error) {
 		&out.Name,
 		&out.Address,
 		&out.Description,
-		&out.CreatedAt,
-		&out.UpdatedAt,
 	)
 	if err != nil {
 		return out, err
@@ -127,8 +120,6 @@ func (q PlaceLocalesQ) Select(ctx context.Context) ([]PlaceLocale, error) {
 			&pd.Name,
 			&pd.Address,
 			&pd.Description,
-			&pd.CreatedAt,
-			&pd.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row for %s: %w", placeLocalizationTable, err)

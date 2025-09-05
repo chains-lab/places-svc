@@ -70,15 +70,12 @@ func insertPlace(t *testing.T, id uuid.UUID) {
 func insertPlaceLocale(t *testing.T, placeID uuid.UUID, locale, name, addr string, desc sql.NullString) {
 	t.Helper()
 	db := openDB(t)
-	now := time.Now().UTC()
 	err := dbx.NewPlaceDetailsQ(db).Insert(context.Background(), dbx.PlaceLocale{
 		PlaceID:     placeID,
 		Locale:      locale,
 		Name:        name,
 		Address:     addr,
 		Description: desc,
-		CreatedAt:   now,
-		UpdatedAt:   now,
 	})
 	if err != nil {
 		t.Fatalf("insert place_i18n %s: %v", locale, err)
