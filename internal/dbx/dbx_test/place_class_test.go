@@ -22,7 +22,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	q := dbx.NewClassesQ(db)
 
 	// root: food
-	root := dbx.InsertPlaceClass{
+	root := dbx.PlaceClass{
 		Code:   "food",
 		Status: "active",
 		Icon:   "🍔",
@@ -38,7 +38,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 
 	// child: restaurant -> food
 	parent := sql.NullString{String: "food", Valid: true}
-	child := dbx.InsertPlaceClass{
+	child := dbx.PlaceClass{
 		Code:   "restaurant",
 		Father: parent,
 		Status: "active",
@@ -54,7 +54,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 
 	// grandchild: cafe -> restaurant
 	parent2 := sql.NullString{String: "restaurant", Valid: true}
-	grand := dbx.InsertPlaceClass{
+	grand := dbx.PlaceClass{
 		Code:   "cafe",
 		Father: parent2,
 		Status: "active",
@@ -67,26 +67,26 @@ func TestPlaceClasses_Integration(t *testing.T) {
 		"cafe", "en", "Cafe")
 
 	// WithLocale: uk
-	got, err := q.New().WithLocale("uk").FilterCode("restaurant").Get(ctx)
+	got, err := q.New().FilterCode("restaurant").GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get with uk: %v", err)
 	}
-	if got.Name == nil || *got.Name != "Ресторан" {
+	if got.Name != "Ресторан" {
 		t.Errorf("want 'Ресторан', got %#v", got.Name)
 	}
-	if got.Locale == nil || *got.Locale != "uk" {
+	if got.Locale != "uk" {
 		t.Errorf("want locale 'uk', got %#v", got.Locale)
 	}
 
 	// WithLocale: fallback to en
-	got, err = q.New().WithLocale("fr").FilterCode("restaurant").Get(ctx)
+	got, err = q.New().FilterCode("restaurant").GetWithLocale(ctx, "fr")
 	if err != nil {
 		t.Fatalf("get with fr fallback: %v", err)
 	}
-	if got.Name == nil || *got.Name != "Restaurant" {
+	if got.Name != "Restaurant" {
 		t.Errorf("want fallback 'Restaurant', got %#v", got.Name)
 	}
-	if got.Locale == nil || *got.Locale != "en" {
+	if got.Locale != "en" {
 		t.Errorf("want fallback locale 'en', got %#v", got.Locale)
 	}
 
@@ -120,8 +120,8 @@ func TestPlaceClasses_Integration(t *testing.T) {
 		t.Errorf("want 2 on page, got %d", len(page))
 	}
 
-	// Cascade deprecate: food -> deprecated
-	depr := "deprecated"
+	// Cascade inactive: food -> inactive
+	depr := "inactive"
 	if err := q.New().FilterCode("food").Update(ctx, dbx.UpdatePlaceClassParams{
 		Status:    &depr,
 		UpdatedAt: time.Now().UTC(),
@@ -133,15 +133,15 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get child after cascade: %v", err)
 	}
-	if rs.Status != "deprecated" {
-		t.Errorf("child should be deprecated, got %s", rs.Status)
+	if rs.Status != "inactive" {
+		t.Errorf("child should be inactive, got %s", rs.Status)
 	}
 	cf, err := q.New().FilterCode("cafe").Get(ctx)
 	if err != nil {
 		t.Fatalf("get grand after cascade: %v", err)
 	}
-	if cf.Status != "deprecated" {
-		t.Errorf("grandchild should be deprecated, got %s", cf.Status)
+	if cf.Status != "inactive" {
+		t.Errorf("grandchild should be inactive, got %s", cf.Status)
 	}
 
 	// Forbid activation under deprecated ancestor
@@ -151,7 +151,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err == nil {
-		t.Fatalf("expected error when activating under deprecated ancestor")
+		t.Fatalf("expected error when activating under inactive ancestor")
 	}
 	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "cannot activate node") {
 		t.Logf("activation blocked (driver msg): %v", err)
@@ -201,11 +201,11 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 	q := dbx.NewClassesQ(db)
 
 	// roots: food, services
-	food := dbx.InsertPlaceClass{Code: "food", Status: "active", Icon: "🍔"}
+	food := dbx.PlaceClass{Code: "food", Status: "active", Icon: "🍔"}
 	if err := q.Insert(ctx, food); err != nil {
 		t.Fatalf("insert food: %v", err)
 	}
-	services := dbx.InsertPlaceClass{Code: "services", Status: "active", Icon: "🧰"}
+	services := dbx.PlaceClass{Code: "services", Status: "active", Icon: "🧰"}
 	if err := q.Insert(ctx, services); err != nil {
 		t.Fatalf("insert services: %v", err)
 	}
@@ -216,7 +216,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 
 	// child: restaurant -> food
 	parentFood := sql.NullString{String: "food", Valid: true}
-	restaurant := dbx.InsertPlaceClass{Code: "restaurant", Father: parentFood, Status: "active", Icon: "🍽️"}
+	restaurant := dbx.PlaceClass{Code: "restaurant", Father: parentFood, Status: "active", Icon: "🍽️"}
 	if err := q.Insert(ctx, restaurant); err != nil {
 		t.Fatalf("insert restaurant: %v", err)
 	}
@@ -224,7 +224,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 
 	// grandchild: cafe -> restaurant
 	parentRest := sql.NullString{String: "restaurant", Valid: true}
-	cafe := dbx.InsertPlaceClass{Code: "cafe", Father: parentRest, Status: "active", Icon: "☕"}
+	cafe := dbx.PlaceClass{Code: "cafe", Father: parentRest, Status: "active", Icon: "☕"}
 	if err := q.Insert(ctx, cafe); err != nil {
 		t.Fatalf("insert cafe: %v", err)
 	}
@@ -310,14 +310,14 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 	}
 
 	// 4) WithLocale('uk') for cafe
-	locCafe, err := q.New().WithLocale("uk").FilterCode("cafe").Get(ctx)
+	locCafe, err := q.New().WithLocale("uk").FilterCode("cafe").GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get cafe with uk locale: %v", err)
 	}
-	if locCafe.Name == nil || *locCafe.Name != "Кав'ярня" {
+	if locCafe.Name != "Кав'ярня" {
 		t.Fatalf("want uk name `Кав'ярня`, got %#v", locCafe.Name)
 	}
-	if locCafe.Locale == nil || *locCafe.Locale != "uk" {
+	if locCafe.Locale != "uk" {
 		t.Fatalf("want locale `uk`, got %#v", locCafe.Locale)
 	}
 }

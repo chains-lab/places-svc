@@ -11,14 +11,24 @@ import (
 
 const PlaceClassesTable = "place_classes"
 
+type PlaceClassWithLocale struct {
+	Code      string         `db:"code"`
+	Father    sql.NullString `db:"father"` // NULL для корней
+	Status    string         `db:"status"`
+	Icon      string         `db:"icon"`
+	Path      string         `db:"path"` // ltree как text
+	Locale    string         `db:"locale"`
+	Name      string         `db:"name"`
+	CreatedAt time.Time      `db:"created_at"`
+	UpdatedAt time.Time      `db:"updated_at"`
+}
+
 type PlaceClass struct {
 	Code      string         `db:"code"`
 	Father    sql.NullString `db:"father"` // NULL для корней
 	Status    string         `db:"status"`
 	Icon      string         `db:"icon"`
 	Path      string         `db:"path"` // ltree как text
-	Locale    *string        `db:"locale"`
-	Name      *string        `db:"name"`
 	CreatedAt time.Time      `db:"created_at"`
 	UpdatedAt time.Time      `db:"updated_at"`
 }
@@ -44,8 +54,6 @@ func NewClassesQ(db *sql.DB) ClassesQ {
 			"pc.path",
 			"pc.created_at",
 			"pc.updated_at",
-			"NULL AS loc_name",
-			"NULL AS loc_locale",
 		).From(PlaceClassesTable + " AS pc"),
 		inserter: b.Insert(PlaceClassesTable),
 		updater:  b.Update(PlaceClassesTable + " AS pc"),
@@ -56,17 +64,7 @@ func NewClassesQ(db *sql.DB) ClassesQ {
 
 func (q ClassesQ) New() ClassesQ { return NewClassesQ(q.db) }
 
-type InsertPlaceClass struct {
-	Code      string         `db:"code"`
-	Father    sql.NullString `db:"father"` // NULL для корней
-	Status    string         `db:"status"`
-	Icon      string         `db:"icon"`
-	Path      string         `db:"path"` // ltree как text
-	CreatedAt time.Time      `db:"created_at"`
-	UpdatedAt time.Time      `db:"updated_at"`
-}
-
-func (q ClassesQ) Insert(ctx context.Context, in InsertPlaceClass) error {
+func (q ClassesQ) Insert(ctx context.Context, in PlaceClass) error {
 	values := map[string]interface{}{
 		"code":   in.Code,
 		"status": in.Status,
@@ -93,7 +91,6 @@ func (q ClassesQ) Insert(ctx context.Context, in InsertPlaceClass) error {
 
 func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (PlaceClass, error) {
 	var pc PlaceClass
-	var locName, locLocale *string
 
 	if err := scanner.Scan(
 		&pc.Code,
@@ -103,15 +100,29 @@ func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (PlaceClass, e
 		&pc.Path,
 		&pc.CreatedAt,
 		&pc.UpdatedAt,
-		&locName,
-		&locLocale,
 	); err != nil {
 		return PlaceClass{}, err
 	}
 
-	// Locale (пустая структура, если не найдено ни запрошенной, ни 'en')
-	pc.Name = locName
-	pc.Locale = locLocale
+	return pc, nil
+}
+
+func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (PlaceClassWithLocale, error) {
+	var pc PlaceClassWithLocale
+
+	if err := scanner.Scan(
+		&pc.Code,
+		&pc.Father,
+		&pc.Status,
+		&pc.Icon,
+		&pc.Path,
+		&pc.CreatedAt,
+		&pc.UpdatedAt,
+		&pc.Name,
+		&pc.Locale,
+	); err != nil {
+		return PlaceClassWithLocale{}, err
+	}
 
 	return pc, nil
 }
@@ -219,10 +230,10 @@ func (q ClassesQ) FilterFather(code sql.NullString) ClassesQ {
 		q.counter = q.counter.Where("father IS NULL")
 		return q
 	}
-	q.selector = q.selector.Where(sq.Eq{"pc.father": code.Valid})
-	q.updater = q.updater.Where(sq.Eq{"pc.father": code.Valid})
-	q.deleter = q.deleter.Where(sq.Eq{"father": code.Valid})
-	q.counter = q.counter.Where(sq.Eq{"father": code.Valid})
+	q.selector = q.selector.Where(sq.Eq{"pc.father": code.String})
+	q.updater = q.updater.Where(sq.Eq{"pc.father": code.String})
+	q.deleter = q.deleter.Where(sq.Eq{"father": code.String})
+	q.counter = q.counter.Where(sq.Eq{"father": code.String})
 	return q
 }
 
@@ -265,20 +276,56 @@ func (q ClassesQ) WithLocale(locale string) ClassesQ {
 		)
 	}
 
-	q.selector = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
-		Select(
-			"pc.code",
-			"pc.father",
-			"pc.status",
-			"pc.icon",
-			"pc.path",
-			"pc.created_at",
-			"pc.updated_at",
-		).
+	q.selector = q.selector.
 		Column(col("name", "loc_name")).
 		Column(col("locale", "loc_locale")).
 		From(base + " AS pc")
 	return q
+}
+
+func (q ClassesQ) GetWithLocale(ctx context.Context, locale string) (PlaceClassWithLocale, error) {
+	qq := q.WithLocale(locale)
+	query, args, err := qq.selector.Limit(1).ToSql()
+	if err != nil {
+		return PlaceClassWithLocale{}, fmt.Errorf("build select query for %s: %w", PlaceClassesTable, err)
+	}
+
+	var row *sql.Row
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		row = tx.QueryRowContext(ctx, query, args...)
+	} else {
+		row = q.db.QueryRowContext(ctx, query, args...)
+	}
+	return scanPlaceClassWithLocale(row)
+}
+
+func (q ClassesQ) SelectWithLocale(ctx context.Context, locale string) ([]PlaceClassWithLocale, error) {
+	qq := q.WithLocale(locale)
+	query, args, err := qq.selector.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var rows *sql.Rows
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		rows, err = tx.QueryContext(ctx, query, args...)
+	} else {
+		rows, err = q.db.QueryContext(ctx, query, args...)
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []PlaceClassWithLocale
+	for rows.Next() {
+		pc, err := scanPlaceClassWithLocale(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, pc)
+	}
+	return out, rows.Err()
 }
 
 func (q ClassesQ) OrderBy(orderBy string) ClassesQ {

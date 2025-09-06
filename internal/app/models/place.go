@@ -12,7 +12,7 @@ type Place struct {
 	ID            uuid.UUID     `json:"id"`
 	CityID        uuid.UUID     `json:"city_id"`
 	DistributorID uuid.NullUUID `json:"distributor_id"`
-	TypeCode      string        `json:"type_code"`
+	Class         string        `json:"class"`
 
 	Status    string    `json:"status"`
 	Verified  bool      `json:"verified"`

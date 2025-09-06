@@ -25,6 +25,24 @@ type Place struct {
 	Ownership string    `db:"ownership"`
 	Point     orb.Point `db:"point"`
 
+	Website sql.NullString `db:"website"`
+	Phone   sql.NullString `db:"phone"`
+
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
+}
+
+type PlaceWithLocale struct {
+	ID            uuid.UUID     `db:"id"`
+	CityID        uuid.UUID     `db:"city_id"`
+	DistributorID uuid.NullUUID `db:"distributor_id"`
+	Class         string        `db:"class"`
+
+	Status    string    `db:"status"`
+	Verified  bool      `db:"verified"`
+	Ownership string    `db:"ownership"`
+	Point     orb.Point `db:"point"`
+
 	Locale      *string         `db:"locale"`
 	Name        *string         `db:"name"`
 	Address     *string         `db:"address"`
@@ -92,7 +110,7 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		&p.ID,
 		&p.CityID,
 		&p.DistributorID,
-		&p.Class, // <— было Class
+		&p.Class,
 		&p.Status,
 		&p.Verified,
 		&p.Ownership,
@@ -110,10 +128,37 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		return Place{}, err
 	}
 
-	p.Locale = locLocale
-	p.Name = locName
-	p.Address = locAddress
-	p.Description = locDescription
+	p.Point = orb.Point{lon, lat}
+
+	return p, nil
+}
+
+func scanPlaceWithLocaleRow(scanner interface{ Scan(dest ...any) error }) (PlaceWithLocale, error) {
+	var (
+		p        PlaceWithLocale
+		lon, lat float64
+	)
+	if err := scanner.Scan(
+		&p.ID,
+		&p.CityID,
+		&p.DistributorID,
+		&p.Class, // <— было Class
+		&p.Status,
+		&p.Verified,
+		&p.Ownership,
+		&lon,
+		&lat,
+		&p.Website,
+		&p.Phone,
+		&p.CreatedAt,
+		&p.UpdatedAt,
+		&p.Locale,
+		&p.Name,
+		&p.Address,
+		&p.Description,
+	); err != nil {
+		return PlaceWithLocale{}, err
+	}
 
 	p.Point = orb.Point{lon, lat}
 
@@ -527,6 +572,54 @@ func (q PlacesQ) WithLocale(locale string) PlacesQ {
 		From(base + " AS p")
 
 	return q
+}
+
+// --- сахарные методы ---
+
+func (q PlacesQ) GetWithLocale(ctx context.Context, locale string) (PlaceWithLocale, error) {
+	qq := q.WithLocale(locale)
+	query, args, err := qq.selector.Limit(1).ToSql()
+	if err != nil {
+		return PlaceWithLocale{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
+	}
+
+	var row *sql.Row
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		row = tx.QueryRowContext(ctx, query, args...)
+	} else {
+		row = q.db.QueryRowContext(ctx, query, args...)
+	}
+	return scanPlaceWithLocaleRow(row)
+}
+
+func (q PlacesQ) SelectWithLocale(ctx context.Context, locale string) ([]PlaceWithLocale, error) {
+	qq := q.WithLocale(locale)
+	query, args, err := qq.selector.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("building select query for %s: %w", placesTable, err)
+	}
+	var (
+		rows *sql.Rows
+	)
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		rows, err = tx.QueryContext(ctx, query, args...)
+	} else {
+		rows, err = q.db.QueryContext(ctx, query, args...)
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []PlaceWithLocale
+	for rows.Next() {
+		item, err := scanPlaceWithLocaleRow(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, item)
+	}
+	return out, rows.Err()
 }
 
 func (q PlacesQ) OrderByCreatedAt(asc bool) PlacesQ {
