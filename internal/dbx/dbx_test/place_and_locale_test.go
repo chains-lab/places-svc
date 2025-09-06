@@ -113,7 +113,7 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	insertPlaceLocale(t, placeID, "uk", "Кавʼярня", "вул. Головна, 1", sql.NullString{Valid: false})
 
 	// 1) exact uk
-	got, err := dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "uk")
+	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get with uk: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	}
 
 	// 2) fallback fr -> en
-	got, err = dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "fr")
+	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
 	if err != nil {
 		t.Fatalf("get with fr (fallback): %v", err)
 	}
@@ -164,7 +164,7 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 		t.Fatalf("update uk: %v", err)
 	}
 
-	got, err = dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "uk")
+	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get after update uk: %v", err)
 	}
@@ -182,7 +182,7 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	if err := dbx.NewPlaceLocalesQ(db).FilterPlaceID(placeID).FilterByLocale("uk").Delete(ctx); err != nil {
 		t.Fatalf("delete uk: %v", err)
 	}
-	got, err = dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "uk")
+	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get after delete uk: %v", err)
 	}
@@ -194,7 +194,7 @@ func TestPlaces_WithLocale_CRUD_Fallback(t *testing.T) {
 	if err := dbx.NewPlaceLocalesQ(db).FilterPlaceID(placeID).FilterByLocale("en").Delete(ctx); err != nil {
 		t.Fatalf("delete en: %v", err)
 	}
-	got, err = dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "fr")
+	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
 	if err != nil {
 		t.Fatalf("get after delete en: %v", err)
 	}
@@ -217,7 +217,7 @@ func TestPlaces_WithLocale_SQL_IsParameterized(t *testing.T) {
 
 	// ожидается вспомогательный метод в dbx:
 	// func (q PlacesQ) SelectorToSql() (string, []any, error) { return q.selector.ToSql() }
-	sqlStr, args, err := dbx.NewPlacesQ(db).WithLocale("uk").FilterByID(placeID).SelectorToSql()
+	sqlStr, args, err := dbx.NewPlacesQ(db).WithLocale("uk").FilterID(placeID).SelectorToSql()
 	if err != nil {
 		t.Fatalf("ToSql(): %v", err)
 	}
@@ -247,7 +247,7 @@ func TestPlaces_InvalidLocale_SanitizedToEN(t *testing.T) {
 	// только EN
 	insertPlaceLocale(t, placeID, "en", "Coffee House", "Main St 1", sql.NullString{Valid: true, String: "Cozy place"})
 
-	got, err := dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "xx-!!")
+	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "xx-!!")
 	if err != nil {
 		t.Fatalf("get with invalid locale: %v", err)
 	}
@@ -267,7 +267,7 @@ func TestPlaces_PartialLocale_NoFieldMixing(t *testing.T) {
 	insertPlaceLocale(t, placeID, "en", "Coffee House", "Main St 1", sql.NullString{Valid: true, String: "Cozy place"})
 	insertPlaceLocale(t, placeID, "uk", "Кавʼярня", "вул. Головна, 1", sql.NullString{Valid: false})
 
-	got, err := dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "uk")
+	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get with uk: %v", err)
 	}
@@ -313,7 +313,7 @@ func TestPlaces_Fallback_NoEN_NoExact_ReturnsEmptyLocale(t *testing.T) {
 	// только FR
 	insertPlaceLocale(t, placeID, "fr", "Maison du Café", "Rue Principale 1", sql.NullString{})
 
-	got, err := dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "de")
+	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "de")
 	if err != nil {
 		t.Fatalf("get with de (no en, no exact): %v", err)
 	}
@@ -330,7 +330,7 @@ func TestPlaces_OnlyOtherLocale_ExactVsEmpty(t *testing.T) {
 	insertPlaceLocale(t, placeID, "fr", "Maison du Café", "Rue Principale 1", sql.NullString{Valid: true, String: "Sympa"})
 
 	// exact: fr
-	got, err := dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "fr")
+	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
 	if err != nil {
 		t.Fatalf("get with fr: %v", err)
 	}
@@ -343,7 +343,7 @@ func TestPlaces_OnlyOtherLocale_ExactVsEmpty(t *testing.T) {
 	}
 
 	// другая: uk → ни exact (uk), ни en — пусто
-	got, err = dbx.NewPlacesQ(db).FilterByID(placeID).GetWithLocale(ctx, "uk")
+	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get with uk (no en): %v", err)
 	}

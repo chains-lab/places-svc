@@ -66,6 +66,54 @@ func (q PlaceLocalesQ) Insert(ctx context.Context, in PlaceLocale) error {
 	return err
 }
 
+func (q PlaceLocalesQ) Upsert(ctx context.Context, in PlaceLocale) error {
+	query := fmt.Sprintf(`
+	INSERT INTO %s (place_id, locale, name, address, description)
+	VALUES ($1, $2, $3, $4, $5)
+	`, placeLocalizationTable)
+
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		_, err := tx.ExecContext(ctx, query, in.PlaceID, in.Locale, in.Name, in.Address, in.Description)
+		return err
+	}
+	_, err := q.db.ExecContext(ctx, query, in.PlaceID, in.Locale, in.Name, in.Address, in.Description)
+	return err
+}
+
+func (q PlaceLocalesQ) Update(ctx context.Context, params UpdatePlaceLocaleParams) error {
+	updates := map[string]interface{}{}
+	if params.Name != nil {
+		updates["name"] = *params.Name
+	}
+	if params.Address != nil {
+		updates["address"] = *params.Address
+	}
+	if params.Description != nil {
+		if params.Description.Valid {
+			updates["description"] = params.Description.String
+		} else {
+			updates["description"] = nil
+		}
+	}
+
+	if len(updates) == 1 { // только updated_at
+		return nil
+	}
+
+	query, args, err := q.updater.SetMap(updates).ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build update query for %s: %w", placeLocalizationTable, err)
+	}
+
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		_, err = tx.ExecContext(ctx, query, args...)
+	} else {
+		_, err = q.db.ExecContext(ctx, query, args...)
+	}
+
+	return err
+}
+
 func (q PlaceLocalesQ) Get(ctx context.Context) (PlaceLocale, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
@@ -135,40 +183,6 @@ type UpdatePlaceLocaleParams struct {
 	Description *sql.NullString
 }
 
-func (q PlaceLocalesQ) Update(ctx context.Context, params UpdatePlaceLocaleParams) error {
-	updates := map[string]interface{}{}
-	if params.Name != nil {
-		updates["name"] = *params.Name
-	}
-	if params.Address != nil {
-		updates["address"] = *params.Address
-	}
-	if params.Description != nil {
-		if params.Description.Valid {
-			updates["description"] = params.Description.String
-		} else {
-			updates["description"] = nil
-		}
-	}
-
-	if len(updates) == 1 { // только updated_at
-		return nil
-	}
-
-	query, args, err := q.updater.SetMap(updates).ToSql()
-	if err != nil {
-		return fmt.Errorf("failed to build update query for %s: %w", placeLocalizationTable, err)
-	}
-
-	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		_, err = tx.ExecContext(ctx, query, args...)
-	} else {
-		_, err = q.db.ExecContext(ctx, query, args...)
-	}
-
-	return err
-}
-
 func (q PlaceLocalesQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
@@ -220,13 +234,24 @@ func (q PlaceLocalesQ) FilterByAddress(address string) PlaceLocalesQ {
 	return q
 }
 
-func (q PlaceLocalesQ) Count(ctx context.Context) (int, error) {
+func (q PlaceLocalesQ) OrderByLocale(asc bool) PlaceLocalesQ {
+	dir := "DESC"
+	if asc {
+		dir = "ASC"
+	}
+
+	q.selector = q.selector.OrderBy("locale " + dir)
+
+	return q
+}
+
+func (q PlaceLocalesQ) Count(ctx context.Context) (uint64, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("failed to build count query for %s: %w", placeLocalizationTable, err)
 	}
 
-	var count int
+	var count uint64
 	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)

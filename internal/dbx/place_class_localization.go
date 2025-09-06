@@ -134,33 +134,6 @@ func (q ClassLocaleQ) Select(ctx context.Context) ([]PlaceClassLocale, error) {
 	return out, err
 }
 
-func (q ClassLocaleQ) FilterClass(code string) ClassLocaleQ {
-	q.selector = q.selector.Where(sq.Eq{"class": code})
-	q.counter = q.counter.Where(sq.Eq{"class": code})
-	q.updater = q.updater.Where(sq.Eq{"class": code})
-	q.deleter = q.deleter.Where(sq.Eq{"class": code})
-
-	return q
-}
-
-func (q ClassLocaleQ) FilterLocale(locale string) ClassLocaleQ {
-	q.selector = q.selector.Where(sq.Eq{"locale": locale})
-	q.counter = q.counter.Where(sq.Eq{"locale": locale})
-	q.updater = q.updater.Where(sq.Eq{"locale": locale})
-	q.deleter = q.deleter.Where(sq.Eq{"locale": locale})
-
-	return q
-}
-
-func (q ClassLocaleQ) FilterNameLike(name string) ClassLocaleQ {
-	q.selector = q.selector.Where(sq.Like{"name": name})
-	q.counter = q.counter.Where(sq.Like{"name": name})
-	q.updater = q.updater.Where(sq.Like{"name": name})
-	q.deleter = q.deleter.Where(sq.Like{"name": name})
-
-	return q
-}
-
 type UpdateClassLocaleParams struct {
 	Name      *string
 	UpdatedAt time.Time
@@ -201,4 +174,68 @@ func (q ClassLocaleQ) Delete(ctx context.Context) error {
 	}
 
 	return err
+}
+
+func (q ClassLocaleQ) FilterClass(code string) ClassLocaleQ {
+	q.selector = q.selector.Where(sq.Eq{"class": code})
+	q.counter = q.counter.Where(sq.Eq{"class": code})
+	q.updater = q.updater.Where(sq.Eq{"class": code})
+	q.deleter = q.deleter.Where(sq.Eq{"class": code})
+
+	return q
+}
+
+func (q ClassLocaleQ) FilterLocale(locale string) ClassLocaleQ {
+	q.selector = q.selector.Where(sq.Eq{"locale": locale})
+	q.counter = q.counter.Where(sq.Eq{"locale": locale})
+	q.updater = q.updater.Where(sq.Eq{"locale": locale})
+	q.deleter = q.deleter.Where(sq.Eq{"locale": locale})
+
+	return q
+}
+
+func (q ClassLocaleQ) FilterNameLike(name string) ClassLocaleQ {
+	q.selector = q.selector.Where(sq.Like{"name": name})
+	q.counter = q.counter.Where(sq.Like{"name": name})
+	q.updater = q.updater.Where(sq.Like{"name": name})
+	q.deleter = q.deleter.Where(sq.Like{"name": name})
+
+	return q
+}
+
+func (q ClassLocaleQ) OrderByLocale(asc bool) ClassLocaleQ {
+	dir := "DESC"
+	if asc {
+		dir = "ASC"
+	}
+
+	q.selector = q.selector.OrderBy("locale " + dir)
+
+	return q
+}
+
+func (q ClassLocaleQ) Count(ctx context.Context) (uint64, error) {
+	query, args, err := q.counter.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("building count query for %s: %w", PlaceClassLocalesTable, err)
+	}
+
+	var count uint64
+	var row *sql.Row
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		row = tx.QueryRowContext(ctx, query, args...)
+	} else {
+		row = q.db.QueryRowContext(ctx, query, args...)
+	}
+
+	if err = row.Scan(&count); err != nil {
+		return 0, fmt.Errorf("scanning count from %s: %w", PlaceClassLocalesTable, err)
+	}
+
+	return count, nil
+}
+
+func (q ClassLocaleQ) Page(limit, offset uint64) ClassLocaleQ {
+	q.selector = q.selector.Limit(limit).Offset(offset)
+	return q
 }

@@ -76,7 +76,7 @@ func TestTimetables_FilterBetween_StraightOverlap(t *testing.T) {
 
 	// фильтруем окно [11:00, 12:30) => [660, 750)
 	list, err := dbx.NewPlaceTimetablesQ(db).
-		FilterByPlaceID(pid).
+		FilterPlaceID(pid).
 		FilterBetween(660, 750).
 		Select(ctx)
 	if err != nil {
@@ -108,7 +108,7 @@ func TestTimetables_FilterBetween_WrapWeek(t *testing.T) {
 	_ = insertTT(t, db, pid, 500, 700)
 
 	list, err := dbx.NewPlaceTimetablesQ(db).
-		FilterByPlaceID(pid).
+		FilterPlaceID(pid).
 		FilterBetween(10000, 200).
 		Select(ctx)
 	if err != nil {
@@ -135,7 +135,7 @@ func TestTimetables_Count_And_Page(t *testing.T) {
 		insertTT(t, db, pid, 100*i+10, 100*i+50) // непересекающиеся
 	}
 
-	cnt, err := dbx.NewPlaceTimetablesQ(db).FilterByPlaceID(pid).Count(ctx)
+	cnt, err := dbx.NewPlaceTimetablesQ(db).FilterPlaceID(pid).Count(ctx)
 	if err != nil {
 		t.Fatalf("count: %v", err)
 	}
@@ -143,7 +143,7 @@ func TestTimetables_Count_And_Page(t *testing.T) {
 		t.Fatalf("expected count=5, got=%d", cnt)
 	}
 
-	list, err := dbx.NewPlaceTimetablesQ(db).FilterByPlaceID(pid).Page(0, 2).Select(ctx)
+	list, err := dbx.NewPlaceTimetablesQ(db).FilterPlaceID(pid).Page(0, 2).Select(ctx)
 	if err != nil {
 		t.Fatalf("page select: %v", err)
 	}
@@ -152,7 +152,7 @@ func TestTimetables_Count_And_Page(t *testing.T) {
 	}
 }
 
-// 5) Get / FilterByID / Delete
+// 5) Get / FilterID / Delete
 func TestTimetables_Get_FilterByID_Delete(t *testing.T) {
 	setupClean(t)
 	db := openDB(t)

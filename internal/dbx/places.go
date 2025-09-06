@@ -142,7 +142,7 @@ func scanPlaceWithLocaleRow(scanner interface{ Scan(dest ...any) error }) (Place
 		&p.ID,
 		&p.CityID,
 		&p.DistributorID,
-		&p.Class, // <— было Class
+		&p.Class, // <— было Data
 		&p.Status,
 		&p.Verified,
 		&p.Ownership,
@@ -167,14 +167,13 @@ func scanPlaceWithLocaleRow(scanner interface{ Scan(dest ...any) error }) (Place
 
 func (q PlacesQ) Insert(ctx context.Context, in Place) error {
 	values := map[string]interface{}{
-		"id":             in.ID,
-		"city_id":        in.CityID,
-		"distributor_id": in.DistributorID,
-		"class":          in.Class,
-		"status":         in.Status,
-		"verified":       in.Verified,
-		"ownership":      in.Ownership,
-		"point":          sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Point[0], in.Point[1]),
+		"id":        in.ID,
+		"city_id":   in.CityID,
+		"class":     in.Class,
+		"status":    in.Status,
+		"verified":  in.Verified,
+		"ownership": in.Ownership,
+		"point":     sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Point[0], in.Point[1]),
 	}
 	if in.Website.Valid {
 		values["website"] = in.Website.String
@@ -187,6 +186,9 @@ func (q PlacesQ) Insert(ctx context.Context, in Place) error {
 	}
 	if !in.UpdatedAt.IsZero() {
 		values["updated_at"] = in.UpdatedAt
+	}
+	if in.DistributorID.Valid {
+		values["distributor_id"] = in.DistributorID.UUID
 	}
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
@@ -328,7 +330,7 @@ func (q PlacesQ) Delete(ctx context.Context) error {
 	return err
 }
 
-func (q PlacesQ) FilterByID(id uuid.UUID) PlacesQ {
+func (q PlacesQ) FilterID(id uuid.UUID) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.id": id})
 	q.counter = q.counter.Where(sq.Eq{"p.id": id})
 	q.updater = q.updater.Where(sq.Eq{"id": id})
@@ -337,7 +339,7 @@ func (q PlacesQ) FilterByID(id uuid.UUID) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterByCityID(cityID uuid.UUID) PlacesQ {
+func (q PlacesQ) FilterCityID(cityID ...uuid.UUID) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.city_id": cityID})
 	q.counter = q.counter.Where(sq.Eq{"p.city_id": cityID})
 	q.updater = q.updater.Where(sq.Eq{"city_id": cityID})
@@ -346,18 +348,11 @@ func (q PlacesQ) FilterByCityID(cityID uuid.UUID) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterByDistributorID(distributorID uuid.NullUUID) PlacesQ {
-	if !distributorID.Valid {
-		q.selector = q.selector.Where("p.distributor_id IS NULL")
-		q.counter = q.counter.Where("p.distributor_id IS NULL")
-		q.updater = q.updater.Where("distributor_id IS NULL")
-		q.deleter = q.deleter.Where("distributor_id IS NULL")
-	} else {
-		q.selector = q.selector.Where(sq.Eq{"p.distributor_id": distributorID})
-		q.counter = q.counter.Where(sq.Eq{"p.distributor_id": distributorID})
-		q.updater = q.updater.Where(sq.Eq{"distributor_id": distributorID})
-		q.deleter = q.deleter.Where(sq.Eq{"distributor_id": distributorID})
-	}
+func (q PlacesQ) FilterDistributorID(distributorID ...uuid.UUID) PlacesQ {
+	q.selector = q.selector.Where(sq.Eq{"p.distributor_id": distributorID})
+	q.counter = q.counter.Where(sq.Eq{"p.distributor_id": distributorID})
+	q.updater = q.updater.Where(sq.Eq{"distributor_id": distributorID})
+	q.deleter = q.deleter.Where(sq.Eq{"distributor_id": distributorID})
 
 	return q
 }
@@ -371,7 +366,7 @@ func (q PlacesQ) FilterClass(Class ...string) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterByStatus(status ...string) PlacesQ {
+func (q PlacesQ) FilterStatus(status ...string) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.status": status})
 	q.counter = q.counter.Where(sq.Eq{"p.status": status})
 	q.updater = q.updater.Where(sq.Eq{"status": status})
@@ -380,7 +375,7 @@ func (q PlacesQ) FilterByStatus(status ...string) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterByVerified(verified bool) PlacesQ {
+func (q PlacesQ) FilterVerified(verified bool) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.verified": verified})
 	q.counter = q.counter.Where(sq.Eq{"p.verified": verified})
 	q.updater = q.updater.Where(sq.Eq{"verified": verified})
@@ -389,7 +384,7 @@ func (q PlacesQ) FilterByVerified(verified bool) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterByOwnership(ownership ...string) PlacesQ {
+func (q PlacesQ) FilterOwnership(ownership ...string) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.ownership": ownership})
 	q.counter = q.counter.Where(sq.Eq{"p.ownership": ownership})
 	q.updater = q.updater.Where(sq.Eq{"ownership": ownership})

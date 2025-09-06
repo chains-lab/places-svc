@@ -1,7 +1,6 @@
 package models
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,20 +8,15 @@ import (
 )
 
 type Place struct {
-	ID            uuid.UUID     `json:"id"`
-	CityID        uuid.UUID     `json:"city_id"`
-	DistributorID uuid.NullUUID `json:"distributor_id"`
-	Class         string        `json:"class"`
+	ID            uuid.UUID  `json:"id"`
+	CityID        uuid.UUID  `json:"city_id"`
+	DistributorID *uuid.UUID `json:"distributor_id"`
+	Class         string     `json:"class"`
 
 	Status    string    `json:"status"`
 	Verified  bool      `json:"verified"`
 	Ownership string    `json:"ownership"`
 	Point     orb.Point `json:"point"`
-
-	Locale      string         `json:"locale"`
-	Name        string         `json:"name"`
-	Address     string         `json:"address"`
-	Description sql.NullString `json:"description"`
 
 	Website *string `json:"website"`
 	Phone   *string `json:"phone"`
@@ -31,10 +25,15 @@ type Place struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type PlaceLocale struct {
-	PlaceID     uuid.UUID      `json:"place_id"`
-	Locale      string         `json:"locale"`
-	Name        string         `json:"name"`
-	Address     string         `json:"address"`
-	Description sql.NullString `json:"description"`
+type LocaleForPlace struct {
+	PlaceID     uuid.UUID `json:"place_id"`
+	Locale      string    `json:"locale"`
+	Name        string    `json:"name"`
+	Address     string    `json:"address"`
+	Description *string   `json:"description"`
+}
+
+type PlaceWithLocale struct {
+	Data   Place
+	Locale LocaleForPlace
 }

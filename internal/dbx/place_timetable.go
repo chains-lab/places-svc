@@ -151,7 +151,7 @@ func (q PlaceTimetablesQ) FilterByID(id uuid.UUID) PlaceTimetablesQ {
 	return q
 }
 
-func (q PlaceTimetablesQ) FilterByPlaceID(placeID uuid.UUID) PlaceTimetablesQ {
+func (q PlaceTimetablesQ) FilterPlaceID(placeID uuid.UUID) PlaceTimetablesQ {
 	q.selector = q.selector.Where(sq.Eq{"place_id": placeID})
 	q.updater = q.updater.Where(sq.Eq{"place_id": placeID})
 	q.deleter = q.deleter.Where(sq.Eq{"place_id": placeID})
@@ -205,13 +205,13 @@ func (q PlaceTimetablesQ) FilterBetween(start, end int) PlaceTimetablesQ {
 	return q
 }
 
-func (q PlaceTimetablesQ) Count(ctx context.Context) (int, error) {
+func (q PlaceTimetablesQ) Count(ctx context.Context) (uint64, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("failed to build count query for %s: %w", placeTimetablesTable, err)
 	}
 
-	var count int
+	var count uint64
 	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)
