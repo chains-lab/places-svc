@@ -82,7 +82,7 @@ type CreatePlaceLocalParams struct {
 	Description *string
 }
 
-func (p Place) CreatePlace(
+func (p Place) Create(
 	ctx context.Context,
 	params CreatePlaceParams,
 	locale CreatePlaceLocalParams,
@@ -303,13 +303,13 @@ func (p Place) SearchPlaces(
 }
 
 type UpdatePlaceParams struct {
-	Class     *string    `json:"class"`
-	Status    *string    `json:"status"`
-	Verified  *bool      `json:"verified"`
-	Ownership *string    `json:"ownership"`
-	Point     *orb.Point `json:"point"`
-	Website   *string    `json:"website"`
-	Phone     *string    `json:"phone"`
+	Class     *string
+	Status    *string
+	Verified  *bool
+	Ownership *string
+	Point     *orb.Point
+	Website   *string
+	Phone     *string
 }
 
 func (p Place) UpdatePlace(

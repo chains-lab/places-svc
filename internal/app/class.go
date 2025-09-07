@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/app/entities"
 	"github.com/chains-lab/places-svc/internal/app/models"
 	"github.com/chains-lab/places-svc/internal/constant"
@@ -56,6 +57,32 @@ func (a App) GetClass(
 	code, locale string,
 ) (models.PlaceClassWithLocale, error) {
 	return a.classificator.GetClass(ctx, code, locale)
+}
+
+type FilterClassesParams struct {
+	Father      *string
+	FatherCycle *bool
+	Status      *string
+	Name        *string
+}
+
+func (a App) ListClasses(
+	ctx context.Context,
+	filter FilterClassesParams,
+	pag pagi.Response,
+) ([]models.PlaceClassWithLocale, pagi.Response, error) {
+	ent := entities.FilterClassesParams{}
+	if filter.Father != nil {
+		ent.Father = filter.Father
+	}
+	if filter.FatherCycle != nil {
+		ent.FatherCycle = filter.FatherCycle
+	}
+	if filter.Status != nil {
+		ent.Status = filter.Status
+	}
+
+	return a.classificator.ListClasses(ctx, ent, pag)
 }
 
 func (a App) DeactivateClass(

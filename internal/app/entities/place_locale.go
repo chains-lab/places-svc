@@ -18,7 +18,7 @@ type placeLocaleQ interface {
 
 	Insert(ctx context.Context, in dbx.PlaceLocale) error
 	Update(ctx context.Context, params dbx.UpdatePlaceLocaleParams) error
-	Upsert(ctx context.Context, in dbx.PlaceLocale) error
+	Upsert(ctx context.Context, in ...dbx.PlaceLocale) error
 	Get(ctx context.Context) (dbx.PlaceLocale, error)
 	Select(ctx context.Context) ([]dbx.PlaceLocale, error)
 	Delete(ctx context.Context) error
@@ -34,52 +34,54 @@ type placeLocaleQ interface {
 	Count(ctx context.Context) (uint64, error)
 }
 
-type UpsetLocaleToPlaceParams struct {
+type AddLocaleParams struct {
+	Locale      string
 	Name        string
 	Address     string
 	Description *string
 }
 
-func (p Place) UpsertLocaleToPlace(
+func (p Place) AddPlaceLocales(
 	ctx context.Context,
 	placeID uuid.UUID,
-	locale string,
-	params UpsetLocaleToPlaceParams,
+	locales ...AddLocaleParams,
 ) (models.LocaleForPlace, error) {
-	err := constant.IsValidLocaleSupported(locale)
-	if err != nil {
-		return models.LocaleForPlace{}, errx.ErrorNeedAtLeastOneLocaleForPlace.Raise(
-			fmt.Errorf("invalid locale provided: %s, cause %w", locale, err),
-		)
+	for _, param := range locales {
+		err := constant.IsValidLocaleSupported(param.Locale)
+		if err != nil {
+			return models.LocaleForPlace{}, errx.ErrorNeedAtLeastOneLocaleForPlace.Raise(
+				fmt.Errorf("invalid locale provided: %s, cause %w", param.Locale, err),
+			)
+		}
 	}
 
-	place, err := p.GetPlaceByID(ctx, placeID, locale)
+	_, err := p.GetPlaceByID(ctx, placeID, constant.LocaleEN)
 	if err != nil {
 		return models.LocaleForPlace{}, err
 	}
 
-	if place.Locale.Locale != locale {
-		return models.LocaleForPlace{}, errx.ErrorCurrentLocaleNotFoundForPlace.Raise(
-			fmt.Errorf("current locale %s not found for place %s", locale, placeID),
-		)
-	}
-
-	stmt := dbx.PlaceLocale{
-		PlaceID: placeID,
-		Locale:  locale,
-		Name:    params.Name,
-		Address: params.Address,
-	}
-	if params.Description != nil {
-		switch *params.Description {
-		case "":
-			stmt.Description = sql.NullString{String: "", Valid: false}
-		default:
-			stmt.Description = sql.NullString{String: *params.Description, Valid: true}
+	stmts := make([]dbx.PlaceLocale, 0, len(locales))
+	for _, param := range locales {
+		stmt := dbx.PlaceLocale{
+			PlaceID: placeID,
+			Locale:  param.Locale,
+			Name:    param.Name,
+			Address: param.Address,
 		}
+
+		if param.Description != nil {
+			switch *param.Description {
+			case "":
+				stmt.Description = sql.NullString{String: "", Valid: false}
+			default:
+				stmt.Description = sql.NullString{String: *param.Description, Valid: true}
+			}
+		}
+
+		stmts = append(stmts, stmt)
 	}
 
-	err = p.localeQ.Upsert(ctx, stmt)
+	err = p.localeQ.Upsert(ctx, stmts...)
 	if err != nil {
 		return models.LocaleForPlace{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to upsert locale %s for place %s, cause: %w", locale, placeID, err),
@@ -89,9 +91,9 @@ func (p Place) UpsertLocaleToPlace(
 	return models.LocaleForPlace{
 		PlaceID:     placeID,
 		Locale:      locale,
-		Name:        params.Name,
-		Address:     params.Address,
-		Description: params.Description,
+		Name:        locales.Name,
+		Address:     locales.Address,
+		Description: locales.Description,
 	}, nil
 }
 

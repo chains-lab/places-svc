@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -66,17 +67,38 @@ func (q PlaceLocalesQ) Insert(ctx context.Context, in PlaceLocale) error {
 	return err
 }
 
-func (q PlaceLocalesQ) Upsert(ctx context.Context, in PlaceLocale) error {
+func (q PlaceLocalesQ) Upsert(ctx context.Context, in ...PlaceLocale) error {
+	if len(in) == 0 {
+		return nil
+	}
+
+	const cols = "(place_id, locale, name, address, description)"
+	var (
+		args []any
+		ph   []string
+		i    = 1
+	)
+
+	for _, row := range in {
+		// на каждый ряд по 5 плейсхолдеров: ($1,$2,$3,$4,$5), ($6,$7,$8,$9,$10), ...
+		ph = append(ph, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)", i, i+1, i+2, i+3, i+4))
+		i += 5
+		args = append(args, row.PlaceID, row.Locale, row.Name, row.Address, row.Description)
+	}
+
 	query := fmt.Sprintf(`
-	INSERT INTO %s (place_id, locale, name, address, description)
-	VALUES ($1, $2, $3, $4, $5)
-	`, placeLocalizationTable)
+		INSERT INTO %s %s VALUES %s
+		ON CONFLICT (place_id, locale) DO UPDATE
+		SET name = EXCLUDED.name,
+		    address = EXCLUDED.address,
+		    description = EXCLUDED.description
+	`, placeLocalizationTable, cols, strings.Join(ph, ","))
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		_, err := tx.ExecContext(ctx, query, in.PlaceID, in.Locale, in.Name, in.Address, in.Description)
+		_, err := tx.ExecContext(ctx, query, args...)
 		return err
 	}
-	_, err := q.db.ExecContext(ctx, query, in.PlaceID, in.Locale, in.Name, in.Address, in.Description)
+	_, err := q.db.ExecContext(ctx, query, args...)
 	return err
 }
 
