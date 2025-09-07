@@ -18,6 +18,12 @@ type ServerConfig struct {
 		Level  string `mapstructure:"level"`
 		Format string `mapstructure:"format"`
 	} `mapstructure:"log"`
+	Timeouts struct {
+		Read       time.Duration `mapstructure:"read"`
+		ReadHeader time.Duration `mapstructure:"read_header"`
+		Write      time.Duration `mapstructure:"write"`
+		Idle       time.Duration `mapstructure:"idle"`
+	} `mapstructure:"timeouts"`
 }
 
 type DatabaseConfig struct {

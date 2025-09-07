@@ -52,25 +52,19 @@ type CreateClassParams struct {
 	Code   string
 	Father *string
 	Icon   string
-	Path   string
-}
-
-type ClassLocaleCreateParams struct {
-	Locale string
 	Name   string
 }
 
 func (c Classificator) CreateClass(
 	ctx context.Context,
 	params CreateClassParams,
-	locale ClassLocaleCreateParams,
-) (models.PlaceClass, models.LocaleForClass, error) {
+) (models.PlaceClassWithLocale, error) {
 	_, err := c.query.New().FilterCode(params.Code).Get(ctx)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return models.PlaceClass{}, models.LocaleForClass{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class existence, cause: %w", err))
+		return models.PlaceClassWithLocale{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class existence, cause: %w", err))
 	}
 	if err == nil {
-		return models.PlaceClass{}, models.LocaleForClass{}, errx.ErrorClassAlreadyExists.Raise(
+		return models.PlaceClassWithLocale{}, errx.ErrorClassAlreadyExists.Raise(
 			fmt.Errorf("class with code %s already exists", params.Code),
 		)
 	}
@@ -87,44 +81,27 @@ func (c Classificator) CreateClass(
 		Father:    fatherValue,
 		Status:    constant.PlaceClassStatusesInactive,
 		Icon:      params.Icon,
-		Path:      params.Path,
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
 	if err != nil {
-		return models.PlaceClass{}, models.LocaleForClass{}, errx.ErrorInternal.Raise(
+		return models.PlaceClassWithLocale{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to create class, cause: %w", err),
 		)
 	}
 
 	err = c.localeQ.Insert(ctx, dbx.PlaceClassLocale{
 		Class:  params.Code,
-		Locale: locale.Locale,
-		Name:   locale.Name,
+		Locale: constant.PlaceClassStatusesInactive,
+		Name:   params.Name,
 	})
 	if err != nil {
-		return models.PlaceClass{}, models.LocaleForClass{}, errx.ErrorInternal.Raise(
+		return models.PlaceClassWithLocale{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to create class locale, cause: %w", err),
 		)
 	}
 
-	resp := models.PlaceClass{
-		Code:      params.Code,
-		Status:    constant.PlaceClassStatusesInactive,
-		Icon:      params.Icon,
-		Path:      params.Path,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
-	if params.Father != nil {
-		resp.Father = params.Father
-	}
-
-	return resp, models.LocaleForClass{
-		Class:  params.Code,
-		Locale: locale.Locale,
-		Name:   locale.Name,
-	}, nil
+	return c.GetClass(ctx, params.Code, constant.PlaceClassStatusesInactive)
 }
 
 func (c Classificator) GetClass(
@@ -151,6 +128,58 @@ func (c Classificator) GetClass(
 	}
 
 	return classWithLocaleModelFromDB(class), nil
+}
+
+type UpdateClassParams struct {
+	Icon   *string
+	Father *string
+}
+
+func (c Classificator) UpdateClass(
+	ctx context.Context,
+	code string,
+	params UpdateClassParams,
+) error {
+	class, err := c.GetClass(ctx, code, constant.LocaleEN)
+	if err != nil {
+		return err
+	}
+
+	stmt := dbx.UpdatePlaceClassParams{
+		UpdatedAt: time.Now().UTC(),
+	}
+
+	if params.Father != nil {
+		_, err = c.query.New().FilterFatherCycle(class.Data.Code).FilterCode(*params.Father).Get(ctx)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return errx.ErrorInternal.Raise(
+				fmt.Errorf("failed to check father cycle for class with code %s, cause: %w", code, err),
+			)
+		}
+		if err == nil {
+			return errx.ErrorClassFatherCycle.Raise(
+				fmt.Errorf("father cycle detected for class with code %s", code),
+			)
+		}
+	}
+	if *params.Father == class.Data.Code {
+		return errx.ErrorClassFatherCycle.Raise(
+			fmt.Errorf("father cycle detected for class with code %s", code),
+		)
+	}
+
+	if params.Icon != nil {
+		stmt.Icon = params.Icon
+	}
+
+	err = c.query.New().FilterCode(code).Update(ctx, stmt)
+	if err != nil {
+		return errx.ErrorInternal.Raise(
+			fmt.Errorf("failed to update class with code %s, cause: %w", code, err),
+		)
+	}
+
+	return nil
 }
 
 func (c Classificator) DeactivateClass(
@@ -303,6 +332,37 @@ func (c Classificator) ListClasses(
 		Size:  pag.Size,
 		Total: count,
 	}, nil
+}
+
+func (c Classificator) DeleteClass(
+	ctx context.Context,
+	code string,
+) error {
+	_, err := c.GetClass(ctx, code, constant.LocaleEN)
+	if err != nil {
+		return err
+	}
+
+	count, err := c.query.New().FilterFather(sql.NullString{String: code, Valid: true}).Count(ctx)
+	if err != nil {
+		return errx.ErrorInternal.Raise(
+			fmt.Errorf("failed to check class children existence, cause: %w", err),
+		)
+	}
+	if count > 0 {
+		return errx.ErrorClassHasChildren.Raise(
+			fmt.Errorf("class with code %s has children, cannot be deleted", code),
+		)
+	}
+
+	err = c.localeQ.New().FilterClass(code).Delete(ctx)
+	if err != nil {
+		return errx.ErrorInternal.Raise(
+			fmt.Errorf("failed to delete class locales, cause: %w", err),
+		)
+	}
+
+	return nil
 }
 
 func classWithLocaleModelFromDB(dbClass dbx.PlaceClassWithLocale) models.PlaceClassWithLocale {
