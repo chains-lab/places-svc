@@ -113,7 +113,7 @@ func (p Place) Create(
 	err := p.query.New().Insert(ctx, stmt)
 	if err != nil {
 		return models.PlaceWithLocale{}, errx.ErrorInternal.Raise(
-			fmt.Errorf("could not create loco, cause %w", err),
+			fmt.Errorf("could not create Location, cause %w", err),
 		)
 	}
 
@@ -126,7 +126,7 @@ func (p Place) Create(
 	err = p.localeQ.Insert(ctx, stmtLocale)
 	if err != nil {
 		return models.PlaceWithLocale{}, errx.ErrorInternal.Raise(
-			fmt.Errorf("could not create loco locale, cause %w", err),
+			fmt.Errorf("could not create Location locale, cause %w", err),
 		)
 	}
 
@@ -172,16 +172,21 @@ func (p Place) GetPlaceByID(
 	placeID uuid.UUID,
 	locale string,
 ) (models.PlaceWithLocale, error) {
+	err := constant.IsValidLocaleSupported(locale)
+	if err != nil {
+		locale = constant.LocaleEN
+	}
+
 	place, err := p.query.New().FilterID(placeID).GetWithLocale(ctx, locale)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			return models.PlaceWithLocale{}, errx.ErrorPlaceNotFound.Raise(
-				fmt.Errorf("loco with id %s not found, cause %w", placeID, err),
+				fmt.Errorf("Location with id %s not found, cause %w", placeID, err),
 			)
 		default:
 			return models.PlaceWithLocale{}, errx.ErrorInternal.Raise(
-				fmt.Errorf("failed to get loco with id %s: %w", placeID, err),
+				fmt.Errorf("failed to get Location with id %s: %w", placeID, err),
 			)
 		}
 	}
@@ -199,7 +204,7 @@ type SearchPlacesFilter struct {
 	Name          *string
 	Address       *string
 
-	loco *SearchPlaceDistanceFilter
+	Location *SearchPlaceDistanceFilter
 
 	Locale *string
 }
@@ -254,8 +259,8 @@ func (p Place) SearchPlaces(
 	if filter.Address != nil {
 		query = query.FilterAddressLike(*filter.Address)
 	}
-	if filter.loco.RadiusM > 0 && filter.loco != nil {
-		query = query.FilterWithinRadiusMeters(filter.loco.Point, filter.loco.RadiusM)
+	if filter.Location.RadiusM > 0 && filter.Location != nil {
+		query = query.FilterWithinRadiusMeters(filter.Location.Point, filter.Location.RadiusM)
 	}
 
 	count, err := p.query.Count(ctx)
@@ -265,8 +270,8 @@ func (p Place) SearchPlaces(
 		case "created_at":
 			query = query.OrderByCreatedAt(s.Ascend)
 		case "distance":
-			if filter.loco != nil {
-				query = query.OrderByDistance(filter.loco.Point, s.Ascend)
+			if filter.Location != nil {
+				query = query.OrderByDistance(filter.Location.Point, s.Ascend)
 			}
 		}
 	}
@@ -315,9 +320,10 @@ type UpdatePlaceParams struct {
 func (p Place) UpdatePlace(
 	ctx context.Context,
 	placeID uuid.UUID,
+	locale string,
 	params UpdatePlaceParams,
 ) (models.PlaceWithLocale, error) {
-	place, err := p.GetPlaceByID(ctx, placeID, constant.LocaleEN) //TODO locale
+	place, err := p.GetPlaceByID(ctx, placeID, locale) //TODO locale
 	if err != nil {
 		return models.PlaceWithLocale{}, err
 	}
@@ -338,6 +344,10 @@ func (p Place) UpdatePlace(
 		place.Data.Verified = *params.Verified
 	}
 	if params.Ownership != nil {
+		err := constant.IsValidPlaceOwnership(*params.Ownership)
+		if err != nil {
+			return models.PlaceWithLocale{}, err
+		}
 		stmt.Ownership = params.Ownership
 		place.Data.Ownership = *params.Ownership
 	}
@@ -368,7 +378,7 @@ func (p Place) UpdatePlace(
 	err = p.query.New().Update(ctx, stmt)
 	if err != nil {
 		return models.PlaceWithLocale{}, errx.ErrorInternal.Raise(
-			fmt.Errorf("failed to update loco with id %s, cause: %w", placeID, err),
+			fmt.Errorf("failed to update Location with id %s, cause: %w", placeID, err),
 		)
 	}
 
@@ -384,7 +394,7 @@ func (p Place) DeletePlaceByID(ctx context.Context, placeID uuid.UUID) error {
 	err = p.localeQ.New().FilterPlaceID(placeID).Delete(ctx)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
-			fmt.Errorf("failed to delete loco locale with id %s, cause: %w", placeID, err),
+			fmt.Errorf("failed to delete Location locale with id %s, cause: %w", placeID, err),
 		)
 	}
 
