@@ -33,7 +33,7 @@ properties:
     type: string
     description: "place ownership"
   point:
-    $ref: './Point.yaml'
+    $ref: './common/Point.yaml'
   name:
     type: string
     description: "place name"

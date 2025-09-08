@@ -1,0 +1,13 @@
+type: object
+required:
+  - lon
+  - lat
+properties:
+  lon:
+    type: number
+    format: float
+    description: "Longitude"
+  lat:
+    type: number
+    format: float
+    description: "Latitude"

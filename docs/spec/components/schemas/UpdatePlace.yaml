@@ -1,29 +1,34 @@
 type: object
 required:
-  - id
-  - type
-  - attributes
+  - data
 properties:
-  id:
-    type: string
-    format: uuid
-    description: "place id"
-  type:
-    type: string
-    enum: [ place ]
-  attributes:
+  data:
     type: object
+    required:
+      - id
+      - type
+      - attributes
     properties:
-      class:
+      id:
         type: string
-        description: "place class"
-      status:
+        format: uuid
+        description: "place id"
+      type:
         type: string
-        description: "place status"
-      website:
-        type: string
-        format: uri
-        description: "place website"
-      phone:
-        type: string
-        description: "place phone number"
+        enum: [ place ]
+      attributes:
+        type: object
+        properties:
+          class:
+            type: string
+            description: "place class"
+          status:
+            type: string
+            description: "place status"
+          website:
+            type: string
+            format: uri
+            description: "place website"
+          phone:
+            type: string
+            description: "place phone number"

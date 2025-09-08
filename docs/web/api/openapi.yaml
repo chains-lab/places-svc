@@ -1,0 +1,441 @@
+openapi: 3.0.0
+info:
+  description: SSO REST API for Cifra app
+  title: Cifra SSO REST API
+  version: 0.0.1
+servers:
+- url: /
+paths:
+  /test:
+    post:
+      description: Test
+      responses:
+        "201":
+          description: successfully
+      tags:
+      - Test
+components:
+  schemas:
+    Class:
+      properties:
+        data:
+          $ref: '#/components/schemas/Class_data'
+      required:
+      - data
+      type: object
+    CreatePlace:
+      properties:
+        data:
+          $ref: '#/components/schemas/CreatePlace_data'
+      required:
+      - data
+      type: object
+    UpdatePlace:
+      properties:
+        data:
+          $ref: '#/components/schemas/UpdatePlace_data'
+      required:
+      - data
+      type: object
+    Place:
+      properties:
+        data:
+          $ref: '#/components/schemas/Place_data'
+      required:
+      - data
+      type: object
+    PlaceCollection:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Place/properties/data'
+          type: array
+      required:
+      - data
+      type: object
+    PlaceRelationships:
+      properties:
+        class:
+          $ref: '#/components/schemas/Class_data_relationships_parent'
+        city:
+          $ref: '#/components/schemas/PlaceRelationships_city'
+        distributor:
+          $ref: '#/components/schemas/Class_data_relationships_parent'
+      required:
+      - city
+      - class
+      type: object
+    PlaceLocale:
+      properties:
+        data:
+          $ref: '#/components/schemas/PlaceLocale_data'
+      required:
+      - data
+      type: object
+    PlaceLocalesCollection:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/PlaceLocalesCollection_data_inner'
+          type: array
+        included:
+          items:
+            $ref: '#/components/schemas/PlaceLocale/properties/data'
+          type: array
+      required:
+      - data
+      - included
+      type: object
+    SetPlaceLocale:
+      properties:
+        data:
+          $ref: '#/components/schemas/SetPlaceLocale_data'
+      required:
+      - data
+      type: object
+    Class_data_attributes:
+      properties:
+        status:
+          description: class status
+          type: string
+        icon:
+          description: class icon
+          format: uri
+          type: string
+        name:
+          default: New Class
+          description: class name
+          type: string
+        created_at:
+          description: class creation date
+          format: date-time
+          type: string
+        updated_at:
+          description: class last update date
+          format: date-time
+          type: string
+      required:
+      - created_at
+      - icon
+      - name
+      - status
+      - updated_at
+      type: object
+    Class_data_relationships_parent:
+      properties:
+        links:
+          $ref: '#/components/schemas/PlaceRelationships/properties/city/properties/links'
+        data:
+          $ref: '#/components/schemas/PlaceLocalesCollection/properties/data/items'
+      required:
+      - data
+      - links
+      type: object
+    Class_data_relationships:
+      properties:
+        parent:
+          $ref: '#/components/schemas/Class_data_relationships_parent'
+      required:
+      - parent
+      type: object
+    Class_data:
+      properties:
+        id:
+          description: class code
+          format: string
+          type: string
+        type:
+          enum:
+          - place_class
+          type: string
+        attributes:
+          $ref: '#/components/schemas/Class_data_attributes'
+        relationships:
+          $ref: '#/components/schemas/Class_data_relationships'
+      required:
+      - attributes
+      - id
+      - relationships
+      - type
+      type: object
+    CreatePlace_data_attributes_point:
+      properties:
+        lon:
+          description: Longitude
+          format: float
+          type: number
+        lat:
+          description: Latitude
+          format: float
+          type: number
+      required:
+      - lat
+      - lon
+      type: object
+    CreatePlace_data_attributes:
+      properties:
+        city_id:
+          description: city id
+          format: uuid
+          type: string
+        distributor_id:
+          description: distributor id
+          format: uuid
+          type: string
+        class:
+          description: place class
+          type: string
+        ownership:
+          description: place ownership
+          type: string
+        point:
+          $ref: '#/components/schemas/CreatePlace_data_attributes_point'
+        locale:
+          description: locale
+          type: string
+        name:
+          description: place name
+          type: string
+        address:
+          description: place address
+          type: string
+        description:
+          description: place description
+          type: string
+        website:
+          description: place website
+          format: uri
+          type: string
+        phone:
+          description: place phone number
+          type: string
+      type: object
+    CreatePlace_data:
+      properties:
+        id:
+          description: place id
+          format: uuid
+          type: string
+        type:
+          enum:
+          - place
+          type: string
+        attributes:
+          $ref: '#/components/schemas/CreatePlace_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
+    UpdatePlace_data_attributes:
+      properties:
+        class:
+          description: place class
+          type: string
+        status:
+          description: place status
+          type: string
+        website:
+          description: place website
+          format: uri
+          type: string
+        phone:
+          description: place phone number
+          type: string
+      type: object
+    UpdatePlace_data:
+      properties:
+        id:
+          description: place id
+          format: uuid
+          type: string
+        type:
+          enum:
+          - place
+          type: string
+        attributes:
+          $ref: '#/components/schemas/UpdatePlace_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
+    Place_data_attributes:
+      properties:
+        city_id:
+          description: city id
+          format: uuid
+          type: string
+        distributor_id:
+          description: distributor id
+          format: uuid
+          type: string
+        class:
+          description: place class
+          type: string
+        status:
+          description: place status
+          type: string
+        verified:
+          description: is place verified
+          type: boolean
+        ownership:
+          description: place ownership
+          type: string
+        point:
+          $ref: '#/components/schemas/CreatePlace/properties/data/properties/attributes/properties/point'
+        name:
+          description: place name
+          type: string
+        address:
+          description: place address
+          type: string
+        description:
+          description: place description
+          type: string
+        website:
+          description: place website
+          format: uri
+          type: string
+        phone:
+          description: place phone number
+          type: string
+        created_at:
+          description: place creation date
+          format: date-time
+          type: string
+        updated_at:
+          description: place last update date
+          format: date-time
+          type: string
+      required:
+      - address
+      - city_id
+      - class
+      - created_at
+      - description
+      - name
+      - ownership
+      - point
+      - status
+      - updated_at
+      - verified
+      type: object
+    Place_data:
+      properties:
+        id:
+          description: place id
+          format: uuid
+          type: string
+        type:
+          enum:
+          - place
+          type: string
+        attributes:
+          $ref: '#/components/schemas/Place_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
+    PlaceRelationships_city_links:
+      properties:
+        self:
+          description: A link to the related resource
+          format: uri
+          type: string
+        related:
+          description: A link to the related resource
+          format: uri
+          type: string
+      required:
+      - related
+      - self
+      type: object
+    PlaceRelationships_city:
+      properties:
+        links:
+          $ref: '#/components/schemas/PlaceRelationships_city_links'
+        data:
+          $ref: '#/components/schemas/PlaceLocalesCollection/properties/data/items'
+      required:
+      - data
+      - links
+      type: object
+    PlaceLocale_data_attributes:
+      properties:
+        name:
+          description: Locale name
+          type: string
+        address:
+          description: Locale address
+          type: string
+        description:
+          description: Locale description
+          type: string
+      required:
+      - address
+      - name
+      type: object
+    PlaceLocale_data:
+      properties:
+        id:
+          description: place_id + locale
+          format: string
+          pattern: "^[0-9a-fA-F-]{36}:[a-z]{2}(?:-[A-Z]{2})?$"
+          type: string
+        type:
+          enum:
+          - place_locale
+          type: string
+        attributes:
+          $ref: '#/components/schemas/PlaceLocale_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
+    PlaceLocalesCollection_data_inner:
+      properties:
+        type:
+          description: The type of the related resource
+          type: string
+        id:
+          description: The ID of the related resource
+          type: string
+      required:
+      - id
+      - type
+      type: object
+    SetPlaceLocale_data_attributes:
+      properties:
+        name:
+          description: Locale name
+          type: string
+        address:
+          description: Locale address
+          type: string
+        description:
+          description: Locale description
+          type: string
+      required:
+      - address
+      - name
+    SetPlaceLocale_data:
+      properties:
+        id:
+          description: place_id + locale
+          format: string
+          pattern: "^[0-9a-fA-F-]{36}:[a-z]{2}(?:-[A-Z]{2})?$"
+          type: string
+        type:
+          enum:
+          - place_locale
+          type: string
+        attributes:
+          $ref: '#/components/schemas/SetPlaceLocale_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
