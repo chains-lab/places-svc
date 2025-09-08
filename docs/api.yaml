@@ -1,0 +1,37 @@
+openapi: 3.0.0
+info:
+  title: Cifra SSO REST API
+  description: SSO REST API for Cifra app
+  version: 0.0.1
+
+paths:
+  /test:
+    post:
+      tags:
+        - Test
+      description: Test
+      responses:
+        '201':
+          description: successfully
+
+components:
+  schemas:
+    Class:
+      $ref: './spec/components/schemas/Class.yaml'
+    CreatePlace:
+      $ref: './spec/components/schemas/CreatePlace.yaml'
+    UpdatePlace:
+      $ref: './spec/components/schemas/UpdatePlace.yaml'
+
+    Place:
+      $ref: './spec/components/schemas/Place.yaml'
+    PlaceCollection:
+      $ref: './spec/components/schemas/PlaceCollection.yaml'
+    PlaceRelationships:
+      $ref: './spec/components/schemas/PlaceRelationships.yaml'
+    PlaceLocale:
+      $ref: './spec/components/schemas/PlaceLocale.yaml'
+    PlaceLocalesCollection:
+      $ref: './spec/components/schemas/PlaceLocalesCollection.yaml'
+    SetPlaceLocale:
+      $ref: './spec/components/schemas/SetPlaceLocale.yaml'

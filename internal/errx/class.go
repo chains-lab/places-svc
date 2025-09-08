@@ -13,6 +13,6 @@ var ErrorCurrentLocaleNotFoundForClass = ape.DeclareError("CURRENT_LOCALE_NOT_FO
 
 var ErrorNedAtLeastOneLocaleForClass = ape.DeclareError("NEED_AT_LEAST_ONE_LOCALE_FOR_CLASS")
 
-var ErrorClassFatherCycle = ape.DeclareError("CLASS_FATHER_CYCLE")
+var ErrorClassParentCycle = ape.DeclareError("CLASS_FATHER_CYCLE")
 
 var ErrorClassHasChildren = ape.DeclareError("CLASS_HAS_CHILDREN")

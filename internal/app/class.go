@@ -13,7 +13,7 @@ import (
 
 type CreateClassParams struct {
 	Code   string
-	Father *string
+	Parent *string
 	Icon   string
 	Name   string
 }
@@ -37,8 +37,8 @@ func (a App) CreateClass(
 		Icon: params.Icon,
 		Name: params.Name,
 	}
-	if params.Father != nil {
-		_, err = a.classificator.GetClass(ctx, *params.Father, constant.LocaleEN)
+	if params.Parent != nil {
+		_, err = a.classificator.GetClass(ctx, *params.Parent, constant.LocaleEN)
 		if err != nil {
 			return models.PlaceClassWithLocale{}, err
 		}
@@ -60,8 +60,8 @@ func (a App) GetClass(
 }
 
 type FilterClassesParams struct {
-	Father      *string
-	FatherCycle *bool
+	Parent      *string
+	ParentCycle *bool
 	Status      *string
 	Name        *string
 }
@@ -72,11 +72,11 @@ func (a App) ListClasses(
 	pag pagi.Response,
 ) ([]models.PlaceClassWithLocale, pagi.Response, error) {
 	ent := entities.FilterClassesParams{}
-	if filter.Father != nil {
-		ent.Father = filter.Father
+	if filter.Parent != nil {
+		ent.Parent = filter.Parent
 	}
-	if filter.FatherCycle != nil {
-		ent.FatherCycle = filter.FatherCycle
+	if filter.ParentCycle != nil {
+		ent.ParentCycle = filter.ParentCycle
 	}
 	if filter.Status != nil {
 		ent.Status = filter.Status
@@ -108,7 +108,7 @@ func (a App) DeactivateClass(
 
 type UpdateClassParams struct {
 	Icon   *string
-	Father *string
+	Parent *string
 }
 
 func (a App) UpdateClass(
@@ -125,16 +125,16 @@ func (a App) UpdateClass(
 	if params.Icon != nil {
 		ent.Icon = params.Icon
 	}
-	if params.Father != nil {
-		ent.Father = params.Father
+	if params.Parent != nil {
+		ent.Parent = params.Parent
 	}
 
-	err = a.classificator.UpdateClass(ctx, *params.Father, ent)
+	err = a.classificator.UpdateClass(ctx, *params.Parent, ent)
 	if err != nil {
 		return models.PlaceClassWithLocale{}, err
 	}
 
-	class, err = a.classificator.GetClass(ctx, *params.Father, locale)
+	class, err = a.classificator.GetClass(ctx, *params.Parent, locale)
 	if err != nil {
 		return models.PlaceClassWithLocale{}, err
 	}

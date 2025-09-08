@@ -21,7 +21,7 @@ func insertBaseKindInfra(t *testing.T) {
 	// root class: food
 	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.PlaceClass{
 		Code:      "food",
-		Father:    sql.NullString{Valid: false},
+		Parent:    sql.NullString{Valid: false},
 		Status:    "active",
 		Icon:      "🍔",
 		CreatedAt: now, UpdatedAt: now,
@@ -33,7 +33,7 @@ func insertBaseKindInfra(t *testing.T) {
 	parent := sql.NullString{String: "food", Valid: true}
 	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.PlaceClass{
 		Code:      "restaurant",
-		Father:    parent,
+		Parent:    parent,
 		Status:    "active",
 		Icon:      "🍽️",
 		CreatedAt: now, UpdatedAt: now,

@@ -1,0 +1,14 @@
+type: object
+required:
+  - parent
+properties:
+  parent:
+    type: object
+    required:
+      - links
+      - data
+    properties:
+      links:
+        $ref: './common/RelationshipLinks.yaml'
+      data:
+        $ref: './common/RelationshipDataObject.yaml'

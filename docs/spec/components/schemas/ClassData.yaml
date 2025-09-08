@@ -1,0 +1,18 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+  - relationships
+properties:
+  id:
+    type: string
+    format: string
+    description: "class code"
+  type:
+    type: string
+    enum: [ place_class ]
+  attributes:
+    $ref: './ClassAttributes.yaml'
+  relationships:
+    $ref: './ClassRelationships.yaml'

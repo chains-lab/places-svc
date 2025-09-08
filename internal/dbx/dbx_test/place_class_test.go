@@ -40,7 +40,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	parent := sql.NullString{String: "food", Valid: true}
 	child := dbx.PlaceClass{
 		Code:   "restaurant",
-		Father: parent,
+		Parent: parent,
 		Status: "active",
 		Icon:   "🍽️",
 	}
@@ -56,7 +56,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	parent2 := sql.NullString{String: "restaurant", Valid: true}
 	grand := dbx.PlaceClass{
 		Code:   "cafe",
-		Father: parent2,
+		Parent: parent2,
 		Status: "active",
 		Icon:   "☕",
 	}
@@ -91,7 +91,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	}
 
 	// Descendants of food (without food itself)
-	desc, err := q.New().FilterFatherCycle("food").OrderBy("pc.code ASC").Select(ctx)
+	desc, err := q.New().FilterParentCycle("food").OrderBy("pc.code ASC").Select(ctx)
 	if err != nil {
 		t.Fatalf("select descendants: %v", err)
 	}
@@ -160,7 +160,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	// Anti-cycle: try to move food under cafe
 	newParent := "cafe"
 	err = q.New().FilterCode("food").Update(ctx, dbx.UpdatePlaceClassParams{
-		Father:    &newParent,
+		Parent:    &newParent,
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err == nil {
@@ -216,7 +216,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 
 	// child: restaurant -> food
 	parentFood := sql.NullString{String: "food", Valid: true}
-	restaurant := dbx.PlaceClass{Code: "restaurant", Father: parentFood, Status: "active", Icon: "🍽️"}
+	restaurant := dbx.PlaceClass{Code: "restaurant", Parent: parentFood, Status: "active", Icon: "🍽️"}
 	if err := q.Insert(ctx, restaurant); err != nil {
 		t.Fatalf("insert restaurant: %v", err)
 	}
@@ -224,7 +224,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 
 	// grandchild: cafe -> restaurant
 	parentRest := sql.NullString{String: "restaurant", Valid: true}
-	cafe := dbx.PlaceClass{Code: "cafe", Father: parentRest, Status: "active", Icon: "☕"}
+	cafe := dbx.PlaceClass{Code: "cafe", Parent: parentRest, Status: "active", Icon: "☕"}
 	if err := q.Insert(ctx, cafe); err != nil {
 		t.Fatalf("insert cafe: %v", err)
 	}
@@ -263,7 +263,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 	// 1) reparent: restaurant -> services
 	newParent := "services"
 	if err := q.New().FilterCode("restaurant").Update(ctx, dbx.UpdatePlaceClassParams{
-		Father:    &newParent,
+		Parent:    &newParent,
 		UpdatedAt: time.Now().UTC(),
 	}); err != nil {
 		t.Fatalf("reparent restaurant under services: %v", err)
@@ -285,8 +285,8 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Fatalf("want path services.restaurant.cafe, got %q", gotCafe.Path)
 	}
 
-	// 2) roots via FilterFather(nil)
-	roots, err := q.New().FilterFather(sql.NullString{
+	// 2) roots via FilterParent(nil)
+	roots, err := q.New().FilterParent(sql.NullString{
 		Valid: false,
 	}).OrderBy("pc.code ASC").Select(ctx)
 	if err != nil {

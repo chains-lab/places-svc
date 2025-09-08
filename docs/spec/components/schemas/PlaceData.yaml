@@ -1,0 +1,15 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    format: uuid
+    description: "place id"
+  type:
+    type: string
+    enum: [ place ]
+  attributes:
+    $ref: './PlaceAttributes.yaml'

@@ -4,10 +4,9 @@ import "time"
 
 type PlaceClass struct {
 	Code      string    `json:"code"`
-	Father    *string   `json:"father,omitempty"` // NULL для корней
+	Parent    *string   `json:"parent,omitempty"`
 	Status    string    `json:"status"`
 	Icon      string    `json:"icon"`
-	Path      string    `json:"path"` // ltree как text
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

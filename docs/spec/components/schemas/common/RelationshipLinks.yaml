@@ -1,0 +1,13 @@
+type: object
+required:
+  - self
+  - related
+properties:
+  self:
+    type: string
+    format: uri
+    description: "A link to the related resource"
+  related:
+    type: string
+    format: uri
+    description: "A link to the related resource"

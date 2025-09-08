@@ -1,0 +1,51 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    format: uuid
+    description: "place id"
+  type:
+    type: string
+    enum: [ place ]
+  attributes:
+    type: object
+    properties:
+      city_id:
+        type: string
+        format: uuid
+        description: "city id"
+      distributor_id:
+        type: string
+        format: uuid
+        description: "distributor id"
+      class:
+        type: string
+        description: "place class"
+      ownership:
+        type: string
+        description: "place ownership"
+      point:
+        $ref: './Point.yaml'
+      locale:
+        type: string
+        description: "locale"
+      name:
+        type: string
+        description: "place name"
+      address:
+        type: string
+        description: "place address"
+      description:
+        type: string
+        description: "place description"
+      website:
+        type: string
+        format: uri
+        description: "place website"
+      phone:
+        type: string
+        description: "place phone number"

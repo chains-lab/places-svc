@@ -1,0 +1,35 @@
+type: object
+required:
+  - class
+  - city
+properties:
+  class:
+    type: object
+    required:
+      - links
+      - data
+    properties:
+      links:
+        $ref: './common/RelationshipLinks.yaml'
+      data:
+        $ref: './common/RelationshipDataObject.yaml'
+  city:
+    type: object
+    required:
+      - links
+      - data
+    properties:
+      links:
+        $ref: './common/RelationshipLinks.yaml'
+      data:
+        $ref: './common/RelationshipDataObject.yaml'
+  distributor:
+    type: object
+    required:
+      - links
+      - data
+    properties:
+      links:
+        $ref: './common/RelationshipLinks.yaml'
+      data:
+        $ref: './common/RelationshipDataObject.yaml'

@@ -24,8 +24,8 @@ type classQ interface {
 	Delete(ctx context.Context) error
 
 	FilterCode(code string) dbx.ClassesQ
-	FilterFather(father sql.NullString) dbx.ClassesQ
-	FilterFatherCycle(father string) dbx.ClassesQ
+	FilterParent(parent sql.NullString) dbx.ClassesQ
+	FilterParentCycle(parent string) dbx.ClassesQ
 	FilterStatus(status string) dbx.ClassesQ
 
 	WithLocale(locale string) dbx.ClassesQ
@@ -50,7 +50,7 @@ func NewClassificator(db *sql.DB) Classificator {
 
 type CreateClassParams struct {
 	Code   string
-	Father *string
+	Parent *string
 	Icon   string
 	Name   string
 }
@@ -69,16 +69,16 @@ func (c Classificator) CreateClass(
 		)
 	}
 
-	fatherValue := sql.NullString{}
-	if params.Father != nil {
-		fatherValue = sql.NullString{String: *params.Father, Valid: true}
+	parentValue := sql.NullString{}
+	if params.Parent != nil {
+		parentValue = sql.NullString{String: *params.Parent, Valid: true}
 	}
 
 	now := time.Now().UTC()
 
 	err = c.query.New().Insert(ctx, dbx.PlaceClass{
 		Code:      params.Code,
-		Father:    fatherValue,
+		Parent:    parentValue,
 		Status:    constant.PlaceClassStatusesInactive,
 		Icon:      params.Icon,
 		CreatedAt: now,
@@ -132,7 +132,7 @@ func (c Classificator) GetClass(
 
 type UpdateClassParams struct {
 	Icon   *string
-	Father *string
+	Parent *string
 }
 
 func (c Classificator) UpdateClass(
@@ -149,22 +149,22 @@ func (c Classificator) UpdateClass(
 		UpdatedAt: time.Now().UTC(),
 	}
 
-	if params.Father != nil {
-		_, err = c.query.New().FilterFatherCycle(class.Data.Code).FilterCode(*params.Father).Get(ctx)
+	if params.Parent != nil {
+		_, err = c.query.New().FilterParentCycle(class.Data.Code).FilterCode(*params.Parent).Get(ctx)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return errx.ErrorInternal.Raise(
-				fmt.Errorf("failed to check father cycle for class with code %s, cause: %w", code, err),
+				fmt.Errorf("failed to check parent cycle for class with code %s, cause: %w", code, err),
 			)
 		}
 		if err == nil {
-			return errx.ErrorClassFatherCycle.Raise(
-				fmt.Errorf("father cycle detected for class with code %s", code),
+			return errx.ErrorClassParentCycle.Raise(
+				fmt.Errorf("parent cycle detected for class with code %s", code),
 			)
 		}
 	}
-	if *params.Father == class.Data.Code {
-		return errx.ErrorClassFatherCycle.Raise(
-			fmt.Errorf("father cycle detected for class with code %s", code),
+	if *params.Parent == class.Data.Code {
+		return errx.ErrorClassParentCycle.Raise(
+			fmt.Errorf("parent cycle detected for class with code %s", code),
 		)
 	}
 
@@ -197,7 +197,7 @@ func (c Classificator) DeactivateClass(
 
 	now := time.Now().UTC()
 	status := constant.PlaceClassStatusesInactive
-	err = c.query.New().FilterFatherCycle(code).Update(ctx, dbx.UpdatePlaceClassParams{
+	err = c.query.New().FilterParentCycle(code).Update(ctx, dbx.UpdatePlaceClassParams{
 		Status:    &status,
 		UpdatedAt: now,
 	})
@@ -255,8 +255,8 @@ func (c Classificator) ActivateClass(
 }
 
 type FilterClassesParams struct {
-	Father      *string
-	FatherCycle *bool
+	Parent      *string
+	ParentCycle *bool
 	Status      *string
 	Locale      *string
 }
@@ -281,12 +281,12 @@ func (c Classificator) ListClasses(
 
 	query := c.query.New()
 
-	if filter.Father != nil {
-		if filter.FatherCycle != nil && *filter.FatherCycle {
-			query = query.FilterFatherCycle(*filter.Father)
+	if filter.Parent != nil {
+		if filter.ParentCycle != nil && *filter.ParentCycle {
+			query = query.FilterParentCycle(*filter.Parent)
 		}
-		query = query.FilterFather(sql.NullString{
-			String: *filter.Father,
+		query = query.FilterParent(sql.NullString{
+			String: *filter.Parent,
 			Valid:  true,
 		})
 	}
@@ -343,7 +343,7 @@ func (c Classificator) DeleteClass(
 		return err
 	}
 
-	count, err := c.query.New().FilterFather(sql.NullString{String: code, Valid: true}).Count(ctx)
+	count, err := c.query.New().FilterParent(sql.NullString{String: code, Valid: true}).Count(ctx)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to check class children existence, cause: %w", err),
@@ -374,8 +374,8 @@ func classWithLocaleModelFromDB(dbClass dbx.PlaceClassWithLocale) models.PlaceCl
 		CreatedAt: dbClass.CreatedAt,
 		UpdatedAt: dbClass.UpdatedAt,
 	}
-	if dbClass.Father.Valid {
-		resp.Father = &dbClass.Father.String
+	if dbClass.Parent.Valid {
+		resp.Parent = &dbClass.Parent.String
 	}
 
 	return models.PlaceClassWithLocale{

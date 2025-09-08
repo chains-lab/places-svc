@@ -1,0 +1,27 @@
+type: object
+required:
+  - status
+  - icon
+  - name
+  - created_at
+  - updated_at
+properties:
+  status:
+    type: string
+    description: "class status"
+  icon:
+    type: string
+    format: uri
+    description: "class icon"
+  name:
+    type: string
+    description: "class name"
+    default: "New Class"
+  created_at:
+    type: string
+    format: date-time
+    description: "class creation date"
+  updated_at:
+    type: string
+    format: date-time
+    description: "class last update date"

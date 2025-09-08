@@ -13,7 +13,7 @@ const PlaceClassesTable = "place_classes"
 
 type PlaceClassWithLocale struct {
 	Code      string         `db:"code"`
-	Father    sql.NullString `db:"father"` // NULL для корней
+	Parent    sql.NullString `db:"parent"` // NULL для корней
 	Status    string         `db:"status"`
 	Icon      string         `db:"icon"`
 	Path      string         `db:"path"` // ltree как text
@@ -25,7 +25,7 @@ type PlaceClassWithLocale struct {
 
 type PlaceClass struct {
 	Code      string         `db:"code"`
-	Father    sql.NullString `db:"father"` // NULL для корней
+	Parent    sql.NullString `db:"parent"` // NULL для корней
 	Status    string         `db:"status"`
 	Icon      string         `db:"icon"`
 	Path      string         `db:"path"` // ltree как text
@@ -48,7 +48,7 @@ func NewClassesQ(db *sql.DB) ClassesQ {
 		db: db,
 		selector: b.Select(
 			"pc.code",
-			"pc.father",
+			"pc.parent",
 			"pc.status",
 			"pc.icon",
 			"pc.path",
@@ -70,10 +70,10 @@ func (q ClassesQ) Insert(ctx context.Context, in PlaceClass) error {
 		"status": in.Status,
 		"icon":   in.Icon,
 	}
-	if in.Father.Valid {
-		values["father"] = in.Father.String
+	if in.Parent.Valid {
+		values["parent"] = in.Parent.String
 	} else {
-		values["father"] = nil
+		values["parent"] = nil
 	}
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
@@ -94,7 +94,7 @@ func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (PlaceClass, e
 
 	if err := scanner.Scan(
 		&pc.Code,
-		&pc.Father,
+		&pc.Parent,
 		&pc.Status,
 		&pc.Icon,
 		&pc.Path,
@@ -112,7 +112,7 @@ func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (Pla
 
 	if err := scanner.Scan(
 		&pc.Code,
-		&pc.Father,
+		&pc.Parent,
 		&pc.Status,
 		&pc.Icon,
 		&pc.Path,
@@ -169,7 +169,7 @@ func (q ClassesQ) Select(ctx context.Context) ([]PlaceClass, error) {
 }
 
 type UpdatePlaceClassParams struct {
-	Father    *string
+	Parent    *string
 	Status    *string
 	Icon      *string
 	UpdatedAt time.Time
@@ -179,8 +179,8 @@ func (q ClassesQ) Update(ctx context.Context, in UpdatePlaceClassParams) error {
 	values := map[string]interface{}{
 		"updated_at": in.UpdatedAt,
 	}
-	if in.Father != nil {
-		values["father"] = *in.Father
+	if in.Parent != nil {
+		values["parent"] = *in.Parent
 	}
 	if in.Status != nil {
 		values["status"] = *in.Status
@@ -222,18 +222,18 @@ func (q ClassesQ) FilterCode(code string) ClassesQ {
 	return q
 }
 
-func (q ClassesQ) FilterFather(code sql.NullString) ClassesQ {
+func (q ClassesQ) FilterParent(code sql.NullString) ClassesQ {
 	if code.Valid == false {
-		q.selector = q.selector.Where("pc.father IS NULL")
-		q.updater = q.updater.Where("pc.father IS NULL")
-		q.deleter = q.deleter.Where("father IS NULL")
-		q.counter = q.counter.Where("father IS NULL")
+		q.selector = q.selector.Where("pc.parent IS NULL")
+		q.updater = q.updater.Where("pc.parent IS NULL")
+		q.deleter = q.deleter.Where("parent IS NULL")
+		q.counter = q.counter.Where("parent IS NULL")
 		return q
 	}
-	q.selector = q.selector.Where(sq.Eq{"pc.father": code.String})
-	q.updater = q.updater.Where(sq.Eq{"pc.father": code.String})
-	q.deleter = q.deleter.Where(sq.Eq{"father": code.String})
-	q.counter = q.counter.Where(sq.Eq{"father": code.String})
+	q.selector = q.selector.Where(sq.Eq{"pc.parent": code.String})
+	q.updater = q.updater.Where(sq.Eq{"pc.parent": code.String})
+	q.deleter = q.deleter.Where(sq.Eq{"parent": code.String})
+	q.counter = q.counter.Where(sq.Eq{"parent": code.String})
 	return q
 }
 
@@ -245,7 +245,7 @@ func (q ClassesQ) FilterStatus(status string) ClassesQ {
 	return q
 }
 
-func (q ClassesQ) FilterFatherCycle(code string) ClassesQ {
+func (q ClassesQ) FilterParentCycle(code string) ClassesQ {
 	cond := sq.Expr(
 		"pc.path <@ (SELECT path FROM "+PlaceClassesTable+" WHERE code = ?) AND pc.code <> ?",
 		code, code,

@@ -5,7 +5,6 @@ import (
 
 	"github.com/chains-lab/places-svc/internal/app/entities"
 	"github.com/chains-lab/places-svc/internal/config"
-	"github.com/chains-lab/places-svc/internal/dbx"
 )
 
 type App struct {
@@ -21,6 +20,8 @@ func NewApp(cfg config.Config) (App, error) {
 	}
 
 	return App{
-		place: dbx.NewPlacesQ(pg),
+		place:         entities.NewPlace(pg),
+		classificator: entities.NewClassificator(pg),
+		timetable:     entities.NewTimetable(pg),
 	}, err
 }
