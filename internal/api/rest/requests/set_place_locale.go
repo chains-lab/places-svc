@@ -16,7 +16,8 @@ func SetPlaceLocale(r *http.Request) (req resources.SetPlaceLocale, err error) {
 
 	errs := validation.Errors{
 		"data/id":         validation.Validate(&req.Data, validation.Required),
-		"data/type":       validation.Validate(req.Data.Type, validation.Required, validation.In(resources.PlaceLocateType)),
+		"data/type":       validation.Validate(req.Data.Type, validation.Required, validation.In(resources.PlaceLocaleType)),
 		"data/attributes": validation.Validate(req.Data.Attributes, validation.Required),
 	}
+	return req, errs.Filter()
 }

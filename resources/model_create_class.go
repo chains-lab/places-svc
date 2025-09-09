@@ -16,38 +16,38 @@ import (
 	"fmt"
 )
 
-// checks if the PlaceCollection type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &PlaceCollection{}
+// checks if the CreateClass type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &CreateClass{}
 
-// PlaceCollection struct for PlaceCollection
-type PlaceCollection struct {
-	Data []PlaceData `json:"data"`
+// CreateClass struct for CreateClass
+type CreateClass struct {
+	Data CreateClassData `json:"data"`
 }
 
-type _PlaceCollection PlaceCollection
+type _CreateClass CreateClass
 
-// NewPlaceCollection instantiates a new PlaceCollection object
+// NewCreateClass instantiates a new CreateClass object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceCollection(data []PlaceData) *PlaceCollection {
-	this := PlaceCollection{}
+func NewCreateClass(data CreateClassData) *CreateClass {
+	this := CreateClass{}
 	this.Data = data
 	return &this
 }
 
-// NewPlaceCollectionWithDefaults instantiates a new PlaceCollection object
+// NewCreateClassWithDefaults instantiates a new CreateClass object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewPlaceCollectionWithDefaults() *PlaceCollection {
-	this := PlaceCollection{}
+func NewCreateClassWithDefaults() *CreateClass {
+	this := CreateClass{}
 	return &this
 }
 
 // GetData returns the Data field value
-func (o *PlaceCollection) GetData() []PlaceData {
+func (o *CreateClass) GetData() CreateClassData {
 	if o == nil {
-		var ret []PlaceData
+		var ret CreateClassData
 		return ret
 	}
 
@@ -56,19 +56,19 @@ func (o *PlaceCollection) GetData() []PlaceData {
 
 // GetDataOk returns a tuple with the Data field value
 // and a boolean to check if the value has been set.
-func (o *PlaceCollection) GetDataOk() ([]PlaceData, bool) {
+func (o *CreateClass) GetDataOk() (*CreateClassData, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return o.Data, true
+	return &o.Data, true
 }
 
 // SetData sets field value
-func (o *PlaceCollection) SetData(v []PlaceData) {
+func (o *CreateClass) SetData(v CreateClassData) {
 	o.Data = v
 }
 
-func (o PlaceCollection) MarshalJSON() ([]byte, error) {
+func (o CreateClass) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -76,13 +76,13 @@ func (o PlaceCollection) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o PlaceCollection) ToMap() (map[string]interface{}, error) {
+func (o CreateClass) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["data"] = o.Data
 	return toSerialize, nil
 }
 
-func (o *PlaceCollection) UnmarshalJSON(data []byte) (err error) {
+func (o *CreateClass) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -104,53 +104,53 @@ func (o *PlaceCollection) UnmarshalJSON(data []byte) (err error) {
 		}
 	}
 
-	varPlaceCollection := _PlaceCollection{}
+	varCreateClass := _CreateClass{}
 
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varPlaceCollection)
+	err = decoder.Decode(&varCreateClass)
 
 	if err != nil {
 		return err
 	}
 
-	*o = PlaceCollection(varPlaceCollection)
+	*o = CreateClass(varCreateClass)
 
 	return err
 }
 
-type NullablePlaceCollection struct {
-	value *PlaceCollection
+type NullableCreateClass struct {
+	value *CreateClass
 	isSet bool
 }
 
-func (v NullablePlaceCollection) Get() *PlaceCollection {
+func (v NullableCreateClass) Get() *CreateClass {
 	return v.value
 }
 
-func (v *NullablePlaceCollection) Set(val *PlaceCollection) {
+func (v *NullableCreateClass) Set(val *CreateClass) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullablePlaceCollection) IsSet() bool {
+func (v NullableCreateClass) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullablePlaceCollection) Unset() {
+func (v *NullableCreateClass) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullablePlaceCollection(val *PlaceCollection) *NullablePlaceCollection {
-	return &NullablePlaceCollection{value: val, isSet: true}
+func NewNullableCreateClass(val *CreateClass) *NullableCreateClass {
+	return &NullableCreateClass{value: val, isSet: true}
 }
 
-func (v NullablePlaceCollection) MarshalJSON() ([]byte, error) {
+func (v NullableCreateClass) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullablePlaceCollection) UnmarshalJSON(src []byte) error {
+func (v *NullableCreateClass) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

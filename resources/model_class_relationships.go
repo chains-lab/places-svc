@@ -16,38 +16,38 @@ import (
 	"fmt"
 )
 
-// checks if the ClassDataRelationships type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &ClassDataRelationships{}
+// checks if the ClassRelationships type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &ClassRelationships{}
 
-// ClassDataRelationships struct for ClassDataRelationships
-type ClassDataRelationships struct {
-	Parent ClassDataRelationshipsParent `json:"parent"`
+// ClassRelationships struct for ClassRelationships
+type ClassRelationships struct {
+	Parent ClassRelationshipsParent `json:"parent"`
 }
 
-type _ClassDataRelationships ClassDataRelationships
+type _ClassRelationships ClassRelationships
 
-// NewClassDataRelationships instantiates a new ClassDataRelationships object
+// NewClassRelationships instantiates a new ClassRelationships object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewClassDataRelationships(parent ClassDataRelationshipsParent) *ClassDataRelationships {
-	this := ClassDataRelationships{}
+func NewClassRelationships(parent ClassRelationshipsParent) *ClassRelationships {
+	this := ClassRelationships{}
 	this.Parent = parent
 	return &this
 }
 
-// NewClassDataRelationshipsWithDefaults instantiates a new ClassDataRelationships object
+// NewClassRelationshipsWithDefaults instantiates a new ClassRelationships object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewClassDataRelationshipsWithDefaults() *ClassDataRelationships {
-	this := ClassDataRelationships{}
+func NewClassRelationshipsWithDefaults() *ClassRelationships {
+	this := ClassRelationships{}
 	return &this
 }
 
 // GetParent returns the Parent field value
-func (o *ClassDataRelationships) GetParent() ClassDataRelationshipsParent {
+func (o *ClassRelationships) GetParent() ClassRelationshipsParent {
 	if o == nil {
-		var ret ClassDataRelationshipsParent
+		var ret ClassRelationshipsParent
 		return ret
 	}
 
@@ -56,7 +56,7 @@ func (o *ClassDataRelationships) GetParent() ClassDataRelationshipsParent {
 
 // GetParentOk returns a tuple with the Parent field value
 // and a boolean to check if the value has been set.
-func (o *ClassDataRelationships) GetParentOk() (*ClassDataRelationshipsParent, bool) {
+func (o *ClassRelationships) GetParentOk() (*ClassRelationshipsParent, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -64,11 +64,11 @@ func (o *ClassDataRelationships) GetParentOk() (*ClassDataRelationshipsParent, b
 }
 
 // SetParent sets field value
-func (o *ClassDataRelationships) SetParent(v ClassDataRelationshipsParent) {
+func (o *ClassRelationships) SetParent(v ClassRelationshipsParent) {
 	o.Parent = v
 }
 
-func (o ClassDataRelationships) MarshalJSON() ([]byte, error) {
+func (o ClassRelationships) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -76,13 +76,13 @@ func (o ClassDataRelationships) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o ClassDataRelationships) ToMap() (map[string]interface{}, error) {
+func (o ClassRelationships) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["parent"] = o.Parent
 	return toSerialize, nil
 }
 
-func (o *ClassDataRelationships) UnmarshalJSON(data []byte) (err error) {
+func (o *ClassRelationships) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -104,53 +104,53 @@ func (o *ClassDataRelationships) UnmarshalJSON(data []byte) (err error) {
 		}
 	}
 
-	varClassDataRelationships := _ClassDataRelationships{}
+	varClassRelationships := _ClassRelationships{}
 
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varClassDataRelationships)
+	err = decoder.Decode(&varClassRelationships)
 
 	if err != nil {
 		return err
 	}
 
-	*o = ClassDataRelationships(varClassDataRelationships)
+	*o = ClassRelationships(varClassRelationships)
 
 	return err
 }
 
-type NullableClassDataRelationships struct {
-	value *ClassDataRelationships
+type NullableClassRelationships struct {
+	value *ClassRelationships
 	isSet bool
 }
 
-func (v NullableClassDataRelationships) Get() *ClassDataRelationships {
+func (v NullableClassRelationships) Get() *ClassRelationships {
 	return v.value
 }
 
-func (v *NullableClassDataRelationships) Set(val *ClassDataRelationships) {
+func (v *NullableClassRelationships) Set(val *ClassRelationships) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableClassDataRelationships) IsSet() bool {
+func (v NullableClassRelationships) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableClassDataRelationships) Unset() {
+func (v *NullableClassRelationships) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableClassDataRelationships(val *ClassDataRelationships) *NullableClassDataRelationships {
-	return &NullableClassDataRelationships{value: val, isSet: true}
+func NewNullableClassRelationships(val *ClassRelationships) *NullableClassRelationships {
+	return &NullableClassRelationships{value: val, isSet: true}
 }
 
-func (v NullableClassDataRelationships) MarshalJSON() ([]byte, error) {
+func (v NullableClassRelationships) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableClassDataRelationships) UnmarshalJSON(src []byte) error {
+func (v *NullableClassRelationships) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

@@ -18,6 +18,13 @@ properties:
           enum: [ place ]
         attributes:
           type: object
+          required:
+            - city_id
+            - class
+            - point
+            - locale
+            - name
+            - description
           properties:
             city_id:
               type: string
@@ -30,9 +37,6 @@ properties:
             class:
               type: string
               description: "place class"
-            ownership:
-              type: string
-              description: "place ownership"
             point:
               $ref: './common/Point.yaml'
             locale:
@@ -41,9 +45,6 @@ properties:
             name:
               type: string
               description: "place name"
-            address:
-              type: string
-              description: "place address"
             description:
               type: string
               description: "place description"

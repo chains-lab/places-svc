@@ -1,0 +1,36 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        description: "class code"
+      type:
+        type: string
+        enum:
+        - classes
+        description: "Resource type"
+      attributes:
+        type: object
+        required:
+          - icon
+          - name
+        properties:
+          icon:
+            type: string
+            format: uri
+            description: "class icon"
+          name:
+            type: string
+            description: "class name at english"
+            default: "New Class"
+          parent:
+            type: string
+            description: "parent class code"

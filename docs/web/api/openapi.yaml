@@ -16,12 +16,166 @@ paths:
       - Test
 components:
   schemas:
+    Point:
+      properties:
+        lon:
+          description: Longitude
+          format: double
+          type: number
+        lat:
+          description: Latitude
+          format: double
+          type: number
+      required:
+      - lat
+      - lon
+      type: object
+    RelationshipLinks:
+      properties:
+        self:
+          description: A link to the related resource
+          format: uri
+          type: string
+        related:
+          description: A link to the related resource
+          format: uri
+          type: string
+      required:
+      - related
+      - self
+      type: object
+    RelationshipDataObject:
+      properties:
+        type:
+          description: The type of the related resource
+          type: string
+        id:
+          description: The ID of the related resource
+          type: string
+      required:
+      - id
+      - type
+      type: object
+    PaginationData:
+      properties:
+        page_number:
+          description: The current page number.
+          example: 1
+          format: int64
+          type: integer
+        page_size:
+          description: The number of items per page.
+          example: 10
+          format: int64
+          type: integer
+        total_items:
+          description: The total number of items available.
+          example: 100
+          format: int64
+          type: integer
+      required:
+      - page_number
+      - page_size
+      - total_items
+      type: object
     Class:
       properties:
         data:
           $ref: '#/components/schemas/Class_data'
       required:
       - data
+      type: object
+    ClassesCollection:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Class/properties/data'
+          type: array
+        links:
+          $ref: '#/components/schemas/PaginationData'
+      required:
+      - data
+      - links
+      type: object
+    ClassRelationships:
+      properties:
+        parent:
+          $ref: '#/components/schemas/ClassRelationships_parent'
+      required:
+      - parent
+      type: object
+    ClassLocale:
+      properties:
+        data:
+          $ref: '#/components/schemas/ClassLocale_data'
+      required:
+      - data
+      type: object
+    ClassLocalesCollection:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/RelationshipDataObject'
+          type: array
+        included:
+          items:
+            $ref: '#/components/schemas/ClassLocale/properties/data'
+          type: array
+      required:
+      - data
+      - included
+      type: object
+    CreateClass:
+      properties:
+        data:
+          $ref: '#/components/schemas/CreateClass_data'
+      required:
+      - data
+      type: object
+    UpdateClass:
+      properties:
+        data:
+          $ref: '#/components/schemas/UpdateClass_data'
+      required:
+      - data
+      type: object
+    DeactivateClass:
+      properties:
+        data:
+          $ref: '#/components/schemas/DeactivateClass_data'
+      required:
+      - data
+      type: object
+    Place:
+      properties:
+        data:
+          $ref: '#/components/schemas/Place_data'
+      required:
+      - data
+      type: object
+    PlacesCollection:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Place/properties/data'
+          type: array
+        links:
+          $ref: '#/components/schemas/PaginationData'
+      required:
+      - data
+      - links
+      type: object
+    PlaceRelationships:
+      properties:
+        class:
+          $ref: '#/components/schemas/ClassRelationships_parent'
+        city:
+          $ref: '#/components/schemas/ClassRelationships_parent'
+        distributor:
+          $ref: '#/components/schemas/ClassRelationships_parent'
+      required:
+      - city
+      - class
       type: object
     CreatePlace:
       properties:
@@ -37,34 +191,6 @@ components:
       required:
       - data
       type: object
-    Place:
-      properties:
-        data:
-          $ref: '#/components/schemas/Place_data'
-      required:
-      - data
-      type: object
-    PlaceCollection:
-      properties:
-        data:
-          items:
-            $ref: '#/components/schemas/Place/properties/data'
-          type: array
-      required:
-      - data
-      type: object
-    PlaceRelationships:
-      properties:
-        class:
-          $ref: '#/components/schemas/Class_data_relationships_parent'
-        city:
-          $ref: '#/components/schemas/PlaceRelationships_city'
-        distributor:
-          $ref: '#/components/schemas/Class_data_relationships_parent'
-      required:
-      - city
-      - class
-      type: object
     PlaceLocale:
       properties:
         data:
@@ -76,7 +202,7 @@ components:
       properties:
         data:
           items:
-            $ref: '#/components/schemas/PlaceLocalesCollection_data_inner'
+            $ref: '#/components/schemas/RelationshipDataObject'
           type: array
         included:
           items:
@@ -121,23 +247,6 @@ components:
       - status
       - updated_at
       type: object
-    Class_data_relationships_parent:
-      properties:
-        links:
-          $ref: '#/components/schemas/PlaceRelationships/properties/city/properties/links'
-        data:
-          $ref: '#/components/schemas/PlaceLocalesCollection/properties/data/items'
-      required:
-      - data
-      - links
-      type: object
-    Class_data_relationships:
-      properties:
-        parent:
-          $ref: '#/components/schemas/Class_data_relationships_parent'
-      required:
-      - parent
-      type: object
     Class_data:
       properties:
         id:
@@ -151,28 +260,138 @@ components:
         attributes:
           $ref: '#/components/schemas/Class_data_attributes'
         relationships:
-          $ref: '#/components/schemas/Class_data_relationships'
+          $ref: '#/components/schemas/ClassRelationships'
       required:
       - attributes
       - id
-      - relationships
       - type
       type: object
-    CreatePlace_data_attributes_point:
+    ClassRelationships_parent:
       properties:
-        lon:
-          description: Longitude
-          format: float
-          type: number
-        lat:
-          description: Latitude
-          format: float
-          type: number
-      required:
-      - lat
-      - lon
+        links:
+          $ref: '#/components/schemas/RelationshipLinks'
+        data:
+          $ref: '#/components/schemas/RelationshipDataObject'
       type: object
-    CreatePlace_data_attributes:
+    ClassLocale_data_attributes:
+      properties:
+        name:
+          description: Class name
+          type: string
+      required:
+      - name
+      type: object
+    ClassLocale_data:
+      properties:
+        id:
+          description: class_code + locale
+          example: yoga:en
+          format: string
+          type: string
+        type:
+          enum:
+          - class_locale
+          type: string
+        attributes:
+          $ref: '#/components/schemas/ClassLocale_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
+    CreateClass_data_attributes:
+      properties:
+        icon:
+          description: class icon
+          format: uri
+          type: string
+        name:
+          default: New Class
+          description: class name at english
+          type: string
+        parent:
+          description: parent class code
+          type: string
+      required:
+      - icon
+      - name
+      type: object
+    CreateClass_data:
+      properties:
+        id:
+          description: class code
+          type: string
+        type:
+          description: Resource type
+          enum:
+          - classes
+          type: string
+        attributes:
+          $ref: '#/components/schemas/CreateClass_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
+    UpdateClass_data_attributes:
+      properties:
+        icon:
+          description: class icon
+          format: uri
+          type: string
+        name:
+          default: New Class
+          description: class name at english
+          type: string
+        parent:
+          description: parent class code
+          type: string
+      type: object
+    UpdateClass_data:
+      properties:
+        id:
+          description: class code
+          type: string
+        type:
+          description: Resource type
+          enum:
+          - classes
+          type: string
+        attributes:
+          $ref: '#/components/schemas/UpdateClass_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
+    DeactivateClass_data_attributes:
+      properties:
+        replaced_class_code:
+          description: The class code that has replaced the deactivated class
+          example: advanced-yoga
+          type: string
+      required:
+      - replaced_class_code
+      type: object
+    DeactivateClass_data:
+      properties:
+        id:
+          description: class_code + locale
+          example: yoga:en
+          format: string
+          type: string
+        type:
+          enum:
+          - place_class
+          type: string
+        attributes:
+          $ref: '#/components/schemas/DeactivateClass_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+      type: object
+    Place_data_attributes:
       properties:
         city_id:
           description: city id
@@ -185,14 +404,14 @@ components:
         class:
           description: place class
           type: string
-        ownership:
-          description: place ownership
+        status:
+          description: place status
           type: string
+        verified:
+          description: is place verified
+          type: boolean
         point:
-          $ref: '#/components/schemas/CreatePlace_data_attributes_point'
-        locale:
-          description: locale
-          type: string
+          $ref: '#/components/schemas/Point'
         name:
           description: place name
           type: string
@@ -209,6 +428,84 @@ components:
         phone:
           description: place phone number
           type: string
+        created_at:
+          description: place creation date
+          format: date-time
+          type: string
+        updated_at:
+          description: place last update date
+          format: date-time
+          type: string
+      required:
+      - address
+      - city_id
+      - class
+      - created_at
+      - description
+      - name
+      - point
+      - status
+      - updated_at
+      - verified
+      type: object
+    Place_data:
+      properties:
+        id:
+          description: place id
+          format: uuid
+          type: string
+        type:
+          enum:
+          - place
+          type: string
+        attributes:
+          $ref: '#/components/schemas/Place_data_attributes'
+        relationships:
+          $ref: '#/components/schemas/PlaceRelationships'
+      required:
+      - attributes
+      - id
+      - relationships
+      - type
+      type: object
+    CreatePlace_data_attributes:
+      properties:
+        city_id:
+          description: city id
+          format: uuid
+          type: string
+        distributor_id:
+          description: distributor id
+          format: uuid
+          type: string
+        class:
+          description: place class
+          type: string
+        point:
+          $ref: '#/components/schemas/Point'
+        locale:
+          description: locale
+          type: string
+        name:
+          description: place name
+          type: string
+        description:
+          description: place description
+          type: string
+        website:
+          description: place website
+          format: uri
+          type: string
+        phone:
+          description: place phone number
+          type: string
+      required:
+      - city_id
+      - class
+      - description
+      - locale
+      - name
+      - point
       type: object
     CreatePlace_data:
       properties:
@@ -260,121 +557,16 @@ components:
       - id
       - type
       type: object
-    Place_data_attributes:
-      properties:
-        city_id:
-          description: city id
-          format: uuid
-          type: string
-        distributor_id:
-          description: distributor id
-          format: uuid
-          type: string
-        class:
-          description: place class
-          type: string
-        status:
-          description: place status
-          type: string
-        verified:
-          description: is place verified
-          type: boolean
-        ownership:
-          description: place ownership
-          type: string
-        point:
-          $ref: '#/components/schemas/CreatePlace/properties/data/properties/attributes/properties/point'
-        name:
-          description: place name
-          type: string
-        address:
-          description: place address
-          type: string
-        description:
-          description: place description
-          type: string
-        website:
-          description: place website
-          format: uri
-          type: string
-        phone:
-          description: place phone number
-          type: string
-        created_at:
-          description: place creation date
-          format: date-time
-          type: string
-        updated_at:
-          description: place last update date
-          format: date-time
-          type: string
-      required:
-      - address
-      - city_id
-      - class
-      - created_at
-      - description
-      - name
-      - ownership
-      - point
-      - status
-      - updated_at
-      - verified
-      type: object
-    Place_data:
-      properties:
-        id:
-          description: place id
-          format: uuid
-          type: string
-        type:
-          enum:
-          - place
-          type: string
-        attributes:
-          $ref: '#/components/schemas/Place_data_attributes'
-      required:
-      - attributes
-      - id
-      - type
-      type: object
-    PlaceRelationships_city_links:
-      properties:
-        self:
-          description: A link to the related resource
-          format: uri
-          type: string
-        related:
-          description: A link to the related resource
-          format: uri
-          type: string
-      required:
-      - related
-      - self
-      type: object
-    PlaceRelationships_city:
-      properties:
-        links:
-          $ref: '#/components/schemas/PlaceRelationships_city_links'
-        data:
-          $ref: '#/components/schemas/PlaceLocalesCollection/properties/data/items'
-      required:
-      - data
-      - links
-      type: object
     PlaceLocale_data_attributes:
       properties:
         name:
           description: Locale name
           type: string
-        address:
-          description: Locale address
-          type: string
         description:
           description: Locale description
           type: string
       required:
-      - address
+      - description
       - name
       type: object
     PlaceLocale_data:
@@ -395,31 +587,16 @@ components:
       - id
       - type
       type: object
-    PlaceLocalesCollection_data_inner:
-      properties:
-        type:
-          description: The type of the related resource
-          type: string
-        id:
-          description: The ID of the related resource
-          type: string
-      required:
-      - id
-      - type
-      type: object
     SetPlaceLocale_data_attributes:
       properties:
         name:
           description: Locale name
           type: string
-        address:
-          description: Locale address
-          type: string
         description:
           description: Locale description
           type: string
       required:
-      - address
+      - description
       - name
     SetPlaceLocale_data:
       properties:

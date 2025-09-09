@@ -20,14 +20,11 @@ properties:
       attributes:
         required:
           - name
-          - address
+          - description
         properties:
           name:
             type: string
             description: "Locale name"
-          address:
-            type: string
-            description: "Locale address"
           description:
             type: string
             description: "Locale description"

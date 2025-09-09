@@ -12,14 +12,11 @@ import (
 )
 
 type CreatePlaceParams struct {
-	ID            uuid.UUID
 	CityID        uuid.UUID
 	DistributorID *uuid.UUID
 	Class         string
-	Status        string
 	Website       *string
 	Phone         *string
-	Ownership     string
 	Point         orb.Point
 }
 
@@ -27,7 +24,7 @@ type CreatePlaceLocalParams struct {
 	Locale      string
 	Name        string
 	Address     string
-	Description *string
+	Description string
 }
 
 func (a App) CreatePlace(
@@ -35,13 +32,13 @@ func (a App) CreatePlace(
 	params CreatePlaceParams,
 	locale CreatePlaceLocalParams,
 ) (models.PlaceWithLocale, error) {
+	ID := uuid.New()
+
 	ents := entities.CreatePlaceParams{
-		ID:            params.ID,
+		ID:            ID,
 		CityID:        params.CityID,
 		DistributorID: params.DistributorID,
 		Class:         params.Class,
-		Status:        params.Status,
-		Ownership:     params.Ownership,
 		Point:         params.Point,
 	}
 	if params.Website != nil {
@@ -59,49 +56,119 @@ func (a App) CreatePlace(
 	return a.place.Create(ctx, ents, entities.CreatePlaceLocalParams{
 		Locale:      locale.Locale,
 		Name:        locale.Name,
-		Address:     locale.Address,
 		Description: locale.Description,
 	})
+}
+
+func (a App) GetPlace(
+	ctx context.Context,
+	placeID uuid.UUID,
+	locale string,
+) (models.PlaceWithLocale, error) {
+	return a.place.GetPlaceByID(ctx, placeID, locale)
+}
+
+func (a App) GetPlaceLocales(
+	ctx context.Context,
+	placeID uuid.UUID,
+	pag pagi.Request,
+) ([]models.PlaceLocale, pagi.Response, error) {
+	return a.place.ListLocalesForPlace(ctx, placeID, pag)
+}
+
+type SearchPlacesFilter struct {
+	Class          []string
+	Status         []string
+	CityIDs        []uuid.UUID
+	DistributorIDs []uuid.UUID
+	Verified       *bool
+	Name           *string
+	Address        *string
+
+	Location *SearchPlaceDistanceFilter
+}
+
+type SearchPlaceDistanceFilter struct {
+	Point   orb.Point
+	RadiusM uint64
+}
+
+func (a App) SearchPlaces(
+	ctx context.Context,
+	locale string,
+	filter SearchPlacesFilter,
+	pag pagi.Request,
+	sort []pagi.SortField,
+) ([]models.PlaceWithLocale, pagi.Response, error) {
+	ents := entities.SearchPlacesFilter{}
+	if len(filter.Class) > 0 && filter.Class != nil {
+		ents.Class = filter.Class
+	}
+	if len(filter.Status) > 0 && filter.Status != nil {
+		ents.Status = filter.Status
+	}
+	if len(filter.CityIDs) > 0 && filter.CityIDs != nil {
+		ents.CityID = filter.CityIDs
+	}
+	if len(filter.DistributorIDs) > 0 && filter.DistributorIDs != nil {
+		ents.DistributorID = filter.DistributorIDs
+	}
+	if filter.Verified != nil {
+		ents.Verified = filter.Verified
+	}
+	if filter.Name != nil {
+		ents.Name = filter.Name
+	}
+	if filter.Address != nil {
+		ents.Address = filter.Address
+	}
+
+	if filter.Location != nil {
+		ents.Location.Point = filter.Location.Point
+		ents.Location.RadiusM = filter.Location.RadiusM
+	}
+
+	return a.place.SearchPlaces(ctx, locale, ents, pag, sort)
+}
+
+type UpdatePlaceParams struct {
+	Class   *string
+	Website *string
+	Phone   *string
 }
 
 func (a App) AddPlaceLocales(
 	ctx context.Context,
 	placeID uuid.UUID,
 	locales ...CreatePlaceLocalParams,
-) (models.LocaleForPlace, error) {
+) error {
 	_, err := a.place.GetPlaceByID(ctx, placeID, constant.LocaleEN)
 	if err != nil {
-		return models.LocaleForPlace{}, err
+		return err
 	}
 
 	out := make([]entities.AddLocaleParams, 0, len(locales))
 	for _, locale := range locales {
 		err := constant.IsValidLocaleSupported(locale.Locale)
 		if err != nil {
-			return models.LocaleForPlace{}, err
+			return err
 		}
 
 		s := entities.AddLocaleParams{
-			Locale:  locale.Locale,
-			Name:    locale.Name,
-			Address: locale.Address,
-		}
-		if locale.Description != nil {
-			s.Description = locale.Description
+			Locale:      locale.Locale,
+			Name:        locale.Name,
+			Description: locale.Description,
 		}
 
 		out = append(out, s)
 	}
 
-	return a.place.AddPlaceLocales(ctx, placeID, out...)
-}
+	err = a.place.AddPlaceLocales(ctx, placeID, out...)
+	if err != nil {
+		return err
+	}
 
-type UpdatePlaceParams struct {
-	Class     *string
-	Ownership *string
-	Point     *orb.Point
-	Website   *string
-	Phone     *string
+	return nil
 }
 
 func (a App) UpdatePlace(
@@ -118,16 +185,11 @@ func (a App) UpdatePlace(
 		}
 		input.Class = params.Class
 	}
-	if params.Ownership != nil {
-		input.Ownership = params.Ownership
-	}
 
 	place, err := a.place.UpdatePlace(ctx, placeID, locale, entities.UpdatePlaceParams{
-		Class:     input.Class,
-		Ownership: input.Ownership,
-		Point:     params.Point,
-		Website:   params.Website,
-		Phone:     params.Phone,
+		Class:   input.Class,
+		Website: params.Website,
+		Phone:   params.Phone,
 	})
 	if err != nil {
 		return models.PlaceWithLocale{}, err
@@ -136,66 +198,18 @@ func (a App) UpdatePlace(
 	return place, nil
 }
 
-type SearchPlacesFilter struct {
-	Class         []string
-	Status        []string
-	Ownership     []string
-	CityID        []uuid.UUID
-	DistributorID []uuid.UUID
-	Verified      *bool
-	Name          *string
-	Address       *string
-
-	loco *SearchPlaceDistanceFilter
-
-	Locale *string
+func (a App) ReactivatePlace(ctx context.Context, placeID uuid.UUID, locale string) (models.PlaceWithLocale, error) {
+	return a.place.ReactivatePlace(ctx, locale, placeID)
 }
 
-type SearchPlaceDistanceFilter struct {
-	Point   orb.Point
-	RadiusM uint64
+func (a App) DeactivatePlace(ctx context.Context, placeID uuid.UUID, locale string) (models.PlaceWithLocale, error) {
+	return a.place.DeactivatePlace(ctx, locale, placeID)
 }
 
-func (a App) SearchPlaces(
-	ctx context.Context,
-	filter SearchPlacesFilter,
-	pag pagi.Request,
-	sort []pagi.SortField,
-) ([]models.PlaceWithLocale, pagi.Response, error) {
-	ents := entities.SearchPlacesFilter{}
-	if len(filter.Class) > 0 && filter.Class != nil {
-		ents.Class = filter.Class
-	}
-	if len(filter.Status) > 0 && filter.Status != nil {
-		ents.Status = filter.Status
-	}
-	if len(filter.Ownership) > 0 && filter.Ownership != nil {
-		ents.Ownership = filter.Ownership
-	}
-	if len(filter.CityID) > 0 && filter.CityID != nil {
-		ents.CityID = filter.CityID
-	}
-	if len(filter.DistributorID) > 0 && filter.DistributorID != nil {
-		ents.DistributorID = filter.DistributorID
-	}
-	if filter.Verified != nil {
-		ents.Verified = filter.Verified
-	}
-	if filter.Name != nil {
-		ents.Name = filter.Name
-	}
-	if filter.Address != nil {
-		ents.Address = filter.Address
-	}
+func (a App) VerifyPlace(ctx context.Context, placeID uuid.UUID) (models.PlaceWithLocale, error) {
+	return a.place.VerifyPlace(ctx, placeID)
+}
 
-	if filter.loco != nil {
-		ents.Location.Point = filter.loco.Point
-		ents.Location.RadiusM = filter.loco.RadiusM
-	}
-
-	if filter.Locale != nil {
-		ents.Locale = filter.Locale
-	}
-
-	return a.place.SearchPlaces(ctx, ents, pag, sort)
+func (a App) DeletePlace(ctx context.Context, placeID uuid.UUID) error {
+	return a.place.DeletePlace(ctx, placeID)
 }

@@ -32,8 +32,6 @@ type PlaceDataAttributes struct {
 	Status string `json:"status"`
 	// is place verified
 	Verified bool `json:"verified"`
-	// place ownership
-	Ownership string `json:"ownership"`
 	Point Point `json:"point"`
 	// place name
 	Name string `json:"name"`
@@ -57,13 +55,12 @@ type _PlaceDataAttributes PlaceDataAttributes
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, ownership string, point Point, name string, address string, description string, createdAt time.Time, updatedAt time.Time) *PlaceDataAttributes {
+func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, point Point, name string, address string, description string, createdAt time.Time, updatedAt time.Time) *PlaceDataAttributes {
 	this := PlaceDataAttributes{}
 	this.CityId = cityId
 	this.Class = class
 	this.Status = status
 	this.Verified = verified
-	this.Ownership = ownership
 	this.Point = point
 	this.Name = name
 	this.Address = address
@@ -207,30 +204,6 @@ func (o *PlaceDataAttributes) GetVerifiedOk() (*bool, bool) {
 // SetVerified sets field value
 func (o *PlaceDataAttributes) SetVerified(v bool) {
 	o.Verified = v
-}
-
-// GetOwnership returns the Ownership field value
-func (o *PlaceDataAttributes) GetOwnership() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Ownership
-}
-
-// GetOwnershipOk returns a tuple with the Ownership field value
-// and a boolean to check if the value has been set.
-func (o *PlaceDataAttributes) GetOwnershipOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Ownership, true
-}
-
-// SetOwnership sets field value
-func (o *PlaceDataAttributes) SetOwnership(v string) {
-	o.Ownership = v
 }
 
 // GetPoint returns the Point field value
@@ -458,7 +431,6 @@ func (o PlaceDataAttributes) ToMap() (map[string]interface{}, error) {
 	toSerialize["class"] = o.Class
 	toSerialize["status"] = o.Status
 	toSerialize["verified"] = o.Verified
-	toSerialize["ownership"] = o.Ownership
 	toSerialize["point"] = o.Point
 	toSerialize["name"] = o.Name
 	toSerialize["address"] = o.Address
@@ -483,7 +455,6 @@ func (o *PlaceDataAttributes) UnmarshalJSON(data []byte) (err error) {
 		"class",
 		"status",
 		"verified",
-		"ownership",
 		"point",
 		"name",
 		"address",

@@ -16,40 +16,40 @@ import (
 	"fmt"
 )
 
-// checks if the PlaceLocalesCollectionDataInner type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &PlaceLocalesCollectionDataInner{}
+// checks if the RelationshipDataObject type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &RelationshipDataObject{}
 
-// PlaceLocalesCollectionDataInner struct for PlaceLocalesCollectionDataInner
-type PlaceLocalesCollectionDataInner struct {
+// RelationshipDataObject struct for RelationshipDataObject
+type RelationshipDataObject struct {
 	// The type of the related resource
 	Type string `json:"type"`
 	// The ID of the related resource
 	Id string `json:"id"`
 }
 
-type _PlaceLocalesCollectionDataInner PlaceLocalesCollectionDataInner
+type _RelationshipDataObject RelationshipDataObject
 
-// NewPlaceLocalesCollectionDataInner instantiates a new PlaceLocalesCollectionDataInner object
+// NewRelationshipDataObject instantiates a new RelationshipDataObject object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceLocalesCollectionDataInner(type_ string, id string) *PlaceLocalesCollectionDataInner {
-	this := PlaceLocalesCollectionDataInner{}
+func NewRelationshipDataObject(type_ string, id string) *RelationshipDataObject {
+	this := RelationshipDataObject{}
 	this.Type = type_
 	this.Id = id
 	return &this
 }
 
-// NewPlaceLocalesCollectionDataInnerWithDefaults instantiates a new PlaceLocalesCollectionDataInner object
+// NewRelationshipDataObjectWithDefaults instantiates a new RelationshipDataObject object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewPlaceLocalesCollectionDataInnerWithDefaults() *PlaceLocalesCollectionDataInner {
-	this := PlaceLocalesCollectionDataInner{}
+func NewRelationshipDataObjectWithDefaults() *RelationshipDataObject {
+	this := RelationshipDataObject{}
 	return &this
 }
 
 // GetType returns the Type field value
-func (o *PlaceLocalesCollectionDataInner) GetType() string {
+func (o *RelationshipDataObject) GetType() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -60,7 +60,7 @@ func (o *PlaceLocalesCollectionDataInner) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *PlaceLocalesCollectionDataInner) GetTypeOk() (*string, bool) {
+func (o *RelationshipDataObject) GetTypeOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -68,12 +68,12 @@ func (o *PlaceLocalesCollectionDataInner) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *PlaceLocalesCollectionDataInner) SetType(v string) {
+func (o *RelationshipDataObject) SetType(v string) {
 	o.Type = v
 }
 
 // GetId returns the Id field value
-func (o *PlaceLocalesCollectionDataInner) GetId() string {
+func (o *RelationshipDataObject) GetId() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -84,7 +84,7 @@ func (o *PlaceLocalesCollectionDataInner) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
-func (o *PlaceLocalesCollectionDataInner) GetIdOk() (*string, bool) {
+func (o *RelationshipDataObject) GetIdOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -92,11 +92,11 @@ func (o *PlaceLocalesCollectionDataInner) GetIdOk() (*string, bool) {
 }
 
 // SetId sets field value
-func (o *PlaceLocalesCollectionDataInner) SetId(v string) {
+func (o *RelationshipDataObject) SetId(v string) {
 	o.Id = v
 }
 
-func (o PlaceLocalesCollectionDataInner) MarshalJSON() ([]byte, error) {
+func (o RelationshipDataObject) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -104,14 +104,14 @@ func (o PlaceLocalesCollectionDataInner) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o PlaceLocalesCollectionDataInner) ToMap() (map[string]interface{}, error) {
+func (o RelationshipDataObject) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["type"] = o.Type
 	toSerialize["id"] = o.Id
 	return toSerialize, nil
 }
 
-func (o *PlaceLocalesCollectionDataInner) UnmarshalJSON(data []byte) (err error) {
+func (o *RelationshipDataObject) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -134,53 +134,53 @@ func (o *PlaceLocalesCollectionDataInner) UnmarshalJSON(data []byte) (err error)
 		}
 	}
 
-	varPlaceLocalesCollectionDataInner := _PlaceLocalesCollectionDataInner{}
+	varRelationshipDataObject := _RelationshipDataObject{}
 
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varPlaceLocalesCollectionDataInner)
+	err = decoder.Decode(&varRelationshipDataObject)
 
 	if err != nil {
 		return err
 	}
 
-	*o = PlaceLocalesCollectionDataInner(varPlaceLocalesCollectionDataInner)
+	*o = RelationshipDataObject(varRelationshipDataObject)
 
 	return err
 }
 
-type NullablePlaceLocalesCollectionDataInner struct {
-	value *PlaceLocalesCollectionDataInner
+type NullableRelationshipDataObject struct {
+	value *RelationshipDataObject
 	isSet bool
 }
 
-func (v NullablePlaceLocalesCollectionDataInner) Get() *PlaceLocalesCollectionDataInner {
+func (v NullableRelationshipDataObject) Get() *RelationshipDataObject {
 	return v.value
 }
 
-func (v *NullablePlaceLocalesCollectionDataInner) Set(val *PlaceLocalesCollectionDataInner) {
+func (v *NullableRelationshipDataObject) Set(val *RelationshipDataObject) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullablePlaceLocalesCollectionDataInner) IsSet() bool {
+func (v NullableRelationshipDataObject) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullablePlaceLocalesCollectionDataInner) Unset() {
+func (v *NullableRelationshipDataObject) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullablePlaceLocalesCollectionDataInner(val *PlaceLocalesCollectionDataInner) *NullablePlaceLocalesCollectionDataInner {
-	return &NullablePlaceLocalesCollectionDataInner{value: val, isSet: true}
+func NewNullableRelationshipDataObject(val *RelationshipDataObject) *NullableRelationshipDataObject {
+	return &NullableRelationshipDataObject{value: val, isSet: true}
 }
 
-func (v NullablePlaceLocalesCollectionDataInner) MarshalJSON() ([]byte, error) {
+func (v NullableRelationshipDataObject) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullablePlaceLocalesCollectionDataInner) UnmarshalJSON(src []byte) error {
+func (v *NullableRelationshipDataObject) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

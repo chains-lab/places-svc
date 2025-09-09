@@ -8,6 +8,8 @@ const (
 	LocaleUK = "uk"
 )
 
+const DefaultLocale = LocaleEN
+
 var supportedLocales = []string{
 	LocaleEN,
 	LocaleRU,

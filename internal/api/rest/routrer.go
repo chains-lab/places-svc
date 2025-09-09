@@ -17,7 +17,6 @@ type Handlers interface {
 	// Places level handlers
 	CreatePlace(w http.ResponseWriter, r *http.Request)
 	GetPlace(w http.ResponseWriter, r *http.Request)
-	GetPlaceLocale(w http.ResponseWriter, r *http.Request)
 	ListPlace(w http.ResponseWriter, r *http.Request)
 	UpdatePlace(w http.ResponseWriter, r *http.Request)
 	SetPlaceLocale(w http.ResponseWriter, r *http.Request)
@@ -25,7 +24,6 @@ type Handlers interface {
 	SetTimetable(w http.ResponseWriter, r *http.Request)
 
 	VerifyPlace(w http.ResponseWriter, r *http.Request)
-	BlockPlace(w http.ResponseWriter, r *http.Request)
 
 	// Class level handlers
 	CreateClass(w http.ResponseWriter, r *http.Request)
@@ -57,7 +55,7 @@ func (s *Service) Api(ctx context.Context, cfg config.Config, h Handlers) {
 
 					r.Route("/{locale}", func(r chi.Router) {
 						r.With(auth).Put("/", h.SetPlaceLocale)
-						r.Get("/", h.GetPlaceLocale)
+						//r.Get("/", h.GetPlaceLocale)
 					})
 
 					r.Route("/timetable", func(r chi.Router) {
@@ -65,7 +63,6 @@ func (s *Service) Api(ctx context.Context, cfg config.Config, h Handlers) {
 					})
 
 					r.Post("/verified", h.VerifyPlace)
-					r.Post("/block", h.BlockPlace)
 				})
 			})
 

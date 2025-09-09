@@ -12,6 +12,8 @@ package resources
 
 import (
 	"encoding/json"
+	"bytes"
+	"fmt"
 )
 
 // checks if the CreatePlaceDataAttributes type satisfies the MappedNullable interface at compile time
@@ -20,34 +22,38 @@ var _ MappedNullable = &CreatePlaceDataAttributes{}
 // CreatePlaceDataAttributes struct for CreatePlaceDataAttributes
 type CreatePlaceDataAttributes struct {
 	// city id
-	CityId *string `json:"city_id,omitempty"`
+	CityId string `json:"city_id"`
 	// distributor id
 	DistributorId *string `json:"distributor_id,omitempty"`
 	// place class
-	Class *string `json:"class,omitempty"`
-	// place ownership
-	Ownership *string `json:"ownership,omitempty"`
-	Point *CreatePlaceDataAttributesPoint `json:"point,omitempty"`
+	Class string `json:"class"`
+	Point Point `json:"point"`
 	// locale
-	Locale *string `json:"locale,omitempty"`
+	Locale string `json:"locale"`
 	// place name
-	Name *string `json:"name,omitempty"`
-	// place address
-	Address *string `json:"address,omitempty"`
+	Name string `json:"name"`
 	// place description
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description"`
 	// place website
 	Website *string `json:"website,omitempty"`
 	// place phone number
 	Phone *string `json:"phone,omitempty"`
 }
 
+type _CreatePlaceDataAttributes CreatePlaceDataAttributes
+
 // NewCreatePlaceDataAttributes instantiates a new CreatePlaceDataAttributes object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCreatePlaceDataAttributes() *CreatePlaceDataAttributes {
+func NewCreatePlaceDataAttributes(cityId string, class string, point Point, locale string, name string, description string) *CreatePlaceDataAttributes {
 	this := CreatePlaceDataAttributes{}
+	this.CityId = cityId
+	this.Class = class
+	this.Point = point
+	this.Locale = locale
+	this.Name = name
+	this.Description = description
 	return &this
 }
 
@@ -59,36 +65,28 @@ func NewCreatePlaceDataAttributesWithDefaults() *CreatePlaceDataAttributes {
 	return &this
 }
 
-// GetCityId returns the CityId field value if set, zero value otherwise.
+// GetCityId returns the CityId field value
 func (o *CreatePlaceDataAttributes) GetCityId() string {
-	if o == nil || IsNil(o.CityId) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.CityId
+
+	return o.CityId
 }
 
-// GetCityIdOk returns a tuple with the CityId field value if set, nil otherwise
+// GetCityIdOk returns a tuple with the CityId field value
 // and a boolean to check if the value has been set.
 func (o *CreatePlaceDataAttributes) GetCityIdOk() (*string, bool) {
-	if o == nil || IsNil(o.CityId) {
+	if o == nil {
 		return nil, false
 	}
-	return o.CityId, true
+	return &o.CityId, true
 }
 
-// HasCityId returns a boolean if a field has been set.
-func (o *CreatePlaceDataAttributes) HasCityId() bool {
-	if o != nil && !IsNil(o.CityId) {
-		return true
-	}
-
-	return false
-}
-
-// SetCityId gets a reference to the given string and assigns it to the CityId field.
+// SetCityId sets field value
 func (o *CreatePlaceDataAttributes) SetCityId(v string) {
-	o.CityId = &v
+	o.CityId = v
 }
 
 // GetDistributorId returns the DistributorId field value if set, zero value otherwise.
@@ -123,228 +121,124 @@ func (o *CreatePlaceDataAttributes) SetDistributorId(v string) {
 	o.DistributorId = &v
 }
 
-// GetClass returns the Class field value if set, zero value otherwise.
+// GetClass returns the Class field value
 func (o *CreatePlaceDataAttributes) GetClass() string {
-	if o == nil || IsNil(o.Class) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Class
+
+	return o.Class
 }
 
-// GetClassOk returns a tuple with the Class field value if set, nil otherwise
+// GetClassOk returns a tuple with the Class field value
 // and a boolean to check if the value has been set.
 func (o *CreatePlaceDataAttributes) GetClassOk() (*string, bool) {
-	if o == nil || IsNil(o.Class) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Class, true
+	return &o.Class, true
 }
 
-// HasClass returns a boolean if a field has been set.
-func (o *CreatePlaceDataAttributes) HasClass() bool {
-	if o != nil && !IsNil(o.Class) {
-		return true
-	}
-
-	return false
-}
-
-// SetClass gets a reference to the given string and assigns it to the Class field.
+// SetClass sets field value
 func (o *CreatePlaceDataAttributes) SetClass(v string) {
-	o.Class = &v
+	o.Class = v
 }
 
-// GetOwnership returns the Ownership field value if set, zero value otherwise.
-func (o *CreatePlaceDataAttributes) GetOwnership() string {
-	if o == nil || IsNil(o.Ownership) {
-		var ret string
+// GetPoint returns the Point field value
+func (o *CreatePlaceDataAttributes) GetPoint() Point {
+	if o == nil {
+		var ret Point
 		return ret
 	}
-	return *o.Ownership
+
+	return o.Point
 }
 
-// GetOwnershipOk returns a tuple with the Ownership field value if set, nil otherwise
+// GetPointOk returns a tuple with the Point field value
 // and a boolean to check if the value has been set.
-func (o *CreatePlaceDataAttributes) GetOwnershipOk() (*string, bool) {
-	if o == nil || IsNil(o.Ownership) {
+func (o *CreatePlaceDataAttributes) GetPointOk() (*Point, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Ownership, true
+	return &o.Point, true
 }
 
-// HasOwnership returns a boolean if a field has been set.
-func (o *CreatePlaceDataAttributes) HasOwnership() bool {
-	if o != nil && !IsNil(o.Ownership) {
-		return true
-	}
-
-	return false
+// SetPoint sets field value
+func (o *CreatePlaceDataAttributes) SetPoint(v Point) {
+	o.Point = v
 }
 
-// SetOwnership gets a reference to the given string and assigns it to the Ownership field.
-func (o *CreatePlaceDataAttributes) SetOwnership(v string) {
-	o.Ownership = &v
-}
-
-// GetPoint returns the Point field value if set, zero value otherwise.
-func (o *CreatePlaceDataAttributes) GetPoint() CreatePlaceDataAttributesPoint {
-	if o == nil || IsNil(o.Point) {
-		var ret CreatePlaceDataAttributesPoint
-		return ret
-	}
-	return *o.Point
-}
-
-// GetPointOk returns a tuple with the Point field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *CreatePlaceDataAttributes) GetPointOk() (*CreatePlaceDataAttributesPoint, bool) {
-	if o == nil || IsNil(o.Point) {
-		return nil, false
-	}
-	return o.Point, true
-}
-
-// HasPoint returns a boolean if a field has been set.
-func (o *CreatePlaceDataAttributes) HasPoint() bool {
-	if o != nil && !IsNil(o.Point) {
-		return true
-	}
-
-	return false
-}
-
-// SetPoint gets a reference to the given CreatePlaceDataAttributesPoint and assigns it to the Point field.
-func (o *CreatePlaceDataAttributes) SetPoint(v CreatePlaceDataAttributesPoint) {
-	o.Point = &v
-}
-
-// GetLocale returns the Locale field value if set, zero value otherwise.
+// GetLocale returns the Locale field value
 func (o *CreatePlaceDataAttributes) GetLocale() string {
-	if o == nil || IsNil(o.Locale) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Locale
+
+	return o.Locale
 }
 
-// GetLocaleOk returns a tuple with the Locale field value if set, nil otherwise
+// GetLocaleOk returns a tuple with the Locale field value
 // and a boolean to check if the value has been set.
 func (o *CreatePlaceDataAttributes) GetLocaleOk() (*string, bool) {
-	if o == nil || IsNil(o.Locale) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Locale, true
+	return &o.Locale, true
 }
 
-// HasLocale returns a boolean if a field has been set.
-func (o *CreatePlaceDataAttributes) HasLocale() bool {
-	if o != nil && !IsNil(o.Locale) {
-		return true
-	}
-
-	return false
-}
-
-// SetLocale gets a reference to the given string and assigns it to the Locale field.
+// SetLocale sets field value
 func (o *CreatePlaceDataAttributes) SetLocale(v string) {
-	o.Locale = &v
+	o.Locale = v
 }
 
-// GetName returns the Name field value if set, zero value otherwise.
+// GetName returns the Name field value
 func (o *CreatePlaceDataAttributes) GetName() string {
-	if o == nil || IsNil(o.Name) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Name
+
+	return o.Name
 }
 
-// GetNameOk returns a tuple with the Name field value if set, nil otherwise
+// GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
 func (o *CreatePlaceDataAttributes) GetNameOk() (*string, bool) {
-	if o == nil || IsNil(o.Name) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Name, true
+	return &o.Name, true
 }
 
-// HasName returns a boolean if a field has been set.
-func (o *CreatePlaceDataAttributes) HasName() bool {
-	if o != nil && !IsNil(o.Name) {
-		return true
-	}
-
-	return false
-}
-
-// SetName gets a reference to the given string and assigns it to the Name field.
+// SetName sets field value
 func (o *CreatePlaceDataAttributes) SetName(v string) {
-	o.Name = &v
+	o.Name = v
 }
 
-// GetAddress returns the Address field value if set, zero value otherwise.
-func (o *CreatePlaceDataAttributes) GetAddress() string {
-	if o == nil || IsNil(o.Address) {
-		var ret string
-		return ret
-	}
-	return *o.Address
-}
-
-// GetAddressOk returns a tuple with the Address field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *CreatePlaceDataAttributes) GetAddressOk() (*string, bool) {
-	if o == nil || IsNil(o.Address) {
-		return nil, false
-	}
-	return o.Address, true
-}
-
-// HasAddress returns a boolean if a field has been set.
-func (o *CreatePlaceDataAttributes) HasAddress() bool {
-	if o != nil && !IsNil(o.Address) {
-		return true
-	}
-
-	return false
-}
-
-// SetAddress gets a reference to the given string and assigns it to the Address field.
-func (o *CreatePlaceDataAttributes) SetAddress(v string) {
-	o.Address = &v
-}
-
-// GetDescription returns the Description field value if set, zero value otherwise.
+// GetDescription returns the Description field value
 func (o *CreatePlaceDataAttributes) GetDescription() string {
-	if o == nil || IsNil(o.Description) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Description
+
+	return o.Description
 }
 
-// GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
+// GetDescriptionOk returns a tuple with the Description field value
 // and a boolean to check if the value has been set.
 func (o *CreatePlaceDataAttributes) GetDescriptionOk() (*string, bool) {
-	if o == nil || IsNil(o.Description) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Description, true
+	return &o.Description, true
 }
 
-// HasDescription returns a boolean if a field has been set.
-func (o *CreatePlaceDataAttributes) HasDescription() bool {
-	if o != nil && !IsNil(o.Description) {
-		return true
-	}
-
-	return false
-}
-
-// SetDescription gets a reference to the given string and assigns it to the Description field.
+// SetDescription sets field value
 func (o *CreatePlaceDataAttributes) SetDescription(v string) {
-	o.Description = &v
+	o.Description = v
 }
 
 // GetWebsite returns the Website field value if set, zero value otherwise.
@@ -421,33 +315,15 @@ func (o CreatePlaceDataAttributes) MarshalJSON() ([]byte, error) {
 
 func (o CreatePlaceDataAttributes) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.CityId) {
-		toSerialize["city_id"] = o.CityId
-	}
+	toSerialize["city_id"] = o.CityId
 	if !IsNil(o.DistributorId) {
 		toSerialize["distributor_id"] = o.DistributorId
 	}
-	if !IsNil(o.Class) {
-		toSerialize["class"] = o.Class
-	}
-	if !IsNil(o.Ownership) {
-		toSerialize["ownership"] = o.Ownership
-	}
-	if !IsNil(o.Point) {
-		toSerialize["point"] = o.Point
-	}
-	if !IsNil(o.Locale) {
-		toSerialize["locale"] = o.Locale
-	}
-	if !IsNil(o.Name) {
-		toSerialize["name"] = o.Name
-	}
-	if !IsNil(o.Address) {
-		toSerialize["address"] = o.Address
-	}
-	if !IsNil(o.Description) {
-		toSerialize["description"] = o.Description
-	}
+	toSerialize["class"] = o.Class
+	toSerialize["point"] = o.Point
+	toSerialize["locale"] = o.Locale
+	toSerialize["name"] = o.Name
+	toSerialize["description"] = o.Description
 	if !IsNil(o.Website) {
 		toSerialize["website"] = o.Website
 	}
@@ -455,6 +331,48 @@ func (o CreatePlaceDataAttributes) ToMap() (map[string]interface{}, error) {
 		toSerialize["phone"] = o.Phone
 	}
 	return toSerialize, nil
+}
+
+func (o *CreatePlaceDataAttributes) UnmarshalJSON(data []byte) (err error) {
+	// This validates that all required properties are included in the JSON object
+	// by unmarshalling the object into a generic map with string keys and checking
+	// that every required field exists as a key in the generic map.
+	requiredProperties := []string{
+		"city_id",
+		"class",
+		"point",
+		"locale",
+		"name",
+		"description",
+	}
+
+	allProperties := make(map[string]interface{})
+
+	err = json.Unmarshal(data, &allProperties)
+
+	if err != nil {
+		return err;
+	}
+
+	for _, requiredProperty := range(requiredProperties) {
+		if _, exists := allProperties[requiredProperty]; !exists {
+			return fmt.Errorf("no value given for required property %v", requiredProperty)
+		}
+	}
+
+	varCreatePlaceDataAttributes := _CreatePlaceDataAttributes{}
+
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&varCreatePlaceDataAttributes)
+
+	if err != nil {
+		return err
+	}
+
+	*o = CreatePlaceDataAttributes(varCreatePlaceDataAttributes)
+
+	return err
 }
 
 type NullableCreatePlaceDataAttributes struct {

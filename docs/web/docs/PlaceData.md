@@ -7,12 +7,13 @@ Name | Type | Description | Notes
 **Id** | **string** | place id | 
 **Type** | **string** |  | 
 **Attributes** | [**PlaceDataAttributes**](PlaceDataAttributes.md) |  | 
+**Relationships** | [**PlaceRelationships**](PlaceRelationships.md) |  | 
 
 ## Methods
 
 ### NewPlaceData
 
-`func NewPlaceData(id string, type_ string, attributes PlaceDataAttributes, ) *PlaceData`
+`func NewPlaceData(id string, type_ string, attributes PlaceDataAttributes, relationships PlaceRelationships, ) *PlaceData`
 
 NewPlaceData instantiates a new PlaceData object
 This constructor will assign default values to properties that have it defined,
@@ -85,6 +86,26 @@ and a boolean to check if the value has been set.
 `func (o *PlaceData) SetAttributes(v PlaceDataAttributes)`
 
 SetAttributes sets Attributes field to given value.
+
+
+### GetRelationships
+
+`func (o *PlaceData) GetRelationships() PlaceRelationships`
+
+GetRelationships returns the Relationships field if non-nil, zero value otherwise.
+
+### GetRelationshipsOk
+
+`func (o *PlaceData) GetRelationshipsOk() (*PlaceRelationships, bool)`
+
+GetRelationshipsOk returns a tuple with the Relationships field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetRelationships
+
+`func (o *PlaceData) SetRelationships(v PlaceRelationships)`
+
+SetRelationships sets Relationships field to given value.
 
 
 

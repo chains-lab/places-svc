@@ -1,0 +1,16 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    format: string
+    description: "class_code + locale"
+    example: "yoga:en"
+  type:
+    type: string
+    enum: [ class_locale ]
+  attributes:
+    $ref: './ClassLocaleAttributes.yaml'

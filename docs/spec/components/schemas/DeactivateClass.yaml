@@ -1,0 +1,28 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: string
+        description: "class_code + locale"
+        example: "yoga:en"
+      type:
+        type: string
+        enum: [ place_class ]
+      attributes:
+        type: object
+        required:
+          - replaced_class_code
+        properties:
+          replaced_class_code:
+            type: string
+            description: "The class code that has replaced the deactivated class"
+            example: "advanced-yoga"

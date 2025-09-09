@@ -3,7 +3,6 @@ required:
   - id
   - type
   - attributes
-  - relationships
 properties:
   id:
     type: string

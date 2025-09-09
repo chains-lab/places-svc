@@ -23,10 +23,8 @@ var _ MappedNullable = &PlaceLocaleDataAttributes{}
 type PlaceLocaleDataAttributes struct {
 	// Locale name
 	Name string `json:"name"`
-	// Locale address
-	Address string `json:"address"`
 	// Locale description
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description"`
 }
 
 type _PlaceLocaleDataAttributes PlaceLocaleDataAttributes
@@ -35,10 +33,10 @@ type _PlaceLocaleDataAttributes PlaceLocaleDataAttributes
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceLocaleDataAttributes(name string, address string) *PlaceLocaleDataAttributes {
+func NewPlaceLocaleDataAttributes(name string, description string) *PlaceLocaleDataAttributes {
 	this := PlaceLocaleDataAttributes{}
 	this.Name = name
-	this.Address = address
+	this.Description = description
 	return &this
 }
 
@@ -74,60 +72,28 @@ func (o *PlaceLocaleDataAttributes) SetName(v string) {
 	o.Name = v
 }
 
-// GetAddress returns the Address field value
-func (o *PlaceLocaleDataAttributes) GetAddress() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Address
-}
-
-// GetAddressOk returns a tuple with the Address field value
-// and a boolean to check if the value has been set.
-func (o *PlaceLocaleDataAttributes) GetAddressOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Address, true
-}
-
-// SetAddress sets field value
-func (o *PlaceLocaleDataAttributes) SetAddress(v string) {
-	o.Address = v
-}
-
-// GetDescription returns the Description field value if set, zero value otherwise.
+// GetDescription returns the Description field value
 func (o *PlaceLocaleDataAttributes) GetDescription() string {
-	if o == nil || IsNil(o.Description) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Description
+
+	return o.Description
 }
 
-// GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
+// GetDescriptionOk returns a tuple with the Description field value
 // and a boolean to check if the value has been set.
 func (o *PlaceLocaleDataAttributes) GetDescriptionOk() (*string, bool) {
-	if o == nil || IsNil(o.Description) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Description, true
+	return &o.Description, true
 }
 
-// HasDescription returns a boolean if a field has been set.
-func (o *PlaceLocaleDataAttributes) HasDescription() bool {
-	if o != nil && !IsNil(o.Description) {
-		return true
-	}
-
-	return false
-}
-
-// SetDescription gets a reference to the given string and assigns it to the Description field.
+// SetDescription sets field value
 func (o *PlaceLocaleDataAttributes) SetDescription(v string) {
-	o.Description = &v
+	o.Description = v
 }
 
 func (o PlaceLocaleDataAttributes) MarshalJSON() ([]byte, error) {
@@ -141,10 +107,7 @@ func (o PlaceLocaleDataAttributes) MarshalJSON() ([]byte, error) {
 func (o PlaceLocaleDataAttributes) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["name"] = o.Name
-	toSerialize["address"] = o.Address
-	if !IsNil(o.Description) {
-		toSerialize["description"] = o.Description
-	}
+	toSerialize["description"] = o.Description
 	return toSerialize, nil
 }
 
@@ -154,7 +117,7 @@ func (o *PlaceLocaleDataAttributes) UnmarshalJSON(data []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"name",
-		"address",
+		"description",
 	}
 
 	allProperties := make(map[string]interface{})

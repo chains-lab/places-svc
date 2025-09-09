@@ -20,10 +20,10 @@ type Place struct {
 	DistributorID uuid.NullUUID `db:"distributor_id"`
 	Class         string        `db:"class"`
 
-	Status    string    `db:"status"`
-	Verified  bool      `db:"verified"`
-	Ownership string    `db:"ownership"`
-	Point     orb.Point `db:"point"`
+	Status   string    `db:"status"`
+	Verified bool      `db:"verified"`
+	Point    orb.Point `db:"point"`
+	Address  string    `db:"address"`
 
 	Website sql.NullString `db:"website"`
 	Phone   sql.NullString `db:"phone"`
@@ -38,14 +38,13 @@ type PlaceWithLocale struct {
 	DistributorID uuid.NullUUID `db:"distributor_id"`
 	Class         string        `db:"class"`
 
-	Status    string    `db:"status"`
-	Verified  bool      `db:"verified"`
-	Ownership string    `db:"ownership"`
-	Point     orb.Point `db:"point"`
+	Status   string    `db:"status"`
+	Verified bool      `db:"verified"`
+	Point    orb.Point `db:"point"`
+	Address  string    `db:"address"`
 
 	Locale      *string         `db:"locale"`
 	Name        *string         `db:"name"`
-	Address     *string         `db:"address"`
 	Description *sql.NullString `db:"description"`
 
 	Website sql.NullString `db:"website"`
@@ -74,16 +73,15 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 		"p.class",
 		"p.status",
 		"p.verified",
-		"p.ownership",
 		"ST_X(p.point::geometry) AS point_lon",
 		"ST_Y(p.point::geometry) AS point_lat",
+		"p.address",
 		"p.website",
 		"p.phone",
 		"p.created_at",
 		"p.updated_at",
 		"NULL AS loc_locale",
 		"NULL AS loc_name",
-		"NULL AS loc_address",
 		"NULL AS loc_description",
 	}
 
@@ -101,10 +99,10 @@ func (q PlacesQ) New() PlacesQ { return NewPlacesQ(q.db) }
 
 func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	var (
-		p                              Place
-		lon, lat                       float64
-		locLocale, locName, locAddress *string
-		locDescription                 *sql.NullString
+		p                  Place
+		lon, lat           float64
+		locLocale, locName *string
+		locDescription     *sql.NullString
 	)
 	if err := scanner.Scan(
 		&p.ID,
@@ -113,16 +111,15 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		&p.Class,
 		&p.Status,
 		&p.Verified,
-		&p.Ownership,
 		&lon,
 		&lat,
+		&p.Address,
 		&p.Website,
 		&p.Phone,
 		&p.CreatedAt,
 		&p.UpdatedAt,
 		&locLocale,
 		&locName,
-		&locAddress,
 		&locDescription,
 	); err != nil {
 		return Place{}, err
@@ -142,12 +139,12 @@ func scanPlaceWithLocaleRow(scanner interface{ Scan(dest ...any) error }) (Place
 		&p.ID,
 		&p.CityID,
 		&p.DistributorID,
-		&p.Class, // <— было Data
+		&p.Class,
 		&p.Status,
 		&p.Verified,
-		&p.Ownership,
 		&lon,
 		&lat,
+		&p.Address,
 		&p.Website,
 		&p.Phone,
 		&p.CreatedAt,
@@ -167,13 +164,13 @@ func scanPlaceWithLocaleRow(scanner interface{ Scan(dest ...any) error }) (Place
 
 func (q PlacesQ) Insert(ctx context.Context, in Place) error {
 	values := map[string]interface{}{
-		"id":        in.ID,
-		"city_id":   in.CityID,
-		"class":     in.Class,
-		"status":    in.Status,
-		"verified":  in.Verified,
-		"ownership": in.Ownership,
-		"point":     sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Point[0], in.Point[1]),
+		"id":       in.ID,
+		"city_id":  in.CityID,
+		"class":    in.Class,
+		"status":   in.Status,
+		"verified": in.Verified,
+		"point":    sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Point[0], in.Point[1]),
+		"address":  in.Address,
 	}
 	if in.Website.Valid {
 		values["website"] = in.Website.String
@@ -251,11 +248,11 @@ func (q PlacesQ) Select(ctx context.Context) ([]Place, error) {
 }
 
 type UpdatePlaceParams struct {
-	Class     *string
-	Status    *string
-	Verified  *bool
-	Ownership *string
-	Point     *orb.Point // [lon, lat]
+	Class    *string
+	Status   *string
+	Verified *bool
+	Point    *orb.Point // [lon, lat]
+	Address  *string
 
 	Website *sql.NullString
 	Phone   *sql.NullString
@@ -276,11 +273,11 @@ func (q PlacesQ) Update(ctx context.Context, p UpdatePlaceParams) error {
 	if p.Verified != nil {
 		values["verified"] = *p.Verified
 	}
-	if p.Ownership != nil {
-		values["ownership"] = *p.Ownership
-	}
 	if p.Point != nil {
 		values["point"] = sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", (*p.Point)[0], (*p.Point)[1])
+	}
+	if p.Address != nil {
+		values["address"] = *p.Address
 	}
 	if p.Website != nil {
 		if p.Website.Valid {
@@ -384,15 +381,6 @@ func (q PlacesQ) FilterVerified(verified bool) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterOwnership(ownership ...string) PlacesQ {
-	q.selector = q.selector.Where(sq.Eq{"p.ownership": ownership})
-	q.counter = q.counter.Where(sq.Eq{"p.ownership": ownership})
-	q.updater = q.updater.Where(sq.Eq{"ownership": ownership})
-	q.deleter = q.deleter.Where(sq.Eq{"ownership": ownership})
-
-	return q
-}
-
 func (q PlacesQ) FilterWithinRadiusMeters(point orb.Point, radiusM uint64) PlacesQ {
 	p := sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", point[0], point[1])
 	cond := sq.Expr("ST_DWithin(p.point, ?, ?)", p, radiusM)
@@ -449,24 +437,8 @@ func (q PlacesQ) FilterNameLike(name string) PlacesQ {
 }
 
 func (q PlacesQ) FilterAddressLike(addr string) PlacesQ {
-	pattern := "%" + addr + "%"
-
-	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeLocalizationTable)
-
-	q.selector = q.selector.LeftJoin(join).Where("pd.address ILIKE ?", pattern).Distinct()
-	q.counter = q.counter.LeftJoin(join).Where("pd.address ILIKE ?", pattern).Distinct()
-
-	sub := sq.Select("1").
-		From(placeLocalizationTable+" pd").
-		Where("pd.place_id = places.id").
-		Where("pd.address ILIKE ?", pattern)
-
-	subSQL, subArgs, _ := sub.ToSql()
-
-	expr := sq.Expr("EXISTS ("+subSQL+")", subArgs...)
-
-	q.updater = q.updater.Where(expr)
-	q.deleter = q.deleter.Where(expr)
+	q.selector = q.selector.Where("p.address ILIKE ?", "%"+addr+"%")
+	q.counter = q.counter.Where("p.address ILIKE ?", "%"+addr+"%")
 
 	return q
 }
@@ -551,7 +523,6 @@ func (q PlacesQ) WithLocale(locale string) PlacesQ {
 			"p.class",
 			"p.status",
 			"p.verified",
-			"p.ownership",
 			"ST_X(p.point::geometry) AS point_lon",
 			"ST_Y(p.point::geometry) AS point_lat",
 			"p.website",
@@ -559,10 +530,8 @@ func (q PlacesQ) WithLocale(locale string) PlacesQ {
 			"p.created_at",
 			"p.updated_at",
 		).
-		// порядок под scanPlaceRow: loc_locale, loc_name, loc_address, loc_description
 		Column(col("locale", "loc_locale")).
 		Column(col("name", "loc_name")).
-		Column(col("address", "loc_address")).
 		Column(col("description", "loc_description")).
 		From(base + " AS p")
 

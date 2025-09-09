@@ -5,9 +5,9 @@ required:
 properties:
   lon:
     type: number
-    format: float
+    format: double
     description: "Longitude"
   lat:
     type: number
-    format: float
+    format: double
     description: "Latitude"

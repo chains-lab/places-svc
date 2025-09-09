@@ -4,14 +4,14 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Data** | [**[]PlaceLocalesCollectionDataInner**](PlaceLocalesCollectionDataInner.md) |  | 
+**Data** | [**[]RelationshipDataObject**](RelationshipDataObject.md) |  | 
 **Included** | [**[]PlaceLocaleData**](PlaceLocaleData.md) |  | 
 
 ## Methods
 
 ### NewPlaceLocalesCollection
 
-`func NewPlaceLocalesCollection(data []PlaceLocalesCollectionDataInner, included []PlaceLocaleData, ) *PlaceLocalesCollection`
+`func NewPlaceLocalesCollection(data []RelationshipDataObject, included []PlaceLocaleData, ) *PlaceLocalesCollection`
 
 NewPlaceLocalesCollection instantiates a new PlaceLocalesCollection object
 This constructor will assign default values to properties that have it defined,
@@ -28,20 +28,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetData
 
-`func (o *PlaceLocalesCollection) GetData() []PlaceLocalesCollectionDataInner`
+`func (o *PlaceLocalesCollection) GetData() []RelationshipDataObject`
 
 GetData returns the Data field if non-nil, zero value otherwise.
 
 ### GetDataOk
 
-`func (o *PlaceLocalesCollection) GetDataOk() (*[]PlaceLocalesCollectionDataInner, bool)`
+`func (o *PlaceLocalesCollection) GetDataOk() (*[]RelationshipDataObject, bool)`
 
 GetDataOk returns a tuple with the Data field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetData
 
-`func (o *PlaceLocalesCollection) SetData(v []PlaceLocalesCollectionDataInner)`
+`func (o *PlaceLocalesCollection) SetData(v []RelationshipDataObject)`
 
 SetData sets Data field to given value.
 

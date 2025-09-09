@@ -21,7 +21,7 @@ var _ MappedNullable = &PlaceLocalesCollection{}
 
 // PlaceLocalesCollection struct for PlaceLocalesCollection
 type PlaceLocalesCollection struct {
-	Data []PlaceLocalesCollectionDataInner `json:"data"`
+	Data []RelationshipDataObject `json:"data"`
 	Included []PlaceLocaleData `json:"included"`
 }
 
@@ -31,7 +31,7 @@ type _PlaceLocalesCollection PlaceLocalesCollection
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceLocalesCollection(data []PlaceLocalesCollectionDataInner, included []PlaceLocaleData) *PlaceLocalesCollection {
+func NewPlaceLocalesCollection(data []RelationshipDataObject, included []PlaceLocaleData) *PlaceLocalesCollection {
 	this := PlaceLocalesCollection{}
 	this.Data = data
 	this.Included = included
@@ -47,9 +47,9 @@ func NewPlaceLocalesCollectionWithDefaults() *PlaceLocalesCollection {
 }
 
 // GetData returns the Data field value
-func (o *PlaceLocalesCollection) GetData() []PlaceLocalesCollectionDataInner {
+func (o *PlaceLocalesCollection) GetData() []RelationshipDataObject {
 	if o == nil {
-		var ret []PlaceLocalesCollectionDataInner
+		var ret []RelationshipDataObject
 		return ret
 	}
 
@@ -58,7 +58,7 @@ func (o *PlaceLocalesCollection) GetData() []PlaceLocalesCollectionDataInner {
 
 // GetDataOk returns a tuple with the Data field value
 // and a boolean to check if the value has been set.
-func (o *PlaceLocalesCollection) GetDataOk() ([]PlaceLocalesCollectionDataInner, bool) {
+func (o *PlaceLocalesCollection) GetDataOk() ([]RelationshipDataObject, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -66,7 +66,7 @@ func (o *PlaceLocalesCollection) GetDataOk() ([]PlaceLocalesCollectionDataInner,
 }
 
 // SetData sets field value
-func (o *PlaceLocalesCollection) SetData(v []PlaceLocalesCollectionDataInner) {
+func (o *PlaceLocalesCollection) SetData(v []RelationshipDataObject) {
 	o.Data = v
 }
 

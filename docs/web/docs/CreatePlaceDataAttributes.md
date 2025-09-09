@@ -4,15 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**CityId** | Pointer to **string** | city id | [optional] 
+**CityId** | **string** | city id | 
 **DistributorId** | Pointer to **string** | distributor id | [optional] 
-**Class** | Pointer to **string** | place class | [optional] 
-**Ownership** | Pointer to **string** | place ownership | [optional] 
-**Point** | Pointer to [**CreatePlaceDataAttributesPoint**](CreatePlaceDataAttributesPoint.md) |  | [optional] 
-**Locale** | Pointer to **string** | locale | [optional] 
-**Name** | Pointer to **string** | place name | [optional] 
-**Address** | Pointer to **string** | place address | [optional] 
-**Description** | Pointer to **string** | place description | [optional] 
+**Class** | **string** | place class | 
+**Point** | [**Point**](Point.md) |  | 
+**Locale** | **string** | locale | 
+**Name** | **string** | place name | 
+**Description** | **string** | place description | 
 **Website** | Pointer to **string** | place website | [optional] 
 **Phone** | Pointer to **string** | place phone number | [optional] 
 
@@ -20,7 +18,7 @@ Name | Type | Description | Notes
 
 ### NewCreatePlaceDataAttributes
 
-`func NewCreatePlaceDataAttributes() *CreatePlaceDataAttributes`
+`func NewCreatePlaceDataAttributes(cityId string, class string, point Point, locale string, name string, description string, ) *CreatePlaceDataAttributes`
 
 NewCreatePlaceDataAttributes instantiates a new CreatePlaceDataAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -54,11 +52,6 @@ and a boolean to check if the value has been set.
 
 SetCityId sets CityId field to given value.
 
-### HasCityId
-
-`func (o *CreatePlaceDataAttributes) HasCityId() bool`
-
-HasCityId returns a boolean if a field has been set.
 
 ### GetDistributorId
 
@@ -104,61 +97,26 @@ and a boolean to check if the value has been set.
 
 SetClass sets Class field to given value.
 
-### HasClass
-
-`func (o *CreatePlaceDataAttributes) HasClass() bool`
-
-HasClass returns a boolean if a field has been set.
-
-### GetOwnership
-
-`func (o *CreatePlaceDataAttributes) GetOwnership() string`
-
-GetOwnership returns the Ownership field if non-nil, zero value otherwise.
-
-### GetOwnershipOk
-
-`func (o *CreatePlaceDataAttributes) GetOwnershipOk() (*string, bool)`
-
-GetOwnershipOk returns a tuple with the Ownership field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetOwnership
-
-`func (o *CreatePlaceDataAttributes) SetOwnership(v string)`
-
-SetOwnership sets Ownership field to given value.
-
-### HasOwnership
-
-`func (o *CreatePlaceDataAttributes) HasOwnership() bool`
-
-HasOwnership returns a boolean if a field has been set.
 
 ### GetPoint
 
-`func (o *CreatePlaceDataAttributes) GetPoint() CreatePlaceDataAttributesPoint`
+`func (o *CreatePlaceDataAttributes) GetPoint() Point`
 
 GetPoint returns the Point field if non-nil, zero value otherwise.
 
 ### GetPointOk
 
-`func (o *CreatePlaceDataAttributes) GetPointOk() (*CreatePlaceDataAttributesPoint, bool)`
+`func (o *CreatePlaceDataAttributes) GetPointOk() (*Point, bool)`
 
 GetPointOk returns a tuple with the Point field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetPoint
 
-`func (o *CreatePlaceDataAttributes) SetPoint(v CreatePlaceDataAttributesPoint)`
+`func (o *CreatePlaceDataAttributes) SetPoint(v Point)`
 
 SetPoint sets Point field to given value.
 
-### HasPoint
-
-`func (o *CreatePlaceDataAttributes) HasPoint() bool`
-
-HasPoint returns a boolean if a field has been set.
 
 ### GetLocale
 
@@ -179,11 +137,6 @@ and a boolean to check if the value has been set.
 
 SetLocale sets Locale field to given value.
 
-### HasLocale
-
-`func (o *CreatePlaceDataAttributes) HasLocale() bool`
-
-HasLocale returns a boolean if a field has been set.
 
 ### GetName
 
@@ -204,36 +157,6 @@ and a boolean to check if the value has been set.
 
 SetName sets Name field to given value.
 
-### HasName
-
-`func (o *CreatePlaceDataAttributes) HasName() bool`
-
-HasName returns a boolean if a field has been set.
-
-### GetAddress
-
-`func (o *CreatePlaceDataAttributes) GetAddress() string`
-
-GetAddress returns the Address field if non-nil, zero value otherwise.
-
-### GetAddressOk
-
-`func (o *CreatePlaceDataAttributes) GetAddressOk() (*string, bool)`
-
-GetAddressOk returns a tuple with the Address field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetAddress
-
-`func (o *CreatePlaceDataAttributes) SetAddress(v string)`
-
-SetAddress sets Address field to given value.
-
-### HasAddress
-
-`func (o *CreatePlaceDataAttributes) HasAddress() bool`
-
-HasAddress returns a boolean if a field has been set.
 
 ### GetDescription
 
@@ -254,11 +177,6 @@ and a boolean to check if the value has been set.
 
 SetDescription sets Description field to given value.
 
-### HasDescription
-
-`func (o *CreatePlaceDataAttributes) HasDescription() bool`
-
-HasDescription returns a boolean if a field has been set.
 
 ### GetWebsite
 

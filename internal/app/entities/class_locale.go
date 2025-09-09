@@ -34,14 +34,14 @@ type ClassLocaleQ interface {
 func (c Classificator) UpsetLocaleToClass(
 	ctx context.Context,
 	codeClass, locale, name string,
-) (models.LocaleForClass, error) {
+) (models.ClassLocale, error) {
 	class, err := c.GetClass(ctx, codeClass, locale)
 	if err != nil {
-		return models.LocaleForClass{}, err
+		return models.ClassLocale{}, err
 	}
 
 	if class.Locale.Locale != locale {
-		return models.LocaleForClass{}, errx.ErrorCurrentLocaleNotFoundForClass.Raise(
+		return models.ClassLocale{}, errx.ErrorCurrentLocaleNotFoundForClass.Raise(
 			fmt.Errorf("current locale %s not found for class %s", locale, codeClass),
 		)
 	}
@@ -52,12 +52,12 @@ func (c Classificator) UpsetLocaleToClass(
 		Name:   name,
 	})
 	if err != nil {
-		return models.LocaleForClass{}, errx.ErrorInternal.Raise(
+		return models.ClassLocale{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to upsert locale %s for codeClass %s, cause: %w", locale, codeClass, err),
 		)
 	}
 
-	return models.LocaleForClass{
+	return models.ClassLocale{
 		Class:  codeClass,
 		Locale: locale,
 		Name:   name,
@@ -68,7 +68,7 @@ func (c Classificator) ListForClass(
 	ctx context.Context,
 	class string,
 	pag pagi.Request,
-) ([]models.LocaleForClass, pagi.Response, error) {
+) ([]models.ClassLocale, pagi.Response, error) {
 	if pag.Page == 0 {
 		pag.Page = 1
 	}
@@ -105,7 +105,7 @@ func (c Classificator) ListForClass(
 		rows = rows[:limit]
 	}
 
-	result := make([]models.LocaleForClass, 0, len(rows))
+	result := make([]models.ClassLocale, 0, len(rows))
 	for _, loc := range rows {
 		result = append(result, classLocaleModelFromDB(loc))
 	}
@@ -161,8 +161,8 @@ func (c Classificator) DeleteLocaleFromClass(
 	return nil
 }
 
-func classLocaleModelFromDB(dbLoc dbx.PlaceClassLocale) models.LocaleForClass {
-	return models.LocaleForClass{
+func classLocaleModelFromDB(dbLoc dbx.PlaceClassLocale) models.ClassLocale {
+	return models.ClassLocale{
 		Class:  dbLoc.Class,
 		Locale: dbLoc.Locale,
 		Name:   dbLoc.Name,

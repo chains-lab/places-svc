@@ -3,6 +3,7 @@ required:
   - id
   - type
   - attributes
+  - relationships
 properties:
   id:
     type: string
@@ -13,3 +14,5 @@ properties:
     enum: [ place ]
   attributes:
     $ref: './PlaceAttributes.yaml'
+  relationships:
+    $ref: './PlaceRelationships.yaml'

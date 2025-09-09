@@ -8,11 +8,6 @@ CREATE TYPE "place_statuses" AS ENUM (
     'blocked'
 );
 
-CREATE TYPE "place_ownership" AS ENUM (
-    'private',
-    'public'
-);
-
 CREATE TABLE "places" (
     "id"             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     "city_id"        UUID NOT NULL,
@@ -21,8 +16,8 @@ CREATE TABLE "places" (
 
     "status"         place_statuses         NOT NULL,
     "verified"       BOOLEAN                NOT NULL DEFAULT FALSE,
-    "ownership"      place_ownership        NOT NULL,
     "point"          geography(POINT, 4326) NOT NULL,
+    "address"        VARCHAR(255)           NOT NULL,
 
     "website"        VARCHAR(255),
     "phone"          VARCHAR(255),
@@ -35,8 +30,7 @@ CREATE TABLE place_i18n (
     "place_id"    UUID       NOT NULL REFERENCES places(id) ON DELETE CASCADE,
     "locale"      VARCHAR(2) NOT NULL,
     "name"        VARCHAR    NOT NULL,
-    "address"     VARCHAR    NOT NULL,
-    "description" VARCHAR,
+    "description" VARCHAR    NOT NULL,
 
     CHECK (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
     PRIMARY KEY (place_id, locale)

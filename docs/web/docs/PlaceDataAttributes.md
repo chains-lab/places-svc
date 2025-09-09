@@ -9,7 +9,6 @@ Name | Type | Description | Notes
 **Class** | **string** | place class | 
 **Status** | **string** | place status | 
 **Verified** | **bool** | is place verified | 
-**Ownership** | **string** | place ownership | 
 **Point** | [**Point**](Point.md) |  | 
 **Name** | **string** | place name | 
 **Address** | **string** | place address | 
@@ -23,7 +22,7 @@ Name | Type | Description | Notes
 
 ### NewPlaceDataAttributes
 
-`func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, ownership string, point Point, name string, address string, description string, createdAt time.Time, updatedAt time.Time, ) *PlaceDataAttributes`
+`func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, point Point, name string, address string, description string, createdAt time.Time, updatedAt time.Time, ) *PlaceDataAttributes`
 
 NewPlaceDataAttributes instantiates a new PlaceDataAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -141,26 +140,6 @@ and a boolean to check if the value has been set.
 `func (o *PlaceDataAttributes) SetVerified(v bool)`
 
 SetVerified sets Verified field to given value.
-
-
-### GetOwnership
-
-`func (o *PlaceDataAttributes) GetOwnership() string`
-
-GetOwnership returns the Ownership field if non-nil, zero value otherwise.
-
-### GetOwnershipOk
-
-`func (o *PlaceDataAttributes) GetOwnershipOk() (*string, bool)`
-
-GetOwnershipOk returns a tuple with the Ownership field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetOwnership
-
-`func (o *PlaceDataAttributes) SetOwnership(v string)`
-
-SetOwnership sets Ownership field to given value.
 
 
 ### GetPoint

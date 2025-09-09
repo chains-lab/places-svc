@@ -13,11 +13,10 @@ import (
 const placeLocalizationTable = "place_i18n"
 
 type PlaceLocale struct {
-	PlaceID     uuid.UUID      `db:"place_id"`
-	Locale      string         `db:"locale"`
-	Name        string         `db:"name"`
-	Address     string         `db:"address"`
-	Description sql.NullString `db:"description"`
+	PlaceID     uuid.UUID `db:"place_id"`
+	Locale      string    `db:"locale"`
+	Name        string    `db:"name"`
+	Description string    `db:"description"`
 }
 
 type PlaceLocalesQ struct {
@@ -49,7 +48,6 @@ func (q PlaceLocalesQ) Insert(ctx context.Context, in PlaceLocale) error {
 		"place_id":    in.PlaceID,
 		"locale":      in.Locale,
 		"name":        in.Name,
-		"address":     in.Address,
 		"description": in.Description,
 	}
 
@@ -81,9 +79,9 @@ func (q PlaceLocalesQ) Upsert(ctx context.Context, in ...PlaceLocale) error {
 
 	for _, row := range in {
 		// на каждый ряд по 5 плейсхолдеров: ($1,$2,$3,$4,$5), ($6,$7,$8,$9,$10), ...
-		ph = append(ph, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)", i, i+1, i+2, i+3, i+4))
+		ph = append(ph, fmt.Sprintf("($%d,$%d,$%d,$%d)", i, i+1, i+2, i+3))
 		i += 5
-		args = append(args, row.PlaceID, row.Locale, row.Name, row.Address, row.Description)
+		args = append(args, row.PlaceID, row.Locale, row.Name, row.Description)
 	}
 
 	query := fmt.Sprintf(`
@@ -102,6 +100,12 @@ func (q PlaceLocalesQ) Upsert(ctx context.Context, in ...PlaceLocale) error {
 	return err
 }
 
+type UpdatePlaceLocaleParams struct {
+	Name        *string
+	Address     *string
+	Description *string
+}
+
 func (q PlaceLocalesQ) Update(ctx context.Context, params UpdatePlaceLocaleParams) error {
 	updates := map[string]interface{}{}
 	if params.Name != nil {
@@ -111,11 +115,7 @@ func (q PlaceLocalesQ) Update(ctx context.Context, params UpdatePlaceLocaleParam
 		updates["address"] = *params.Address
 	}
 	if params.Description != nil {
-		if params.Description.Valid {
-			updates["description"] = params.Description.String
-		} else {
-			updates["description"] = nil
-		}
+		updates["description"] = *params.Description
 	}
 
 	if len(updates) == 1 { // только updated_at
@@ -153,7 +153,6 @@ func (q PlaceLocalesQ) Get(ctx context.Context) (PlaceLocale, error) {
 		&out.PlaceID,
 		&out.Locale,
 		&out.Name,
-		&out.Address,
 		&out.Description,
 	)
 	if err != nil {
@@ -187,7 +186,6 @@ func (q PlaceLocalesQ) Select(ctx context.Context) ([]PlaceLocale, error) {
 			&pd.PlaceID,
 			&pd.Locale,
 			&pd.Name,
-			&pd.Address,
 			&pd.Description,
 		)
 		if err != nil {
@@ -197,12 +195,6 @@ func (q PlaceLocalesQ) Select(ctx context.Context) ([]PlaceLocale, error) {
 	}
 
 	return out, rows.Err()
-}
-
-type UpdatePlaceLocaleParams struct {
-	Name        *string
-	Address     *string
-	Description *sql.NullString
 }
 
 func (q PlaceLocalesQ) Delete(ctx context.Context) error {
@@ -243,15 +235,6 @@ func (q PlaceLocalesQ) FilterByName(name string) PlaceLocalesQ {
 	q.updater = q.updater.Where(sq.Eq{"name": name})
 	q.deleter = q.deleter.Where(sq.Eq{"name": name})
 	q.counter = q.counter.Where(sq.Eq{"name": name})
-
-	return q
-}
-
-func (q PlaceLocalesQ) FilterByAddress(address string) PlaceLocalesQ {
-	q.selector = q.selector.Where(sq.Eq{"address": address})
-	q.updater = q.updater.Where(sq.Eq{"address": address})
-	q.deleter = q.deleter.Where(sq.Eq{"address": address})
-	q.counter = q.counter.Where(sq.Eq{"address": address})
 
 	return q
 }

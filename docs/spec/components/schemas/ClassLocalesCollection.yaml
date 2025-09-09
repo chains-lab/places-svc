@@ -1,0 +1,13 @@
+type: object
+required:
+  - data
+  - included
+properties:
+  data:
+    type: array
+    items:
+      $ref: './common/RelationshipDataObject.yaml'
+  included:
+    type: array
+    items:
+      $ref: './ClassLocaleData.yaml'

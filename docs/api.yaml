@@ -16,19 +16,42 @@ paths:
 
 components:
   schemas:
+    Point:
+      $ref: './spec/components/schemas/common/Point.yaml'
+    RelationshipLinks:
+      $ref: './spec/components/schemas/common/RelationshipLinks.yaml'
+    RelationshipDataObject:
+      $ref: './spec/components/schemas/common/RelationshipDataObject.yaml'
+    PaginationData:
+      $ref: './spec/components/schemas/common/PaginationData.yaml'
+
     Class:
       $ref: './spec/components/schemas/Class.yaml'
+    ClassesCollection:
+      $ref: './spec/components/schemas/ClassesCollection.yaml'
+    ClassRelationships:
+      $ref: './spec/components/schemas/ClassRelationships.yaml'
+    ClassLocale:
+      $ref: './spec/components/schemas/ClassLocale.yaml'
+    ClassLocalesCollection:
+        $ref: './spec/components/schemas/ClassLocalesCollection.yaml'
+    CreateClass:
+      $ref: './spec/components/schemas/CreateClass.yaml'
+    UpdateClass:
+      $ref: './spec/components/schemas/UpdateClass.yaml'
+    DeactivateClass:
+      $ref: './spec/components/schemas/DeactivateClass.yaml'
+
+    Place:
+      $ref: './spec/components/schemas/Place.yaml'
+    PlacesCollection:
+      $ref: './spec/components/schemas/PlacesCollection.yaml'
+    PlaceRelationships:
+      $ref: './spec/components/schemas/PlaceRelationships.yaml'
     CreatePlace:
       $ref: './spec/components/schemas/CreatePlace.yaml'
     UpdatePlace:
       $ref: './spec/components/schemas/UpdatePlace.yaml'
-
-    Place:
-      $ref: './spec/components/schemas/Place.yaml'
-    PlaceCollection:
-      $ref: './spec/components/schemas/PlaceCollection.yaml'
-    PlaceRelationships:
-      $ref: './spec/components/schemas/PlaceRelationships.yaml'
     PlaceLocale:
       $ref: './spec/components/schemas/PlaceLocale.yaml'
     PlaceLocalesCollection:

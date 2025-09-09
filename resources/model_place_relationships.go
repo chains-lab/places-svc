@@ -21,9 +21,9 @@ var _ MappedNullable = &PlaceRelationships{}
 
 // PlaceRelationships struct for PlaceRelationships
 type PlaceRelationships struct {
-	Class ClassDataRelationshipsParent `json:"class"`
-	City PlaceRelationshipsCity `json:"city"`
-	Distributor *ClassDataRelationshipsParent `json:"distributor,omitempty"`
+	Class ClassRelationshipsParent `json:"class"`
+	City ClassRelationshipsParent `json:"city"`
+	Distributor *ClassRelationshipsParent `json:"distributor,omitempty"`
 }
 
 type _PlaceRelationships PlaceRelationships
@@ -32,7 +32,7 @@ type _PlaceRelationships PlaceRelationships
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceRelationships(class ClassDataRelationshipsParent, city PlaceRelationshipsCity) *PlaceRelationships {
+func NewPlaceRelationships(class ClassRelationshipsParent, city ClassRelationshipsParent) *PlaceRelationships {
 	this := PlaceRelationships{}
 	this.Class = class
 	this.City = city
@@ -48,9 +48,9 @@ func NewPlaceRelationshipsWithDefaults() *PlaceRelationships {
 }
 
 // GetClass returns the Class field value
-func (o *PlaceRelationships) GetClass() ClassDataRelationshipsParent {
+func (o *PlaceRelationships) GetClass() ClassRelationshipsParent {
 	if o == nil {
-		var ret ClassDataRelationshipsParent
+		var ret ClassRelationshipsParent
 		return ret
 	}
 
@@ -59,7 +59,7 @@ func (o *PlaceRelationships) GetClass() ClassDataRelationshipsParent {
 
 // GetClassOk returns a tuple with the Class field value
 // and a boolean to check if the value has been set.
-func (o *PlaceRelationships) GetClassOk() (*ClassDataRelationshipsParent, bool) {
+func (o *PlaceRelationships) GetClassOk() (*ClassRelationshipsParent, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -67,14 +67,14 @@ func (o *PlaceRelationships) GetClassOk() (*ClassDataRelationshipsParent, bool) 
 }
 
 // SetClass sets field value
-func (o *PlaceRelationships) SetClass(v ClassDataRelationshipsParent) {
+func (o *PlaceRelationships) SetClass(v ClassRelationshipsParent) {
 	o.Class = v
 }
 
 // GetCity returns the City field value
-func (o *PlaceRelationships) GetCity() PlaceRelationshipsCity {
+func (o *PlaceRelationships) GetCity() ClassRelationshipsParent {
 	if o == nil {
-		var ret PlaceRelationshipsCity
+		var ret ClassRelationshipsParent
 		return ret
 	}
 
@@ -83,7 +83,7 @@ func (o *PlaceRelationships) GetCity() PlaceRelationshipsCity {
 
 // GetCityOk returns a tuple with the City field value
 // and a boolean to check if the value has been set.
-func (o *PlaceRelationships) GetCityOk() (*PlaceRelationshipsCity, bool) {
+func (o *PlaceRelationships) GetCityOk() (*ClassRelationshipsParent, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -91,14 +91,14 @@ func (o *PlaceRelationships) GetCityOk() (*PlaceRelationshipsCity, bool) {
 }
 
 // SetCity sets field value
-func (o *PlaceRelationships) SetCity(v PlaceRelationshipsCity) {
+func (o *PlaceRelationships) SetCity(v ClassRelationshipsParent) {
 	o.City = v
 }
 
 // GetDistributor returns the Distributor field value if set, zero value otherwise.
-func (o *PlaceRelationships) GetDistributor() ClassDataRelationshipsParent {
+func (o *PlaceRelationships) GetDistributor() ClassRelationshipsParent {
 	if o == nil || IsNil(o.Distributor) {
-		var ret ClassDataRelationshipsParent
+		var ret ClassRelationshipsParent
 		return ret
 	}
 	return *o.Distributor
@@ -106,7 +106,7 @@ func (o *PlaceRelationships) GetDistributor() ClassDataRelationshipsParent {
 
 // GetDistributorOk returns a tuple with the Distributor field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *PlaceRelationships) GetDistributorOk() (*ClassDataRelationshipsParent, bool) {
+func (o *PlaceRelationships) GetDistributorOk() (*ClassRelationshipsParent, bool) {
 	if o == nil || IsNil(o.Distributor) {
 		return nil, false
 	}
@@ -122,8 +122,8 @@ func (o *PlaceRelationships) HasDistributor() bool {
 	return false
 }
 
-// SetDistributor gets a reference to the given ClassDataRelationshipsParent and assigns it to the Distributor field.
-func (o *PlaceRelationships) SetDistributor(v ClassDataRelationshipsParent) {
+// SetDistributor gets a reference to the given ClassRelationshipsParent and assigns it to the Distributor field.
+func (o *PlaceRelationships) SetDistributor(v ClassRelationshipsParent) {
 	o.Distributor = &v
 }
 

@@ -16,3 +16,5 @@ var ErrorCurrentLocaleNotFoundForPlace = ape.DeclareError("CURRENT_LOCALE_NOT_FO
 var ErrorPlaceStatusInvalid = ape.DeclareError("PLACE_STATUS_INVALID")
 
 var ErrorPlaceOwnershipInvalid = ape.DeclareError("PLACE_OWNERSHIP_INVALID")
+
+var ErrorPlaceForDeleteMustBeInactive = ape.DeclareError("PLACE_FOR_DELETE_MUST_BE_INACTIVE")

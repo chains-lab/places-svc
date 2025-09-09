@@ -5,9 +5,6 @@ required:
 properties:
   class:
     type: object
-    required:
-      - links
-      - data
     properties:
       links:
         $ref: './common/RelationshipLinks.yaml'
@@ -15,9 +12,6 @@ properties:
         $ref: './common/RelationshipDataObject.yaml'
   city:
     type: object
-    required:
-      - links
-      - data
     properties:
       links:
         $ref: './common/RelationshipLinks.yaml'
@@ -25,9 +19,6 @@ properties:
         $ref: './common/RelationshipDataObject.yaml'
   distributor:
     type: object
-    required:
-      - links
-      - data
     properties:
       links:
         $ref: './common/RelationshipLinks.yaml'

@@ -16,40 +16,40 @@ import (
 	"fmt"
 )
 
-// checks if the PlaceRelationshipsCityLinks type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &PlaceRelationshipsCityLinks{}
+// checks if the RelationshipLinks type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &RelationshipLinks{}
 
-// PlaceRelationshipsCityLinks struct for PlaceRelationshipsCityLinks
-type PlaceRelationshipsCityLinks struct {
+// RelationshipLinks struct for RelationshipLinks
+type RelationshipLinks struct {
 	// A link to the related resource
 	Self string `json:"self"`
 	// A link to the related resource
 	Related string `json:"related"`
 }
 
-type _PlaceRelationshipsCityLinks PlaceRelationshipsCityLinks
+type _RelationshipLinks RelationshipLinks
 
-// NewPlaceRelationshipsCityLinks instantiates a new PlaceRelationshipsCityLinks object
+// NewRelationshipLinks instantiates a new RelationshipLinks object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceRelationshipsCityLinks(self string, related string) *PlaceRelationshipsCityLinks {
-	this := PlaceRelationshipsCityLinks{}
+func NewRelationshipLinks(self string, related string) *RelationshipLinks {
+	this := RelationshipLinks{}
 	this.Self = self
 	this.Related = related
 	return &this
 }
 
-// NewPlaceRelationshipsCityLinksWithDefaults instantiates a new PlaceRelationshipsCityLinks object
+// NewRelationshipLinksWithDefaults instantiates a new RelationshipLinks object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewPlaceRelationshipsCityLinksWithDefaults() *PlaceRelationshipsCityLinks {
-	this := PlaceRelationshipsCityLinks{}
+func NewRelationshipLinksWithDefaults() *RelationshipLinks {
+	this := RelationshipLinks{}
 	return &this
 }
 
 // GetSelf returns the Self field value
-func (o *PlaceRelationshipsCityLinks) GetSelf() string {
+func (o *RelationshipLinks) GetSelf() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -60,7 +60,7 @@ func (o *PlaceRelationshipsCityLinks) GetSelf() string {
 
 // GetSelfOk returns a tuple with the Self field value
 // and a boolean to check if the value has been set.
-func (o *PlaceRelationshipsCityLinks) GetSelfOk() (*string, bool) {
+func (o *RelationshipLinks) GetSelfOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -68,12 +68,12 @@ func (o *PlaceRelationshipsCityLinks) GetSelfOk() (*string, bool) {
 }
 
 // SetSelf sets field value
-func (o *PlaceRelationshipsCityLinks) SetSelf(v string) {
+func (o *RelationshipLinks) SetSelf(v string) {
 	o.Self = v
 }
 
 // GetRelated returns the Related field value
-func (o *PlaceRelationshipsCityLinks) GetRelated() string {
+func (o *RelationshipLinks) GetRelated() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -84,7 +84,7 @@ func (o *PlaceRelationshipsCityLinks) GetRelated() string {
 
 // GetRelatedOk returns a tuple with the Related field value
 // and a boolean to check if the value has been set.
-func (o *PlaceRelationshipsCityLinks) GetRelatedOk() (*string, bool) {
+func (o *RelationshipLinks) GetRelatedOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -92,11 +92,11 @@ func (o *PlaceRelationshipsCityLinks) GetRelatedOk() (*string, bool) {
 }
 
 // SetRelated sets field value
-func (o *PlaceRelationshipsCityLinks) SetRelated(v string) {
+func (o *RelationshipLinks) SetRelated(v string) {
 	o.Related = v
 }
 
-func (o PlaceRelationshipsCityLinks) MarshalJSON() ([]byte, error) {
+func (o RelationshipLinks) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -104,14 +104,14 @@ func (o PlaceRelationshipsCityLinks) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o PlaceRelationshipsCityLinks) ToMap() (map[string]interface{}, error) {
+func (o RelationshipLinks) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["self"] = o.Self
 	toSerialize["related"] = o.Related
 	return toSerialize, nil
 }
 
-func (o *PlaceRelationshipsCityLinks) UnmarshalJSON(data []byte) (err error) {
+func (o *RelationshipLinks) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -134,53 +134,53 @@ func (o *PlaceRelationshipsCityLinks) UnmarshalJSON(data []byte) (err error) {
 		}
 	}
 
-	varPlaceRelationshipsCityLinks := _PlaceRelationshipsCityLinks{}
+	varRelationshipLinks := _RelationshipLinks{}
 
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varPlaceRelationshipsCityLinks)
+	err = decoder.Decode(&varRelationshipLinks)
 
 	if err != nil {
 		return err
 	}
 
-	*o = PlaceRelationshipsCityLinks(varPlaceRelationshipsCityLinks)
+	*o = RelationshipLinks(varRelationshipLinks)
 
 	return err
 }
 
-type NullablePlaceRelationshipsCityLinks struct {
-	value *PlaceRelationshipsCityLinks
+type NullableRelationshipLinks struct {
+	value *RelationshipLinks
 	isSet bool
 }
 
-func (v NullablePlaceRelationshipsCityLinks) Get() *PlaceRelationshipsCityLinks {
+func (v NullableRelationshipLinks) Get() *RelationshipLinks {
 	return v.value
 }
 
-func (v *NullablePlaceRelationshipsCityLinks) Set(val *PlaceRelationshipsCityLinks) {
+func (v *NullableRelationshipLinks) Set(val *RelationshipLinks) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullablePlaceRelationshipsCityLinks) IsSet() bool {
+func (v NullableRelationshipLinks) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullablePlaceRelationshipsCityLinks) Unset() {
+func (v *NullableRelationshipLinks) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullablePlaceRelationshipsCityLinks(val *PlaceRelationshipsCityLinks) *NullablePlaceRelationshipsCityLinks {
-	return &NullablePlaceRelationshipsCityLinks{value: val, isSet: true}
+func NewNullableRelationshipLinks(val *RelationshipLinks) *NullableRelationshipLinks {
+	return &NullableRelationshipLinks{value: val, isSet: true}
 }
 
-func (v NullablePlaceRelationshipsCityLinks) MarshalJSON() ([]byte, error) {
+func (v NullableRelationshipLinks) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullablePlaceRelationshipsCityLinks) UnmarshalJSON(src []byte) error {
+func (v *NullableRelationshipLinks) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

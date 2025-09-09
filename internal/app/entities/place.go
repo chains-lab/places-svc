@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/chains-lab/pagi"
+	"github.com/chains-lab/places-svc/internal/app/geo"
 	"github.com/chains-lab/places-svc/internal/app/models"
 	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/dbx"
@@ -28,7 +29,6 @@ type placeQ interface {
 	FilterID(id uuid.UUID) dbx.PlacesQ
 	FilterClass(class ...string) dbx.PlacesQ
 	FilterStatus(status ...string) dbx.PlacesQ
-	FilterOwnership(ownership ...string) dbx.PlacesQ
 	FilterCityID(cityID ...uuid.UUID) dbx.PlacesQ
 	FilterDistributorID(distributorID ...uuid.UUID) dbx.PlacesQ
 	FilterVerified(verified bool) dbx.PlacesQ
@@ -54,12 +54,14 @@ type placeQ interface {
 type Place struct {
 	query   placeQ
 	localeQ placeLocaleQ
+	geo     *geo.Guesser
 }
 
 func NewPlace(db *sql.DB) Place {
 	return Place{
 		query:   dbx.NewPlacesQ(db),
 		localeQ: dbx.NewPlaceLocalesQ(db),
+		geo:     geo.NewGuesser(),
 	}
 }
 
@@ -71,15 +73,13 @@ type CreatePlaceParams struct {
 	Status        string
 	Website       *string
 	Phone         *string
-	Ownership     string
 	Point         orb.Point
 }
 
 type CreatePlaceLocalParams struct {
 	Locale      string
 	Name        string
-	Address     string
-	Description *string
+	Description string
 }
 
 func (p Place) Create(
@@ -93,9 +93,8 @@ func (p Place) Create(
 		ID:        params.ID,
 		CityID:    params.CityID,
 		Class:     params.Class,
-		Status:    params.Status,
+		Status:    constant.PlaceStatusActive,
 		Verified:  false,
-		Ownership: params.Ownership,
 		Point:     params.Point,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -118,15 +117,22 @@ func (p Place) Create(
 	}
 
 	stmtLocale := dbx.PlaceLocale{
-		PlaceID: params.ID,
-		Locale:  locale.Locale,
-		Name:    locale.Name,
-		Address: locale.Address,
+		PlaceID:     params.ID,
+		Locale:      locale.Locale,
+		Name:        locale.Name,
+		Description: locale.Description,
 	}
 	err = p.localeQ.Insert(ctx, stmtLocale)
 	if err != nil {
 		return models.PlaceWithLocale{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("could not create Location locale, cause %w", err),
+		)
+	}
+
+	addr, err := p.geo.Guess(ctx, orb.Point{30.5234, 50.4501}) // Киев
+	if err != nil {
+		return models.PlaceWithLocale{}, errx.ErrorInternal.Raise(
+			fmt.Errorf("could not guess address for Location, cause %w", err),
 		)
 	}
 
@@ -136,10 +142,10 @@ func (p Place) Create(
 		Class:     params.Class,
 		Status:    params.Status,
 		Verified:  false,
-		Ownership: params.Ownership,
 		Point:     params.Point,
 		CreatedAt: now,
 		UpdatedAt: now,
+		Address:   fmt.Sprintf("%+v\n", addr),
 	}
 	if params.DistributorID != nil {
 		place.DistributorID = params.DistributorID
@@ -151,14 +157,11 @@ func (p Place) Create(
 		place.Phone = params.Phone
 	}
 
-	paramsLocale := models.LocaleForPlace{
-		PlaceID: params.ID,
-		Locale:  locale.Locale,
-		Name:    locale.Name,
-		Address: locale.Address,
-	}
-	if locale.Description != nil {
-		paramsLocale.Description = locale.Description
+	paramsLocale := models.PlaceLocale{
+		PlaceID:     params.ID,
+		Locale:      locale.Locale,
+		Name:        locale.Name,
+		Description: locale.Description,
 	}
 
 	return models.PlaceWithLocale{
@@ -197,7 +200,6 @@ func (p Place) GetPlaceByID(
 type SearchPlacesFilter struct {
 	Class         []string
 	Status        []string
-	Ownership     []string
 	CityID        []uuid.UUID
 	DistributorID []uuid.UUID
 	Verified      *bool
@@ -205,8 +207,6 @@ type SearchPlacesFilter struct {
 	Address       *string
 
 	Location *SearchPlaceDistanceFilter
-
-	Locale *string
 }
 
 type SearchPlaceDistanceFilter struct {
@@ -216,6 +216,7 @@ type SearchPlaceDistanceFilter struct {
 
 func (p Place) SearchPlaces(
 	ctx context.Context,
+	locale string,
 	filter SearchPlacesFilter,
 	pag pagi.Request,
 	sort []pagi.SortField,
@@ -243,9 +244,6 @@ func (p Place) SearchPlaces(
 	}
 	if filter.Verified != nil {
 		query = query.FilterVerified(*filter.Verified)
-	}
-	if len(filter.Ownership) > 0 && filter.Ownership != nil {
-		query = query.FilterOwnership(filter.Ownership...)
 	}
 	if len(filter.CityID) > 0 && filter.CityID != nil {
 		query = query.FilterCityID(filter.CityID...)
@@ -277,12 +275,7 @@ func (p Place) SearchPlaces(
 	}
 
 	loc := constant.LocaleEN
-	if filter.Locale != nil {
-		err = constant.IsValidLocaleSupported(loc)
-		if err == nil {
-			loc = *filter.Locale
-		}
-	}
+	err = constant.IsValidLocaleSupported(locale)
 
 	rows, err := query.Page(limit, offset).SelectWithLocale(ctx, loc)
 	if err != nil {
@@ -308,13 +301,13 @@ func (p Place) SearchPlaces(
 }
 
 type UpdatePlaceParams struct {
-	Class     *string
-	Status    *string
-	Verified  *bool
-	Ownership *string
-	Point     *orb.Point
-	Website   *string
-	Phone     *string
+	Class    *string
+	Status   *string
+	Verified *bool
+	Point    *orb.Point
+	Website  *string
+	Phone    *string
+	Address  *string
 }
 
 func (p Place) UpdatePlace(
@@ -342,14 +335,6 @@ func (p Place) UpdatePlace(
 	if params.Verified != nil {
 		stmt.Verified = params.Verified
 		place.Data.Verified = *params.Verified
-	}
-	if params.Ownership != nil {
-		err := constant.IsValidPlaceOwnership(*params.Ownership)
-		if err != nil {
-			return models.PlaceWithLocale{}, err
-		}
-		stmt.Ownership = params.Ownership
-		place.Data.Ownership = *params.Ownership
 	}
 	if params.Point != nil {
 		stmt.Point = params.Point
@@ -385,71 +370,6 @@ func (p Place) UpdatePlace(
 	return place, nil
 }
 
-func (p Place) DeletePlaceByID(ctx context.Context, placeID uuid.UUID) error {
-	_, err := p.GetPlaceByID(ctx, placeID, constant.LocaleEN)
-	if err != nil {
-		return err
-	}
-
-	err = p.localeQ.New().FilterPlaceID(placeID).Delete(ctx)
-	if err != nil {
-		return errx.ErrorInternal.Raise(
-			fmt.Errorf("failed to delete Location locale with id %s, cause: %w", placeID, err),
-		)
-	}
-
-	return nil
-}
-
-type DeletePlacesFilter struct {
-	Class         *string
-	Status        *string
-	Ownership     *string
-	CityID        *uuid.UUID
-	DistributorID *uuid.UUID
-	Verified      *bool
-	Name          *string
-	Address       *string
-}
-
-func (p Place) DeletePlaces(ctx context.Context, filter DeletePlacesFilter) error {
-	query := p.query.New()
-
-	if filter.Class != nil {
-		query = query.FilterClass(*filter.Class)
-	}
-	if filter.Status != nil {
-		query = query.FilterStatus(*filter.Status)
-	}
-	if filter.Verified != nil {
-		query = query.FilterVerified(*filter.Verified)
-	}
-	if filter.Ownership != nil {
-		query = query.FilterOwnership(*filter.Ownership)
-	}
-	if filter.CityID != nil {
-		query = query.FilterCityID(*filter.CityID)
-	}
-	if filter.DistributorID != nil {
-		query = query.FilterDistributorID(*filter.DistributorID)
-	}
-	if filter.Name != nil {
-		query = query.FilterNameLike(*filter.Name)
-	}
-	if filter.Address != nil {
-		query = query.FilterAddressLike(*filter.Address)
-	}
-
-	err := query.Delete(ctx)
-	if err != nil {
-		return errx.ErrorInternal.Raise(
-			fmt.Errorf("failed to delete locos, cause: %w", err),
-		)
-	}
-
-	return nil
-}
-
 type UpdatePlacesFilter struct {
 	Class         []string
 	CityID        []uuid.UUID
@@ -457,10 +377,9 @@ type UpdatePlacesFilter struct {
 }
 
 type UpdatePlacesParams struct {
-	Class     *string
-	Status    *string
-	Ownership *string
-	Verified  *bool
+	Class    *string
+	Status   *string
+	Verified *bool
 }
 
 func (p Place) UpdatePlaces(
@@ -494,16 +413,6 @@ func (p Place) UpdatePlaces(
 
 		stmt.Status = params.Status
 	}
-	if params.Ownership != nil {
-		err := constant.IsValidPlaceOwnership(*params.Ownership)
-		if err != nil {
-			return errx.ErrorPlaceOwnershipInvalid.Raise(
-				fmt.Errorf("invalid place ownership, cause: %w", err),
-			)
-		}
-
-		stmt.Ownership = params.Ownership
-	}
 	if params.Verified != nil {
 		stmt.Verified = params.Verified
 	}
@@ -518,6 +427,136 @@ func (p Place) UpdatePlaces(
 	return nil
 }
 
+func (p Place) VerifyPlace(ctx context.Context, placeID uuid.UUID) (models.PlaceWithLocale, error) {
+	place, err := p.GetPlaceByID(ctx, placeID, constant.LocaleEN)
+	if err != nil {
+		return models.PlaceWithLocale{}, err
+	}
+
+	if place.Data.Verified {
+		return place, nil
+	}
+
+	verified := true
+	updated, err := p.UpdatePlace(ctx, placeID, constant.LocaleEN, UpdatePlaceParams{
+		Verified: &verified,
+	})
+	if err != nil {
+		return models.PlaceWithLocale{}, err
+	}
+
+	return updated, nil
+}
+
+func (p Place) DeactivatePlace(ctx context.Context, locale string, placeID uuid.UUID) (models.PlaceWithLocale, error) {
+	place, err := p.GetPlaceByID(ctx, placeID, locale)
+	if err != nil {
+		return models.PlaceWithLocale{}, err
+	}
+
+	if place.Data.Status == constant.PlaceStatusInactive {
+		return place, nil
+	}
+
+	status := constant.PlaceStatusInactive
+	updated, err := p.UpdatePlace(ctx, placeID, locale, UpdatePlaceParams{
+		Status: &status,
+	})
+	if err != nil {
+		return models.PlaceWithLocale{}, err
+	}
+
+	return updated, nil
+}
+
+func (p Place) ReactivatePlace(ctx context.Context, locale string, placeID uuid.UUID) (models.PlaceWithLocale, error) {
+	place, err := p.GetPlaceByID(ctx, placeID, locale)
+	if err != nil {
+		return models.PlaceWithLocale{}, err
+	}
+
+	if place.Data.Status == constant.PlaceStatusActive {
+		return place, nil
+	}
+
+	status := constant.PlaceStatusActive
+	updated, err := p.UpdatePlace(ctx, placeID, locale, UpdatePlaceParams{
+		Status: &status,
+	})
+	if err != nil {
+		return models.PlaceWithLocale{}, err
+	}
+
+	return updated, nil
+}
+
+func (p Place) DeletePlace(ctx context.Context, placeID uuid.UUID) error {
+	place, err := p.GetPlaceByID(ctx, placeID, constant.LocaleEN)
+	if err != nil {
+		return err
+	}
+
+	if place.Data.Status != constant.PlaceStatusInactive {
+		return errx.ErrorPlaceForDeleteMustBeInactive.Raise(
+			fmt.Errorf("place %s is not in inactive status", place.Data.ID.String()),
+		)
+	}
+
+	err = p.localeQ.New().FilterPlaceID(placeID).Delete(ctx)
+	if err != nil {
+		return errx.ErrorInternal.Raise(
+			fmt.Errorf("failed to delete Location locale with id %s, cause: %w", placeID, err),
+		)
+	}
+
+	return nil
+}
+
+type DeletePlacesFilter struct {
+	Class         *string
+	Status        *string
+	CityID        *uuid.UUID
+	DistributorID *uuid.UUID
+	Verified      *bool
+	Name          *string
+	Address       *string
+}
+
+func (p Place) DeletePlaces(ctx context.Context, filter DeletePlacesFilter) error {
+	query := p.query.New()
+
+	if filter.Class != nil {
+		query = query.FilterClass(*filter.Class)
+	}
+	if filter.Status != nil {
+		query = query.FilterStatus(*filter.Status)
+	}
+	if filter.Verified != nil {
+		query = query.FilterVerified(*filter.Verified)
+	}
+	if filter.CityID != nil {
+		query = query.FilterCityID(*filter.CityID)
+	}
+	if filter.DistributorID != nil {
+		query = query.FilterDistributorID(*filter.DistributorID)
+	}
+	if filter.Name != nil {
+		query = query.FilterNameLike(*filter.Name)
+	}
+	if filter.Address != nil {
+		query = query.FilterAddressLike(*filter.Address)
+	}
+
+	err := query.Delete(ctx)
+	if err != nil {
+		return errx.ErrorInternal.Raise(
+			fmt.Errorf("failed to delete locos, cause: %w", err),
+		)
+	}
+
+	return nil
+}
+
 func placeWithLocaleModelFromDB(in dbx.PlaceWithLocale) models.PlaceWithLocale {
 	out := models.PlaceWithLocale{
 		Data: models.Place{
@@ -526,12 +565,12 @@ func placeWithLocaleModelFromDB(in dbx.PlaceWithLocale) models.PlaceWithLocale {
 			Class:     in.Class,
 			Status:    in.Status,
 			Verified:  in.Verified,
-			Ownership: in.Ownership,
 			Point:     in.Point,
+			Address:   in.Address,
 			CreatedAt: in.CreatedAt,
 			UpdatedAt: in.UpdatedAt,
 		},
-		Locale: models.LocaleForPlace{
+		Locale: models.PlaceLocale{
 			PlaceID: in.ID,
 		},
 	}
@@ -545,7 +584,7 @@ func placeWithLocaleModelFromDB(in dbx.PlaceWithLocale) models.PlaceWithLocale {
 		out.Data.Phone = &in.Phone.String
 	}
 	if in.Description.Valid {
-		out.Locale.Description = &in.Description.String
+		out.Locale.Description = in.Description.String
 	}
 	if in.Locale != nil {
 		out.Locale.Locale = *in.Locale
@@ -553,9 +592,5 @@ func placeWithLocaleModelFromDB(in dbx.PlaceWithLocale) models.PlaceWithLocale {
 	if in.Name != nil {
 		out.Locale.Name = *in.Name
 	}
-	if in.Address != nil {
-		out.Locale.Address = *in.Address
-	}
-
 	return out
 }

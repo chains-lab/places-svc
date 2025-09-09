@@ -16,42 +16,42 @@ import (
 	"fmt"
 )
 
-// checks if the CreatePlaceDataAttributesPoint type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &CreatePlaceDataAttributesPoint{}
+// checks if the Point type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &Point{}
 
-// CreatePlaceDataAttributesPoint struct for CreatePlaceDataAttributesPoint
-type CreatePlaceDataAttributesPoint struct {
+// Point struct for Point
+type Point struct {
 	// Longitude
-	Lon float32 `json:"lon"`
+	Lon float64 `json:"lon"`
 	// Latitude
-	Lat float32 `json:"lat"`
+	Lat float64 `json:"lat"`
 }
 
-type _CreatePlaceDataAttributesPoint CreatePlaceDataAttributesPoint
+type _Point Point
 
-// NewCreatePlaceDataAttributesPoint instantiates a new CreatePlaceDataAttributesPoint object
+// NewPoint instantiates a new Point object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCreatePlaceDataAttributesPoint(lon float32, lat float32) *CreatePlaceDataAttributesPoint {
-	this := CreatePlaceDataAttributesPoint{}
+func NewPoint(lon float64, lat float64) *Point {
+	this := Point{}
 	this.Lon = lon
 	this.Lat = lat
 	return &this
 }
 
-// NewCreatePlaceDataAttributesPointWithDefaults instantiates a new CreatePlaceDataAttributesPoint object
+// NewPointWithDefaults instantiates a new Point object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewCreatePlaceDataAttributesPointWithDefaults() *CreatePlaceDataAttributesPoint {
-	this := CreatePlaceDataAttributesPoint{}
+func NewPointWithDefaults() *Point {
+	this := Point{}
 	return &this
 }
 
 // GetLon returns the Lon field value
-func (o *CreatePlaceDataAttributesPoint) GetLon() float32 {
+func (o *Point) GetLon() float64 {
 	if o == nil {
-		var ret float32
+		var ret float64
 		return ret
 	}
 
@@ -60,7 +60,7 @@ func (o *CreatePlaceDataAttributesPoint) GetLon() float32 {
 
 // GetLonOk returns a tuple with the Lon field value
 // and a boolean to check if the value has been set.
-func (o *CreatePlaceDataAttributesPoint) GetLonOk() (*float32, bool) {
+func (o *Point) GetLonOk() (*float64, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -68,14 +68,14 @@ func (o *CreatePlaceDataAttributesPoint) GetLonOk() (*float32, bool) {
 }
 
 // SetLon sets field value
-func (o *CreatePlaceDataAttributesPoint) SetLon(v float32) {
+func (o *Point) SetLon(v float64) {
 	o.Lon = v
 }
 
 // GetLat returns the Lat field value
-func (o *CreatePlaceDataAttributesPoint) GetLat() float32 {
+func (o *Point) GetLat() float64 {
 	if o == nil {
-		var ret float32
+		var ret float64
 		return ret
 	}
 
@@ -84,7 +84,7 @@ func (o *CreatePlaceDataAttributesPoint) GetLat() float32 {
 
 // GetLatOk returns a tuple with the Lat field value
 // and a boolean to check if the value has been set.
-func (o *CreatePlaceDataAttributesPoint) GetLatOk() (*float32, bool) {
+func (o *Point) GetLatOk() (*float64, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -92,11 +92,11 @@ func (o *CreatePlaceDataAttributesPoint) GetLatOk() (*float32, bool) {
 }
 
 // SetLat sets field value
-func (o *CreatePlaceDataAttributesPoint) SetLat(v float32) {
+func (o *Point) SetLat(v float64) {
 	o.Lat = v
 }
 
-func (o CreatePlaceDataAttributesPoint) MarshalJSON() ([]byte, error) {
+func (o Point) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -104,14 +104,14 @@ func (o CreatePlaceDataAttributesPoint) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o CreatePlaceDataAttributesPoint) ToMap() (map[string]interface{}, error) {
+func (o Point) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["lon"] = o.Lon
 	toSerialize["lat"] = o.Lat
 	return toSerialize, nil
 }
 
-func (o *CreatePlaceDataAttributesPoint) UnmarshalJSON(data []byte) (err error) {
+func (o *Point) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -134,53 +134,53 @@ func (o *CreatePlaceDataAttributesPoint) UnmarshalJSON(data []byte) (err error) 
 		}
 	}
 
-	varCreatePlaceDataAttributesPoint := _CreatePlaceDataAttributesPoint{}
+	varPoint := _Point{}
 
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varCreatePlaceDataAttributesPoint)
+	err = decoder.Decode(&varPoint)
 
 	if err != nil {
 		return err
 	}
 
-	*o = CreatePlaceDataAttributesPoint(varCreatePlaceDataAttributesPoint)
+	*o = Point(varPoint)
 
 	return err
 }
 
-type NullableCreatePlaceDataAttributesPoint struct {
-	value *CreatePlaceDataAttributesPoint
+type NullablePoint struct {
+	value *Point
 	isSet bool
 }
 
-func (v NullableCreatePlaceDataAttributesPoint) Get() *CreatePlaceDataAttributesPoint {
+func (v NullablePoint) Get() *Point {
 	return v.value
 }
 
-func (v *NullableCreatePlaceDataAttributesPoint) Set(val *CreatePlaceDataAttributesPoint) {
+func (v *NullablePoint) Set(val *Point) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableCreatePlaceDataAttributesPoint) IsSet() bool {
+func (v NullablePoint) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableCreatePlaceDataAttributesPoint) Unset() {
+func (v *NullablePoint) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableCreatePlaceDataAttributesPoint(val *CreatePlaceDataAttributesPoint) *NullableCreatePlaceDataAttributesPoint {
-	return &NullableCreatePlaceDataAttributesPoint{value: val, isSet: true}
+func NewNullablePoint(val *Point) *NullablePoint {
+	return &NullablePoint{value: val, isSet: true}
 }
 
-func (v NullableCreatePlaceDataAttributesPoint) MarshalJSON() ([]byte, error) {
+func (v NullablePoint) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableCreatePlaceDataAttributesPoint) UnmarshalJSON(src []byte) error {
+func (v *NullablePoint) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

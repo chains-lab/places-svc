@@ -4,7 +4,6 @@ required:
   - class
   - status
   - verified
-  - ownership
   - point
   - name
   - address
@@ -29,9 +28,6 @@ properties:
   verified:
     type: boolean
     description: "is place verified"
-  ownership:
-    type: string
-    description: "place ownership"
   point:
     $ref: './common/Point.yaml'
   name:

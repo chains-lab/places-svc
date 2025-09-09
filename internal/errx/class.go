@@ -16,3 +16,9 @@ var ErrorNedAtLeastOneLocaleForClass = ape.DeclareError("NEED_AT_LEAST_ONE_LOCAL
 var ErrorClassParentCycle = ape.DeclareError("CLASS_FATHER_CYCLE")
 
 var ErrorClassHasChildren = ape.DeclareError("CLASS_HAS_CHILDREN")
+
+var ErrorClassDeactivateReplaceSame = ape.DeclareError("CLASS_DEACTIVATE_REPLACE_SAME")
+
+var ErrorCannotDeleteActiveClass = ape.DeclareError("CANNOT_DELETE_ACTIVE_CLASS")
+
+var ErrorClassHasPlaces = ape.DeclareError("CLASS_HAS_PLACES")

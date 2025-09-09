@@ -25,7 +25,7 @@ type ClassData struct {
 	Id string `json:"id"`
 	Type string `json:"type"`
 	Attributes ClassDataAttributes `json:"attributes"`
-	Relationships ClassDataRelationships `json:"relationships"`
+	Relationships *ClassRelationships `json:"relationships,omitempty"`
 }
 
 type _ClassData ClassData
@@ -34,12 +34,11 @@ type _ClassData ClassData
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewClassData(id string, type_ string, attributes ClassDataAttributes, relationships ClassDataRelationships) *ClassData {
+func NewClassData(id string, type_ string, attributes ClassDataAttributes) *ClassData {
 	this := ClassData{}
 	this.Id = id
 	this.Type = type_
 	this.Attributes = attributes
-	this.Relationships = relationships
 	return &this
 }
 
@@ -123,28 +122,36 @@ func (o *ClassData) SetAttributes(v ClassDataAttributes) {
 	o.Attributes = v
 }
 
-// GetRelationships returns the Relationships field value
-func (o *ClassData) GetRelationships() ClassDataRelationships {
-	if o == nil {
-		var ret ClassDataRelationships
+// GetRelationships returns the Relationships field value if set, zero value otherwise.
+func (o *ClassData) GetRelationships() ClassRelationships {
+	if o == nil || IsNil(o.Relationships) {
+		var ret ClassRelationships
 		return ret
 	}
-
-	return o.Relationships
+	return *o.Relationships
 }
 
-// GetRelationshipsOk returns a tuple with the Relationships field value
+// GetRelationshipsOk returns a tuple with the Relationships field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *ClassData) GetRelationshipsOk() (*ClassDataRelationships, bool) {
-	if o == nil {
+func (o *ClassData) GetRelationshipsOk() (*ClassRelationships, bool) {
+	if o == nil || IsNil(o.Relationships) {
 		return nil, false
 	}
-	return &o.Relationships, true
+	return o.Relationships, true
 }
 
-// SetRelationships sets field value
-func (o *ClassData) SetRelationships(v ClassDataRelationships) {
-	o.Relationships = v
+// HasRelationships returns a boolean if a field has been set.
+func (o *ClassData) HasRelationships() bool {
+	if o != nil && !IsNil(o.Relationships) {
+		return true
+	}
+
+	return false
+}
+
+// SetRelationships gets a reference to the given ClassRelationships and assigns it to the Relationships field.
+func (o *ClassData) SetRelationships(v ClassRelationships) {
+	o.Relationships = &v
 }
 
 func (o ClassData) MarshalJSON() ([]byte, error) {
@@ -160,7 +167,9 @@ func (o ClassData) ToMap() (map[string]interface{}, error) {
 	toSerialize["id"] = o.Id
 	toSerialize["type"] = o.Type
 	toSerialize["attributes"] = o.Attributes
-	toSerialize["relationships"] = o.Relationships
+	if !IsNil(o.Relationships) {
+		toSerialize["relationships"] = o.Relationships
+	}
 	return toSerialize, nil
 }
 
@@ -172,7 +181,6 @@ func (o *ClassData) UnmarshalJSON(data []byte) (err error) {
 		"id",
 		"type",
 		"attributes",
-		"relationships",
 	}
 
 	allProperties := make(map[string]interface{})

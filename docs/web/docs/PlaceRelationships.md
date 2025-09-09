@@ -4,15 +4,15 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Class** | [**ClassDataRelationshipsParent**](ClassDataRelationshipsParent.md) |  | 
-**City** | [**PlaceRelationshipsCity**](PlaceRelationshipsCity.md) |  | 
-**Distributor** | Pointer to [**ClassDataRelationshipsParent**](ClassDataRelationshipsParent.md) |  | [optional] 
+**Class** | [**ClassRelationshipsParent**](ClassRelationshipsParent.md) |  | 
+**City** | [**ClassRelationshipsParent**](ClassRelationshipsParent.md) |  | 
+**Distributor** | Pointer to [**ClassRelationshipsParent**](ClassRelationshipsParent.md) |  | [optional] 
 
 ## Methods
 
 ### NewPlaceRelationships
 
-`func NewPlaceRelationships(class ClassDataRelationshipsParent, city PlaceRelationshipsCity, ) *PlaceRelationships`
+`func NewPlaceRelationships(class ClassRelationshipsParent, city ClassRelationshipsParent, ) *PlaceRelationships`
 
 NewPlaceRelationships instantiates a new PlaceRelationships object
 This constructor will assign default values to properties that have it defined,
@@ -29,60 +29,60 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetClass
 
-`func (o *PlaceRelationships) GetClass() ClassDataRelationshipsParent`
+`func (o *PlaceRelationships) GetClass() ClassRelationshipsParent`
 
 GetClass returns the Class field if non-nil, zero value otherwise.
 
 ### GetClassOk
 
-`func (o *PlaceRelationships) GetClassOk() (*ClassDataRelationshipsParent, bool)`
+`func (o *PlaceRelationships) GetClassOk() (*ClassRelationshipsParent, bool)`
 
 GetClassOk returns a tuple with the Class field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetClass
 
-`func (o *PlaceRelationships) SetClass(v ClassDataRelationshipsParent)`
+`func (o *PlaceRelationships) SetClass(v ClassRelationshipsParent)`
 
 SetClass sets Class field to given value.
 
 
 ### GetCity
 
-`func (o *PlaceRelationships) GetCity() PlaceRelationshipsCity`
+`func (o *PlaceRelationships) GetCity() ClassRelationshipsParent`
 
 GetCity returns the City field if non-nil, zero value otherwise.
 
 ### GetCityOk
 
-`func (o *PlaceRelationships) GetCityOk() (*PlaceRelationshipsCity, bool)`
+`func (o *PlaceRelationships) GetCityOk() (*ClassRelationshipsParent, bool)`
 
 GetCityOk returns a tuple with the City field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetCity
 
-`func (o *PlaceRelationships) SetCity(v PlaceRelationshipsCity)`
+`func (o *PlaceRelationships) SetCity(v ClassRelationshipsParent)`
 
 SetCity sets City field to given value.
 
 
 ### GetDistributor
 
-`func (o *PlaceRelationships) GetDistributor() ClassDataRelationshipsParent`
+`func (o *PlaceRelationships) GetDistributor() ClassRelationshipsParent`
 
 GetDistributor returns the Distributor field if non-nil, zero value otherwise.
 
 ### GetDistributorOk
 
-`func (o *PlaceRelationships) GetDistributorOk() (*ClassDataRelationshipsParent, bool)`
+`func (o *PlaceRelationships) GetDistributorOk() (*ClassRelationshipsParent, bool)`
 
 GetDistributorOk returns a tuple with the Distributor field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetDistributor
 
-`func (o *PlaceRelationships) SetDistributor(v ClassDataRelationshipsParent)`
+`func (o *PlaceRelationships) SetDistributor(v ClassRelationshipsParent)`
 
 SetDistributor sets Distributor field to given value.
 
