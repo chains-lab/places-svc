@@ -22,6 +22,8 @@ var _ MappedNullable = &Place{}
 // Place struct for Place
 type Place struct {
 	Data PlaceData `json:"data"`
+	// Array of related resources
+	Included []TimetableData `json:"included"`
 }
 
 type _Place Place
@@ -30,9 +32,10 @@ type _Place Place
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlace(data PlaceData) *Place {
+func NewPlace(data PlaceData, included []TimetableData) *Place {
 	this := Place{}
 	this.Data = data
+	this.Included = included
 	return &this
 }
 
@@ -68,6 +71,30 @@ func (o *Place) SetData(v PlaceData) {
 	o.Data = v
 }
 
+// GetIncluded returns the Included field value
+func (o *Place) GetIncluded() []TimetableData {
+	if o == nil {
+		var ret []TimetableData
+		return ret
+	}
+
+	return o.Included
+}
+
+// GetIncludedOk returns a tuple with the Included field value
+// and a boolean to check if the value has been set.
+func (o *Place) GetIncludedOk() ([]TimetableData, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Included, true
+}
+
+// SetIncluded sets field value
+func (o *Place) SetIncluded(v []TimetableData) {
+	o.Included = v
+}
+
 func (o Place) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -79,6 +106,7 @@ func (o Place) MarshalJSON() ([]byte, error) {
 func (o Place) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["data"] = o.Data
+	toSerialize["included"] = o.Included
 	return toSerialize, nil
 }
 
@@ -88,6 +116,7 @@ func (o *Place) UnmarshalJSON(data []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"data",
+		"included",
 	}
 
 	allProperties := make(map[string]interface{})

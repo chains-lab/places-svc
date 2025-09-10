@@ -1,0 +1,41 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: "place_id"
+      type:
+        type: string
+        enum: [ place_locale ]
+      attributes:
+        type: object
+        required:
+          - locales
+        properties:
+          locales:
+            type: array
+            items:
+              type: object
+              required:
+                - locale
+                - name
+                - description
+              properties:
+                locale:
+                  type: string
+                  description: "Locale code (e.g. en, fr, de)"
+                name:
+                  type: string
+                  description: "Locale name"
+                description:
+                  type: string
+                  description: "Locale description"

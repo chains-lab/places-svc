@@ -6,44 +6,49 @@ import (
 	"github.com/chains-lab/places-svc/resources"
 )
 
-func Place(m models.PlaceWithLocale) resources.Place {
+func Place(m models.PlaceWithDetails) resources.Place {
 	resp := resources.Place{
 		Data: resources.PlaceData{
-			Id:   m.Data.ID.String(),
+			Id:   m.Place.ID.String(),
 			Type: resources.PlaceType,
 			Attributes: resources.PlaceDataAttributes{
-				CityId:   m.Data.CityID.String(),
-				Class:    m.Data.Class,
-				Status:   m.Data.Status,
-				Verified: m.Data.Verified,
+				CityId:   m.Place.CityID.String(),
+				Class:    m.Place.Class,
+				Status:   m.Place.Status,
+				Verified: m.Place.Verified,
 				Point: resources.Point{
-					Lon: m.Data.Point[0],
-					Lat: m.Data.Point[1],
+					Lon: m.Place.Point[0],
+					Lat: m.Place.Point[1],
 				},
 				Name:        m.Locale.Name,
-				Address:     m.Data.Address,
+				Address:     m.Place.Address,
 				Description: m.Locale.Description,
-				CreatedAt:   m.Data.CreatedAt,
-				UpdatedAt:   m.Data.UpdatedAt,
+				CreatedAt:   m.Place.CreatedAt,
+				UpdatedAt:   m.Place.UpdatedAt,
 			},
 		},
 	}
 
-	if m.Data.DistributorID != nil {
-		disID := m.Data.DistributorID.String()
+	if m.Place.DistributorID != nil {
+		disID := m.Place.DistributorID.String()
 		resp.Data.Attributes.DistributorId = &disID
 	}
-	if m.Data.Website != nil {
-		resp.Data.Attributes.Website = m.Data.Website
+	if m.Place.Website != nil {
+		resp.Data.Attributes.Website = m.Place.Website
 	}
-	if m.Data.Phone != nil {
-		resp.Data.Attributes.Phone = m.Data.Phone
+	if m.Place.Phone != nil {
+		resp.Data.Attributes.Phone = m.Place.Phone
+	}
+
+	if m.Timetable.Table != nil {
+		resp.Included = make([]resources.TimetableData, 0, 1)
+		resp.Included = append(resp.Included, Timetable(m.Timetable).Data)
 	}
 
 	return resp
 }
 
-func PlacesCollection(ms []models.PlaceWithLocale, pag pagi.Response) resources.PlacesCollection {
+func PlacesCollection(ms []models.PlaceWithDetails, pag pagi.Response) resources.PlacesCollection {
 	resp := resources.PlacesCollection{
 		Data: make([]resources.PlaceData, 0, len(ms)),
 		Links: resources.PaginationData{

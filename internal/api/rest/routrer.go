@@ -19,18 +19,25 @@ type Handlers interface {
 	GetPlace(w http.ResponseWriter, r *http.Request)
 	ListPlace(w http.ResponseWriter, r *http.Request)
 	UpdatePlace(w http.ResponseWriter, r *http.Request)
-	SetPlaceLocale(w http.ResponseWriter, r *http.Request)
 	DeletePlace(w http.ResponseWriter, r *http.Request)
 	SetTimetable(w http.ResponseWriter, r *http.Request)
-
 	VerifyPlace(w http.ResponseWriter, r *http.Request)
+	ActivatePlace(w http.ResponseWriter, r *http.Request)
+	DeactivatePlace(w http.ResponseWriter, r *http.Request)
+	ListPlaceLocales(w http.ResponseWriter, r *http.Request)
+	SetLocalesForPlace(w http.ResponseWriter, r *http.Request)
+	GetTimetable(w http.ResponseWriter, r *http.Request)
+	DeleteTimetable(w http.ResponseWriter, r *http.Request)
 
 	// Class level handlers
 	CreateClass(w http.ResponseWriter, r *http.Request)
 	GetClass(w http.ResponseWriter, r *http.Request)
 	ListClass(w http.ResponseWriter, r *http.Request)
 	UpdateClass(w http.ResponseWriter, r *http.Request)
+	ActivateClass(w http.ResponseWriter, r *http.Request)
+	DeactivateClass(w http.ResponseWriter, r *http.Request)
 	DeleteClass(w http.ResponseWriter, r *http.Request)
+	SetLocalesForClass(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Service) Api(ctx context.Context, cfg config.Config, h Handlers) {
@@ -44,6 +51,25 @@ func (s *Service) Api(ctx context.Context, cfg config.Config, h Handlers) {
 	s.router.Route("/places-svc/", func(r chi.Router) {
 		r.Use(svc)
 		r.Route("/v1", func(r chi.Router) {
+			r.Route("/classes", func(r chi.Router) {
+				r.Get("/", h.ListClass)
+				r.With(auth).With(sysadmin).Post("/", h.CreateClass)
+
+				r.Route("/{class_code}", func(r chi.Router) {
+					r.Get("/", h.GetClass)
+					r.With(auth).With(sysadmin).Put("/", h.UpdateClass)
+					r.With(auth).With(sysadmin).Delete("/", h.DeleteClass)
+
+					r.With(auth).With(sysadmin).Put("/activate", h.ActivateClass)
+					r.With(auth).With(sysadmin).Put("/deactivate", h.DeactivateClass)
+
+					r.Route("/locales", func(r chi.Router) {
+						r.Get("/", h.ListPlaceLocales)
+						r.With(auth).With(sysadmin).Put("/", h.SetLocalesForClass)
+					})
+				})
+			})
+
 			r.Route("/places", func(r chi.Router) {
 				r.Get("/", h.ListPlace)
 				r.With(auth).Post("/", h.CreatePlace)
@@ -53,27 +79,20 @@ func (s *Service) Api(ctx context.Context, cfg config.Config, h Handlers) {
 					r.With(auth).Put("/", h.UpdatePlace)
 					r.With(auth).Delete("/", h.DeletePlace)
 
-					r.Route("/{locale}", func(r chi.Router) {
-						r.With(auth).Put("/", h.SetPlaceLocale)
-						//r.Get("/", h.GetPlaceLocale)
+					r.With(auth).Put("/activate", h.ActivatePlace)
+					r.With(auth).Put("/deactivate", h.DeactivatePlace)
+					r.With(auth).With(sysadmin).Put("/verified", h.VerifyPlace)
+
+					r.Route("/locales", func(r chi.Router) {
+						r.Get("/", h.ListPlaceLocales)
+						r.With(auth).Put("/", h.SetLocalesForPlace)
 					})
 
 					r.Route("/timetable", func(r chi.Router) {
+						r.Get("/", h.GetTimetable)
 						r.With(auth).Put("/", h.SetTimetable)
+						r.With(auth).Delete("/", h.DeleteTimetable)
 					})
-
-					r.Post("/verified", h.VerifyPlace)
-				})
-			})
-
-			r.Route("/classes", func(r chi.Router) {
-				r.Get("/", h.ListClass)
-				r.With(auth).With(sysadmin).Post("/", h.CreateClass)
-
-				r.Route("/{class_id}", func(r chi.Router) {
-					r.Get("/", h.GetClass)
-					r.With(auth).With(sysadmin).Put("/", h.UpdateClass)
-					r.With(auth).With(sysadmin).Delete("/", h.DeleteClass)
 				})
 			})
 		})

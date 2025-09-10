@@ -33,7 +33,8 @@ type PlaceLocale struct {
 	Description string    `json:"description"`
 }
 
-type PlaceWithLocale struct {
-	Data   Place
-	Locale PlaceLocale
+type PlaceWithDetails struct {
+	Place     Place
+	Locale    PlaceLocale
+	Timetable Timetable
 }

@@ -22,7 +22,7 @@ func (a Adapter) GetPlaceLocales(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	locales, pagResp, err := a.app.GetPlaceLocales(r.Context(), placeID, pag)
+	locales, pagResp, err := a.app.ListPlaceLocales(r.Context(), placeID, pag)
 	if err != nil {
 		a.Log(r).WithError(err).Error("failed to get place locales")
 		switch {

@@ -1,11 +1,16 @@
 type: object
 required:
   - data
+  - included
   - links
 properties:
   data:
     type: array
     items:
       $ref: './PlaceData.yaml'
+  included:
+    type: array
+    items:
+      $ref: './TimetableData.yaml'
   links:
     $ref: './common/PaginationData.yaml'

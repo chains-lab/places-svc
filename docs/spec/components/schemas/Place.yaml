@@ -1,6 +1,12 @@
 type: object
 required:
   - data
+  - included
 properties:
   data:
     $ref: './PlaceData.yaml'
+  included:
+    type: array
+    description: "Array of related resources"
+    items:
+      $ref: './TimetableData.yaml'

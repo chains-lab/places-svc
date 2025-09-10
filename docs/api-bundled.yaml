@@ -294,10 +294,50 @@ components:
                   type: string
                   description: The class code that has replaced the deactivated class
                   example: advanced-yoga
+    SetLocalesForClass:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              format: string
+              description: class_code
+            type:
+              type: string
+              enum:
+                - class_code_locale
+            attributes:
+              type: object
+              required:
+                - locales
+              properties:
+                locales:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - locale
+                      - name
+                    properties:
+                      locale:
+                        type: string
+                        description: Locale code
+                      name:
+                        type: string
+                        description: Locale name
     Place:
       type: object
       required:
         - data
+        - included
       properties:
         data:
           type: object
@@ -374,16 +414,26 @@ components:
                   description: place last update date
             relationships:
               $ref: '#/components/schemas/PlaceRelationships'
+        included:
+          type: array
+          description: Array of related resources
+          items:
+            $ref: '#/components/schemas/Timetable/properties/data'
     PlacesCollection:
       type: object
       required:
         - data
+        - included
         - links
       properties:
         data:
           type: array
           items:
             $ref: '#/components/schemas/Place/properties/data'
+        included:
+          type: array
+          items:
+            $ref: '#/components/schemas/Timetable/properties/data'
         links:
           $ref: '#/components/schemas/PaginationData'
     PlaceRelationships:
@@ -555,7 +605,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlaceLocale/properties/data'
-    SetPlaceLocale:
+    SetLocalesForPlace:
       type: object
       required:
         - data
@@ -569,21 +619,123 @@ components:
           properties:
             id:
               type: string
-              format: string
-              description: place_id + locale
-              pattern: '^[0-9a-fA-F-]{36}:[a-z]{2}(?:-[A-Z]{2})?$'
+              format: uuid
+              description: place_id
             type:
               type: string
               enum:
                 - place_locale
             attributes:
+              type: object
               required:
-                - name
-                - description
+                - locales
               properties:
-                name:
-                  type: string
-                  description: Locale name
-                description:
-                  type: string
-                  description: Locale description
+                locales:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - locale
+                      - name
+                      - description
+                    properties:
+                      locale:
+                        type: string
+                        description: 'Locale code (e.g. en, fr, de)'
+                      name:
+                        type: string
+                        description: Locale name
+                      description:
+                        type: string
+                        description: Locale description
+    Timetable:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: place id
+            type:
+              type: string
+              enum:
+                - place_timetable
+            attributes:
+              type: object
+              required:
+                - table
+              properties:
+                table:
+                  type: array
+                  description: timetable table
+                  items:
+                    $ref: '#/components/schemas/TimetableInterval'
+    TimetableInterval:
+      type: object
+      required:
+        - from
+        - to
+      properties:
+        from:
+          $ref: '#/components/schemas/TimeMoment'
+        to:
+          $ref: '#/components/schemas/TimeMoment'
+    TimeMoment:
+      type: object
+      required:
+        - weekday
+        - time
+      properties:
+        weekday:
+          type: string
+          description: Day of the week.
+          enum:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+        time:
+          type: string
+          description: 'Time of the day in 24-hour format (HH:MM).'
+          pattern: '^(?:[01]\d|2[0-3]):[0-5]\d$'
+    SetPlaceTimetable:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: place id
+            type:
+              type: string
+              enum:
+                - place_timetable
+            attributes:
+              type: object
+              required:
+                - table
+              properties:
+                table:
+                  type: array
+                  description: timetable table
+                  items:
+                    $ref: '#/components/schemas/TimetableInterval'

@@ -5,15 +5,15 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/chains-lab/places-svc/internal/app/entities"
+	"github.com/chains-lab/places-svc/internal/app/entities/class"
+	"github.com/chains-lab/places-svc/internal/app/entities/place"
 	"github.com/chains-lab/places-svc/internal/config"
 	"github.com/chains-lab/places-svc/internal/dbx"
 )
 
 type App struct {
-	place         entities.Place
-	classificator entities.Classificator
-	timetable     entities.Timetable
+	place         place.Place
+	classificator class.Classificator
 
 	db *sql.DB
 }
@@ -25,9 +25,8 @@ func NewApp(cfg config.Config) (App, error) {
 	}
 
 	return App{
-		place:         entities.NewPlace(pg),
-		classificator: entities.NewClassificator(pg),
-		timetable:     entities.NewTimetable(pg),
+		place:         place.NewPlace(pg),
+		classificator: class.NewClassificator(pg),
 
 		db: pg,
 	}, err

@@ -5,13 +5,14 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Data** | [**[]PlaceData**](PlaceData.md) |  | 
+**Included** | [**[]TimetableData**](TimetableData.md) |  | 
 **Links** | [**PaginationData**](PaginationData.md) |  | 
 
 ## Methods
 
 ### NewPlacesCollection
 
-`func NewPlacesCollection(data []PlaceData, links PaginationData, ) *PlacesCollection`
+`func NewPlacesCollection(data []PlaceData, included []TimetableData, links PaginationData, ) *PlacesCollection`
 
 NewPlacesCollection instantiates a new PlacesCollection object
 This constructor will assign default values to properties that have it defined,
@@ -44,6 +45,26 @@ and a boolean to check if the value has been set.
 `func (o *PlacesCollection) SetData(v []PlaceData)`
 
 SetData sets Data field to given value.
+
+
+### GetIncluded
+
+`func (o *PlacesCollection) GetIncluded() []TimetableData`
+
+GetIncluded returns the Included field if non-nil, zero value otherwise.
+
+### GetIncludedOk
+
+`func (o *PlacesCollection) GetIncludedOk() (*[]TimetableData, bool)`
+
+GetIncludedOk returns a tuple with the Included field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetIncluded
+
+`func (o *PlacesCollection) SetIncluded(v []TimetableData)`
+
+SetIncluded sets Included field to given value.
 
 
 ### GetLinks

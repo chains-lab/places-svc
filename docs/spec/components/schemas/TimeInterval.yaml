@@ -1,0 +1,9 @@
+type: object
+required:
+  - from
+  - to
+properties:
+    from:
+      $ref: './TimeMoment.yaml'
+    to:
+      $ref: './TimeMoment.yaml'

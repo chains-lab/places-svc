@@ -95,9 +95,12 @@ func (q PlaceLocalesQ) Upsert(ctx context.Context, in ...PlaceLocale) error {
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		_, err := tx.ExecContext(ctx, query, args...)
 		return err
+	} else {
+		_, err := q.db.ExecContext(ctx, query, args...)
+		return err
 	}
-	_, err := q.db.ExecContext(ctx, query, args...)
-	return err
+
+	return nil
 }
 
 type UpdatePlaceLocaleParams struct {

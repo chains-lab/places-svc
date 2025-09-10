@@ -22,6 +22,7 @@ var _ MappedNullable = &PlacesCollection{}
 // PlacesCollection struct for PlacesCollection
 type PlacesCollection struct {
 	Data []PlaceData `json:"data"`
+	Included []TimetableData `json:"included"`
 	Links PaginationData `json:"links"`
 }
 
@@ -31,9 +32,10 @@ type _PlacesCollection PlacesCollection
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlacesCollection(data []PlaceData, links PaginationData) *PlacesCollection {
+func NewPlacesCollection(data []PlaceData, included []TimetableData, links PaginationData) *PlacesCollection {
 	this := PlacesCollection{}
 	this.Data = data
+	this.Included = included
 	this.Links = links
 	return &this
 }
@@ -68,6 +70,30 @@ func (o *PlacesCollection) GetDataOk() ([]PlaceData, bool) {
 // SetData sets field value
 func (o *PlacesCollection) SetData(v []PlaceData) {
 	o.Data = v
+}
+
+// GetIncluded returns the Included field value
+func (o *PlacesCollection) GetIncluded() []TimetableData {
+	if o == nil {
+		var ret []TimetableData
+		return ret
+	}
+
+	return o.Included
+}
+
+// GetIncludedOk returns a tuple with the Included field value
+// and a boolean to check if the value has been set.
+func (o *PlacesCollection) GetIncludedOk() ([]TimetableData, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Included, true
+}
+
+// SetIncluded sets field value
+func (o *PlacesCollection) SetIncluded(v []TimetableData) {
+	o.Included = v
 }
 
 // GetLinks returns the Links field value
@@ -105,6 +131,7 @@ func (o PlacesCollection) MarshalJSON() ([]byte, error) {
 func (o PlacesCollection) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["data"] = o.Data
+	toSerialize["included"] = o.Included
 	toSerialize["links"] = o.Links
 	return toSerialize, nil
 }
@@ -115,6 +142,7 @@ func (o *PlacesCollection) UnmarshalJSON(data []byte) (err error) {
 	// that every required field exists as a key in the generic map.
 	requiredProperties := []string{
 		"data",
+		"included",
 		"links",
 	}
 

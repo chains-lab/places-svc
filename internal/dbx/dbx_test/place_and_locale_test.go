@@ -217,7 +217,7 @@ func TestPlaces_WithLocale_SQL_IsParameterized(t *testing.T) {
 
 	// ожидается вспомогательный метод в dbx:
 	// func (q PlacesQ) SelectorToSql() (string, []any, error) { return q.selector.ToSql() }
-	sqlStr, args, err := dbx.NewPlacesQ(db).WithLocale("uk").FilterID(placeID).SelectorToSql()
+	sqlStr, args, err := dbx.NewPlacesQ(db).withLocale("uk").FilterID(placeID).SelectorToSql()
 	if err != nil {
 		t.Fatalf("ToSql(): %v", err)
 	}
@@ -292,7 +292,7 @@ func TestPlaces_FilterNameLike_Distinct(t *testing.T) {
 	insertPlaceLocale(t, p2, "en", "Coffee Corner", "Second St 2", sql.NullString{})
 
 	list, err := dbx.NewPlacesQ(db).
-		WithLocale("en").
+		withLocale("en").
 		FilterNameLike("Coffee").
 		Select(ctx)
 	if err != nil {

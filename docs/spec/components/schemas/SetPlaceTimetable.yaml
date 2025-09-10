@@ -1,0 +1,28 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: "place id"
+      type:
+        type: string
+        enum: [ place_timetable ]
+      attributes:
+        type: object
+        required:
+          - table
+        properties:
+          table:
+            type: array
+            description: "timetable table"
+            items:
+              $ref: './TimeInterval.yaml'

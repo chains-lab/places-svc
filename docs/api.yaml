@@ -41,6 +41,8 @@ components:
       $ref: './spec/components/schemas/UpdateClass.yaml'
     DeactivateClass:
       $ref: './spec/components/schemas/DeactivateClass.yaml'
+    SetLocalesForClass:
+      $ref: './spec/components/schemas/SetLocalesForClass.yaml'
 
     Place:
       $ref: './spec/components/schemas/Place.yaml'
@@ -56,5 +58,14 @@ components:
       $ref: './spec/components/schemas/PlaceLocale.yaml'
     PlaceLocalesCollection:
       $ref: './spec/components/schemas/PlaceLocalesCollection.yaml'
-    SetPlaceLocale:
-      $ref: './spec/components/schemas/SetPlaceLocale.yaml'
+    SetLocalesForPlace:
+      $ref: './spec/components/schemas/SetLocalesForPlace.yaml'
+
+    Timetable:
+      $ref: './spec/components/schemas/Timetable.yaml'
+    TimetableInterval:
+      $ref: './spec/components/schemas/TimeInterval.yaml'
+    TimeMoment:
+      $ref: './spec/components/schemas/TimeMoment.yaml'
+    SetPlaceTimetable:
+      $ref: './spec/components/schemas/SetPlaceTimetable.yaml'

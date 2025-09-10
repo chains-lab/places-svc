@@ -44,7 +44,11 @@ func (q ClassLocaleQ) Insert(ctx context.Context, in ...PlaceClassLocale) error 
 		return nil
 	}
 
-	ins := q.inserter.Columns("class", "locale", "name")
+	ins := q.inserter.Columns(
+		"class",
+		"locale",
+		"name",
+	)
 	for _, item := range in {
 		ins = ins.Values(item.Class, item.Locale, item.Name)
 	}
@@ -62,7 +66,24 @@ func (q ClassLocaleQ) Insert(ctx context.Context, in ...PlaceClassLocale) error 
 	return err
 }
 
-func (q ClassLocaleQ) Upsert(ctx context.Context, in PlaceClassLocale) error {
+func (q ClassLocaleQ) Upsert(ctx context.Context, in ...PlaceClassLocale) error {
+	if len(in) == 0 {
+		return nil
+	}
+
+	const cols = "(class, locale, name)"
+	var (
+		args []any
+		ph   []string
+		i    = 1
+	)
+
+	for _, row := range in {
+		ph = append(ph, fmt.Sprintf("($%d, $%d, $%d)", i, i+1, i+2))
+		args = append(args, row.Class, row.Locale, row.Name)
+		i += 3
+	}
+
 	query := fmt.Sprintf(`
 		INSERT INTO %s (class, locale, name)
 		VALUES ($1, $2, $3)
@@ -71,11 +92,14 @@ func (q ClassLocaleQ) Upsert(ctx context.Context, in PlaceClassLocale) error {
     `, PlaceClassLocalesTable)
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		_, err := tx.ExecContext(ctx, query, in.Class, in.Locale, in.Name)
+		_, err := tx.ExecContext(ctx, query, args...)
+		return err
+	} else {
+		_, err := q.db.ExecContext(ctx, query, args...)
 		return err
 	}
-	_, err := q.db.ExecContext(ctx, query, in.Class, in.Locale, in.Name)
-	return err
+
+	return nil
 }
 
 func (q ClassLocaleQ) Get(ctx context.Context) (PlaceClassLocale, error) {

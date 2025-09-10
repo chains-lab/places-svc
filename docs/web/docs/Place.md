@@ -5,12 +5,13 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Data** | [**PlaceData**](PlaceData.md) |  | 
+**Included** | [**[]TimetableData**](TimetableData.md) | Array of related resources | 
 
 ## Methods
 
 ### NewPlace
 
-`func NewPlace(data PlaceData, ) *Place`
+`func NewPlace(data PlaceData, included []TimetableData, ) *Place`
 
 NewPlace instantiates a new Place object
 This constructor will assign default values to properties that have it defined,
@@ -43,6 +44,26 @@ and a boolean to check if the value has been set.
 `func (o *Place) SetData(v PlaceData)`
 
 SetData sets Data field to given value.
+
+
+### GetIncluded
+
+`func (o *Place) GetIncluded() []TimetableData`
+
+GetIncluded returns the Included field if non-nil, zero value otherwise.
+
+### GetIncludedOk
+
+`func (o *Place) GetIncludedOk() (*[]TimetableData, bool)`
+
+GetIncludedOk returns a tuple with the Included field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetIncluded
+
+`func (o *Place) SetIncluded(v []TimetableData)`
+
+SetIncluded sets Included field to given value.
 
 
 

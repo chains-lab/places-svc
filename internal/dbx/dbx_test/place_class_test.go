@@ -66,7 +66,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	mustExec(t, db, "INSERT INTO place_class_i18n(class, locale, name) VALUES ($1,$2,$3)",
 		"cafe", "en", "Cafe")
 
-	// WithLocale: uk
+	// withLocale: uk
 	got, err := q.New().FilterCode("restaurant").GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get with uk: %v", err)
@@ -78,7 +78,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 		t.Errorf("want locale 'uk', got %#v", got.Locale)
 	}
 
-	// WithLocale: fallback to en
+	// withLocale: fallback to en
 	got, err = q.New().FilterCode("restaurant").GetWithLocale(ctx, "fr")
 	if err != nil {
 		t.Fatalf("get with fr fallback: %v", err)
@@ -309,7 +309,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 		t.Logf("delete parent failed as expected (driver msg): %v", err)
 	}
 
-	// 4) WithLocale('uk') for cafe
+	// 4) withLocale('uk') for cafe
 	locCafe, err := q.New().WithLocale("uk").FilterCode("cafe").GetWithLocale(ctx, "uk")
 	if err != nil {
 		t.Fatalf("get cafe with uk locale: %v", err)

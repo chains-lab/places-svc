@@ -32,6 +32,13 @@ func (q PlacesQ) SelectorToSql() (string, []any, error) {
 	return q.selector.ToSql()
 }
 
+func strOrEmpty(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
 //go:embed migrations/*.sql
 var Migrations embed.FS
 

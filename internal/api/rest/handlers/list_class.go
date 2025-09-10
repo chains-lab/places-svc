@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/chains-lab/ape"
-	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/app"
@@ -14,7 +13,7 @@ import (
 func (a Adapter) ListClass(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
-	var filters app.FilterClassesParams
+	var filters app.FilterListClassesParams
 
 	if parent := q.Get("parent"); parent != "" {
 		filters.Parent = &parent

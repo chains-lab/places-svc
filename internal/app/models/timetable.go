@@ -11,8 +11,9 @@ type TimeInterval struct {
 	From Moment
 	To   Moment
 }
+
 type Timetable struct {
-	Intervals []TimeInterval `json:"intervals"`
+	Table []TimeInterval
 }
 
 func NumberMinutesToMoment(minutes int) Moment {
@@ -26,8 +27,12 @@ func NumberMinutesToMoment(minutes int) Moment {
 }
 
 func (ti TimeInterval) ToNumberMinutes() (int, int) {
-	from := int(ti.From.Weekday)*24*60 + int(ti.From.Time.Hours())*60 + int(ti.From.Time.Minutes())%60
-	to := int(ti.To.Weekday)*24*60 + int(ti.To.Time.Hours())*60 + int(ti.To.Time.Minutes())%60
+	from := ti.From.ToNumberMinutes()
+	to := ti.To.ToNumberMinutes()
 
 	return from, to
+}
+
+func (m Moment) ToNumberMinutes() int {
+	return int(m.Weekday)*24*60 + int(m.Time.Hours())*60 + int(m.Time.Minutes())%60
 }

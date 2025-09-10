@@ -16,7 +16,7 @@ import (
 func (a Adapter) ListPlace(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
-	var filters app.SearchPlacesFilter
+	var filters app.FilterListPlaces
 
 	if cities := q["city_id"]; len(cities) > 0 {
 		cityIDs := make([]uuid.UUID, 0, len(cities))
@@ -79,7 +79,7 @@ func (a Adapter) ListPlace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if point := strings.TrimSpace(q.Get("point")); point != "" {
-		filters.Location = &app.SearchPlaceDistanceFilter{}
+		filters.Location = &app.GeoFilterListPlaces{}
 		parts := strings.Split(point, ",")
 		if len(parts) != 2 {
 			ape.RenderErr(w, problems.InvalidParameter("point", fmt.Errorf("invalid point format, expected 'lon,lat'")))
@@ -97,7 +97,7 @@ func (a Adapter) ListPlace(w http.ResponseWriter, r *http.Request) {
 			ape.RenderErr(w, problems.InvalidParameter("point", fmt.Errorf("invalid latitude value: %v", err)))
 			return
 		}
-		filters.Location = &app.SearchPlaceDistanceFilter{
+		filters.Location = &app.GeoFilterListPlaces{
 			Point: [2]float64{lon, lat},
 		}
 	}
@@ -114,7 +114,7 @@ func (a Adapter) ListPlace(w http.ResponseWriter, r *http.Request) {
 
 	pag, sort := pagi.GetPagination(r)
 
-	places, pagResp, err := a.app.SearchPlaces(r.Context(), DetectLocale(w, r), filters, pag, sort)
+	places, pagResp, err := a.app.ListPlaces(r.Context(), DetectLocale(w, r), filters, pag, sort)
 	if err != nil {
 		switch {
 		default:

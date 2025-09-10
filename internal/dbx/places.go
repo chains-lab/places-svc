@@ -32,26 +32,10 @@ type Place struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-type PlaceWithLocale struct {
-	ID            uuid.UUID     `db:"id"`
-	CityID        uuid.UUID     `db:"city_id"`
-	DistributorID uuid.NullUUID `db:"distributor_id"`
-	Class         string        `db:"class"`
-
-	Status   string    `db:"status"`
-	Verified bool      `db:"verified"`
-	Point    orb.Point `db:"point"`
-	Address  string    `db:"address"`
-
-	Locale      *string         `db:"locale"`
-	Name        *string         `db:"name"`
-	Description *sql.NullString `db:"description"`
-
-	Website sql.NullString `db:"website"`
-	Phone   sql.NullString `db:"phone"`
-
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+type PlaceWithDetails struct {
+	Place     Place
+	Locale    PlaceLocale
+	Timetable []PlaceTimetable
 }
 
 type PlacesQ struct {
@@ -130,11 +114,22 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	return p, nil
 }
 
-func scanPlaceWithLocaleRow(scanner interface{ Scan(dest ...any) error }) (PlaceWithLocale, error) {
+func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (
+	Place, *string, *string, *string, *PlaceTimetable, error,
+) {
 	var (
-		p        PlaceWithLocale
-		lon, lat float64
+		p         Place
+		lon, lat  float64
+		locLocale *string
+		locName   *string
+		locDesc   *string
+
+		ttID      uuid.NullUUID
+		ttPlaceID uuid.NullUUID
+		ttStart   sql.NullInt32
+		ttEnd     sql.NullInt32
 	)
+
 	if err := scanner.Scan(
 		&p.ID,
 		&p.CityID,
@@ -149,17 +144,30 @@ func scanPlaceWithLocaleRow(scanner interface{ Scan(dest ...any) error }) (Place
 		&p.Phone,
 		&p.CreatedAt,
 		&p.UpdatedAt,
-		&p.Locale,
-		&p.Name,
-		&p.Address,
-		&p.Description,
+		&locLocale,
+		&locName,
+		&locDesc,
+		&ttID,
+		&ttPlaceID,
+		&ttStart,
+		&ttEnd,
 	); err != nil {
-		return PlaceWithLocale{}, err
+		return Place{}, nil, nil, nil, nil, err
 	}
 
 	p.Point = orb.Point{lon, lat}
 
-	return p, nil
+	var tt *PlaceTimetable
+	if ttID.Valid {
+		t := PlaceTimetable{
+			ID:       ttID.UUID,
+			PlaceID:  p.ID,
+			StartMin: int(ttStart.Int32),
+			EndMin:   int(ttEnd.Int32),
+		}
+		tt = &t
+	}
+	return p, locLocale, locName, locDesc, tt, nil
 }
 
 func (q PlacesQ) Insert(ctx context.Context, in Place) error {
@@ -495,7 +503,7 @@ func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) WithLocale(locale string) PlacesQ {
+func (q PlacesQ) withLocale(locale string) PlacesQ {
 	base := placesTable
 	i18n := placeLocalizationTable
 
@@ -525,6 +533,7 @@ func (q PlacesQ) WithLocale(locale string) PlacesQ {
 			"p.verified",
 			"ST_X(p.point::geometry) AS point_lon",
 			"ST_Y(p.point::geometry) AS point_lat",
+			"p.address",
 			"p.website",
 			"p.phone",
 			"p.created_at",
@@ -538,33 +547,77 @@ func (q PlacesQ) WithLocale(locale string) PlacesQ {
 	return q
 }
 
-// --- сахарные методы ---
+func (q PlacesQ) withTimetable() PlacesQ {
+	q.selector = q.selector.
+		Column(
+			"pt.id AS tt_id",
+			"pt.place_id AS tt_place_id",
+			"pt.start_min AS tt_start_min",
+			"pt.end_min AS tt_end_min",
+		).
+		LeftJoin(placeTimetablesTable + " pt ON pt.place_id = p.id")
 
-func (q PlacesQ) GetWithLocale(ctx context.Context, locale string) (PlaceWithLocale, error) {
-	qq := q.WithLocale(locale)
-	query, args, err := qq.selector.Limit(1).ToSql()
-	if err != nil {
-		return PlaceWithLocale{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
-	}
-
-	var row *sql.Row
-	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		row = tx.QueryRowContext(ctx, query, args...)
-	} else {
-		row = q.db.QueryRowContext(ctx, query, args...)
-	}
-	return scanPlaceWithLocaleRow(row)
+	return q
 }
 
-func (q PlacesQ) SelectWithLocale(ctx context.Context, locale string) ([]PlaceWithLocale, error) {
-	qq := q.WithLocale(locale)
+func (q PlacesQ) GetWithDetails(ctx context.Context, locale string) (PlaceWithDetails, error) {
+	qq := q.withLocale(locale).withTimetable()
+
+	query, args, err := qq.selector.ToSql()
+	if err != nil {
+		return PlaceWithDetails{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
+	}
+
+	var rows *sql.Rows
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		rows, err = tx.QueryContext(ctx, query, args...)
+	} else {
+		rows, err = q.db.QueryContext(ctx, query, args...)
+	}
+	if err != nil {
+		return PlaceWithDetails{}, err
+	}
+	defer rows.Close()
+
+	var (
+		out  PlaceWithDetails
+		seen bool
+	)
+
+	for rows.Next() {
+		p, locLocale, locName, locDesc, tt, err := scanPlaceWihDetails(rows)
+		if err != nil {
+			return PlaceWithDetails{}, err
+		}
+		if !seen {
+			out.Place = p
+			out.Locale = PlaceLocale{
+				PlaceID:     p.ID,
+				Locale:      strOrEmpty(locLocale),
+				Name:        strOrEmpty(locName),
+				Description: strOrEmpty(locDesc),
+			}
+			seen = true
+		}
+		if tt != nil {
+			out.Timetable = append(out.Timetable, *tt)
+		}
+	}
+	if !seen {
+		return PlaceWithDetails{}, sql.ErrNoRows
+	}
+	return out, rows.Err()
+}
+
+func (q PlacesQ) SelectWithDetails(ctx context.Context, locale string) ([]PlaceWithDetails, error) {
+	qq := q.withLocale(locale).withTimetable()
+
 	query, args, err := qq.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("building select query for %s: %w", placesTable, err)
 	}
-	var (
-		rows *sql.Rows
-	)
+
+	var rows *sql.Rows
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		rows, err = tx.QueryContext(ctx, query, args...)
 	} else {
@@ -575,14 +628,35 @@ func (q PlacesQ) SelectWithLocale(ctx context.Context, locale string) ([]PlaceWi
 	}
 	defer rows.Close()
 
-	var out []PlaceWithLocale
+	out := make([]PlaceWithDetails, 0, 16)
+	indexByID := make(map[uuid.UUID]int)
+
 	for rows.Next() {
-		item, err := scanPlaceWithLocaleRow(rows)
+		p, locLocale, locName, locDesc, tt, err := scanPlaceWihDetails(rows)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, item)
+
+		idx, ok := indexByID[p.ID]
+		if !ok {
+			item := PlaceWithDetails{
+				Place: p,
+				Locale: PlaceLocale{
+					PlaceID:     p.ID,
+					Locale:      strOrEmpty(locLocale),
+					Name:        strOrEmpty(locName),
+					Description: strOrEmpty(locDesc),
+				},
+			}
+			out = append(out, item)
+			idx = len(out) - 1
+			indexByID[p.ID] = idx
+		}
+		if tt != nil {
+			out[idx].Timetable = append(out[idx].Timetable, *tt)
+		}
 	}
+
 	return out, rows.Err()
 }
 

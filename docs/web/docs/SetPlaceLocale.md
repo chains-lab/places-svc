@@ -4,13 +4,13 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Data** | [**SetPlaceLocaleData**](SetPlaceLocaleData.md) |  | 
+**Data** | [**PlaceLocaleData**](PlaceLocaleData.md) |  | 
 
 ## Methods
 
 ### NewSetPlaceLocale
 
-`func NewSetPlaceLocale(data SetPlaceLocaleData, ) *SetPlaceLocale`
+`func NewSetPlaceLocale(data PlaceLocaleData, ) *SetPlaceLocale`
 
 NewSetPlaceLocale instantiates a new SetPlaceLocale object
 This constructor will assign default values to properties that have it defined,
@@ -27,20 +27,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetData
 
-`func (o *SetPlaceLocale) GetData() SetPlaceLocaleData`
+`func (o *SetPlaceLocale) GetData() PlaceLocaleData`
 
 GetData returns the Data field if non-nil, zero value otherwise.
 
 ### GetDataOk
 
-`func (o *SetPlaceLocale) GetDataOk() (*SetPlaceLocaleData, bool)`
+`func (o *SetPlaceLocale) GetDataOk() (*PlaceLocaleData, bool)`
 
 GetDataOk returns a tuple with the Data field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetData
 
-`func (o *SetPlaceLocale) SetData(v SetPlaceLocaleData)`
+`func (o *SetPlaceLocale) SetData(v PlaceLocaleData)`
 
 SetData sets Data field to given value.
 

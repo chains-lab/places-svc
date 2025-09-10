@@ -83,7 +83,7 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.log.Infof("created place with id %s by user %s", place.Data.ID, initiator.ID)
+	a.log.Infof("created place with id %s by user %s", place.Place.ID, initiator.ID)
 
 	ape.Render(w, http.StatusCreated, responses.Place(place))
 }
