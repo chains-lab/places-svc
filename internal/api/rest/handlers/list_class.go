@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/chains-lab/ape"
+	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/app"
@@ -21,10 +22,6 @@ func (a Adapter) ListClass(w http.ResponseWriter, r *http.Request) {
 
 	if status := q.Get("status"); status != "" {
 		filters.Status = &status
-	}
-
-	if name := q.Get("name"); name != "" {
-		filters.Name = &name
 	}
 
 	if parentCycle := q.Get("parent_cycle"); parentCycle != "" {
@@ -44,8 +41,9 @@ func (a Adapter) ListClass(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pag, _ := pagi.GetPagination(r)
+	locale := DetectLocale(w, r)
 
-	classes, pagResp, err := a.app.ListClasses(r.Context(), filters, pag)
+	classes, pagResp, err := a.app.ListClasses(r.Context(), locale, filters, pag)
 	if err != nil {
 		a.Log(r).WithError(err).Error("failed to list classes")
 		switch {
