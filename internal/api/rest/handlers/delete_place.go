@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/chains-lab/ape"
 	"github.com/chains-lab/ape/problems"
+	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -29,7 +31,14 @@ func (a Adapter) DeletePlace(w http.ResponseWriter, r *http.Request) {
 	err = a.app.DeletePlace(r.Context(), placeID)
 	if err != nil {
 		a.log.WithError(err).Error("failed to delete place")
-		ape.RenderErr(w, problems.InternalError())
+		switch {
+		case errors.Is(err, errx.ErrorPlaceForDeleteMustBeInactive):
+			ape.RenderErr(w, problems.PreconditionFailed("cannot delete place that is not inactive"))
+		case errors.Is(err, errx.ErrorPlaceNotFound):
+			ape.RenderErr(w, problems.NotFound("place not found"))
+		default:
+			ape.RenderErr(w, problems.InternalError())
+		}
 
 		return
 	}

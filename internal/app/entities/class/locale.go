@@ -77,7 +77,7 @@ func (c Classificator) SetLocales(
 	for _, param := range locales {
 		err := constant.IsValidLocaleSupported(param.Locale)
 		if err != nil {
-			return errx.ErrorNeedAtLeastOneLocaleForPlace.Raise(
+			return errx.ErrorInvalidLocale.Raise(
 				fmt.Errorf("invalid locale provided: %s, cause %w", param.Locale, err),
 			)
 		}
@@ -95,6 +95,12 @@ func (c Classificator) SetLocales(
 			Locale: locale.Locale,
 			Name:   locale.Name,
 		})
+	}
+
+	if len(stmts) == 0 { //TODO remove all locales before this or not
+		return errx.ErrorNedAtLeastOneLocaleForClass.Raise(
+			fmt.Errorf("need at least one locale for class"),
+		)
 	}
 
 	err = c.localeQ.Upsert(ctx, stmts...)

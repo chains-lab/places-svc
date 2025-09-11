@@ -46,7 +46,7 @@ func (c Classificator) Update(
 		}
 	}
 	if *params.Parent == class.Data.Code {
-		return errx.ErrorClassParentCycle.Raise(
+		return errx.ErrorClassParentEqualCode.Raise(
 			fmt.Errorf("parent cycle detected for class with code %s", code),
 		)
 	}

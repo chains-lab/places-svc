@@ -50,9 +50,22 @@ func (a App) CreatePlace(
 		return models.PlaceWithDetails{}, err
 	}
 
-	return a.place.Create(ctx, p, place.CreateLocalParams{
-		Locale:      locale.Locale,
-		Name:        locale.Name,
-		Description: locale.Description,
+	var res models.PlaceWithDetails
+	txErr := a.transaction(func(txCtx context.Context) error {
+		res, err = a.place.Create(ctx, p, place.CreateLocalParams{
+			Locale:      locale.Locale,
+			Name:        locale.Name,
+			Description: locale.Description,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
+	if txErr != nil {
+		return models.PlaceWithDetails{}, txErr
+	}
+
+	return res, nil
 }

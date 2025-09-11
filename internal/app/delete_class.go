@@ -26,7 +26,7 @@ func (a App) DeleteClass(
 		place.FilterListParams{Class: []string{c.Data.Code}}, pagi.Request{}, nil)
 
 	if len(places) != 0 {
-		return errx.ErrorClassHasPlaces.Raise(err)
+		return errx.ErrorCantDeleteClassWithPlaces.Raise(err)
 	}
 
 	return a.classificator.DeleteClass(ctx, code)

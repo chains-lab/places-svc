@@ -3,6 +3,7 @@ package class
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/chains-lab/pagi"
@@ -39,6 +40,18 @@ func (c Classificator) List(
 	query := c.query.New()
 
 	if filter.Parent != nil {
+		_, err := c.Get(ctx, *filter.Parent, locale)
+		if errors.Is(err, errx.ErrorClassNotFound) {
+			return nil, pagi.Response{}, errx.ErrorParentClassNotFound.Raise(
+				fmt.Errorf("parent class not found: %s", *filter.Parent),
+			)
+		}
+		if err != nil {
+			return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+				fmt.Errorf("failed to get parent class: %w", err),
+			)
+		}
+
 		if filter.ParentCycle != nil && *filter.ParentCycle {
 			query = query.FilterParentCycle(*filter.Parent)
 		}
@@ -48,6 +61,12 @@ func (c Classificator) List(
 		})
 	}
 	if filter.Status != nil {
+		err := constant.IsValidPlaceStatus(*filter.Status)
+		if err != nil {
+			return nil, pagi.Response{}, errx.ErrorClassStatusInvalid.Raise(
+				fmt.Errorf("invalid status filter: %s", *filter.Status),
+			)
+		}
 		query = query.FilterStatus(*filter.Status)
 	}
 

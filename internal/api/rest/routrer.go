@@ -24,7 +24,7 @@ type Handlers interface {
 	VerifyPlace(w http.ResponseWriter, r *http.Request)
 	ActivatePlace(w http.ResponseWriter, r *http.Request)
 	DeactivatePlace(w http.ResponseWriter, r *http.Request)
-	ListPlaceLocales(w http.ResponseWriter, r *http.Request)
+	ListLocalesForPlace(w http.ResponseWriter, r *http.Request)
 	SetLocalesForPlace(w http.ResponseWriter, r *http.Request)
 	GetTimetable(w http.ResponseWriter, r *http.Request)
 	DeleteTimetable(w http.ResponseWriter, r *http.Request)
@@ -64,7 +64,7 @@ func (s *Service) Api(ctx context.Context, cfg config.Config, h Handlers) {
 					r.With(auth).With(sysadmin).Put("/deactivate", h.DeactivateClass)
 
 					r.Route("/locales", func(r chi.Router) {
-						r.Get("/", h.ListPlaceLocales)
+						r.Get("/", h.ListLocalesForPlace)
 						r.With(auth).With(sysadmin).Put("/", h.SetLocalesForClass)
 					})
 				})
@@ -84,7 +84,7 @@ func (s *Service) Api(ctx context.Context, cfg config.Config, h Handlers) {
 					r.With(auth).With(sysadmin).Put("/verified", h.VerifyPlace)
 
 					r.Route("/locales", func(r chi.Router) {
-						r.Get("/", h.ListPlaceLocales)
+						r.Get("/", h.ListLocalesForPlace)
 						r.With(auth).Put("/", h.SetLocalesForPlace)
 					})
 

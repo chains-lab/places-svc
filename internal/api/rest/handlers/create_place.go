@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/chains-lab/ape"
@@ -9,6 +11,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/app"
+	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
 	"github.com/paulmach/orb"
 )
@@ -55,8 +58,6 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//TODO make a post for check user is distributor or not
-
 		params.DistributorID = &distributorID
 	}
 	if req.Data.Attributes.Phone != nil {
@@ -76,6 +77,8 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.log.WithError(err).Error("error creating place")
 		switch {
+		case errors.Is(err, errx.ErrorClassNotFound):
+			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class with code %s not found", params.Class)))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

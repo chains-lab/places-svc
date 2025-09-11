@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -74,6 +75,51 @@ func (q PlaceTimetablesQ) Insert(ctx context.Context, in ...PlaceTimetable) erro
 	}
 
 	return err
+}
+
+func (q PlaceTimetablesQ) Upsert(ctx context.Context, in ...PlaceTimetable) error {
+	if len(in) == 0 {
+		return nil
+	}
+
+	var cols = "(id, place_id, start_min, end_min)"
+	var (
+		args []any
+		ph   []string
+		i    = 1
+	)
+
+	for _, row := range in {
+		ph = append(ph, fmt.Sprintf("($%d, $%d, $%d, $%d)", i, i+1, i+2, i+3))
+		args = append(args,
+			row.ID,
+			row.PlaceID,
+			row.StartMin,
+			row.EndMin,
+		)
+		i += 4
+	}
+
+	query := fmt.Sprintf(`
+		INSERT INTO %s %s VALUES %s 
+		ON CONFLICT (id) DO UPDATE 
+		    SET place_id = EXCLUDED.place_id, 
+		    start_min = EXCLUDED.start_min, 
+		    end_min = EXCLUDED.end_min
+		`, placeTimetablesTable,
+		cols,
+		sq.Expr(strings.Join(ph, ",")),
+	)
+
+	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
+		_, err := tx.ExecContext(ctx, query, args...)
+		return err
+	} else {
+		_, err := q.db.ExecContext(ctx, query, args...)
+		return err
+	}
+
+	return nil
 }
 
 func (q PlaceTimetablesQ) Get(ctx context.Context) (PlaceTimetable, error) {

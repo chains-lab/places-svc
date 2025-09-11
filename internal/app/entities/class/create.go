@@ -29,7 +29,7 @@ func (c Classificator) Create(
 		return models.ClassWithLocale{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class existence, cause: %w", err))
 	}
 	if err == nil {
-		return models.ClassWithLocale{}, errx.ErrorClassAlreadyExists.Raise(
+		return models.ClassWithLocale{}, errx.ErrorClassCodeAlreadyTaken.Raise(
 			fmt.Errorf("class with code %s already exists", params.Code),
 		)
 	}

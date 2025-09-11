@@ -1,17 +1,19 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/chains-lab/ape"
 	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
+	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
-func (a Adapter) GetPlaceLocales(w http.ResponseWriter, r *http.Request) {
+func (a Adapter) ListLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 	pag, _ := pagi.GetPagination(r)
 
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
@@ -26,6 +28,8 @@ func (a Adapter) GetPlaceLocales(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.Log(r).WithError(err).Error("failed to get place locales")
 		switch {
+		case errors.Is(err, errx.ErrorPlaceNotFound):
+			ape.RenderErr(w, problems.NotFound("place not found"))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

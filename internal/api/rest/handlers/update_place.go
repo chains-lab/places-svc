@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/app"
+	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -61,6 +63,8 @@ func (a Adapter) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.log.WithError(err).Error("error updating place")
 		switch {
+		case errors.Is(err, errx.ErrorClassNotFound):
+			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class %s not found", *params.Class)))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

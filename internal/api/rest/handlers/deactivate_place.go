@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/chains-lab/ape"
 	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
+	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -22,8 +25,10 @@ func (a Adapter) DeactivatePlace(w http.ResponseWriter, r *http.Request) {
 
 	place, err := a.app.DeactivatePlace(r.Context(), placeID, locale)
 	if err != nil {
-		a.log.WithError(err).WithField("place_id", placeID).Error("error deactivating place")
+		a.log.WithError(err).Errorf("error deactivating place with id %s", placeID)
 		switch {
+		case errors.Is(err, errx.ErrorPlaceNotFound):
+			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("place with id %s not found", placeID)))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

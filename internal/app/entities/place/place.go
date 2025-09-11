@@ -62,17 +62,12 @@ func NewPlace(db *sql.DB) Place {
 func placeWithDetailsModelFromDB(in dbx.PlaceWithDetails) models.PlaceWithDetails {
 	p := placeModelFromDB(in.Place)
 	l := placeLocaleModelFromDB(in.Locale)
+	t := placeTimeTableModelFromDB(in.Timetable)
 
 	out := models.PlaceWithDetails{
-		Place:  p,
-		Locale: l,
-	}
-
-	if in.Timetable != nil {
-		out.Timetable.Table = make([]models.TimeInterval, len(in.Timetable))
-		for i, ti := range in.Timetable {
-			out.Timetable.Table[i] = placeTimetableModelFromDB(ti)
-		}
+		Place:     p,
+		Locale:    l,
+		Timetable: t,
 	}
 
 	return out
@@ -113,9 +108,16 @@ func placeLocaleModelFromDB(dbLoc dbx.PlaceLocale) models.PlaceLocale {
 
 }
 
-func placeTimetableModelFromDB(dbTI dbx.PlaceTimetable) models.TimeInterval {
-	return models.TimeInterval{
-		From: models.NumberMinutesToMoment(dbTI.StartMin),
-		To:   models.NumberMinutesToMoment(dbTI.EndMin),
+func placeTimeTableModelFromDB(dbTI []dbx.PlaceTimetable) models.Timetable {
+	res := models.Timetable{
+		Table: make([]models.TimeInterval, 0, len(dbTI)),
 	}
+	for _, ti := range dbTI {
+		res.Table = append(res.Table, models.TimeInterval{
+			From: models.NumberMinutesToMoment(ti.StartMin),
+			To:   models.NumberMinutesToMoment(ti.EndMin),
+		})
+	}
+
+	return res
 }

@@ -14,6 +14,7 @@ import (
 type timetableQ interface {
 	New() dbx.PlaceTimetablesQ
 	Insert(ctx context.Context, in ...dbx.PlaceTimetable) error
+	Upsert(ctx context.Context, in ...dbx.PlaceTimetable) error
 	Get(ctx context.Context) (dbx.PlaceTimetable, error)
 	Select(ctx context.Context) ([]dbx.PlaceTimetable, error)
 	Delete(ctx context.Context) error
@@ -26,73 +27,21 @@ type timetableQ interface {
 	Page(offset, limit uint64) dbx.PlaceTimetablesQ
 }
 
-// AddTimetable deprecated: use SetTimetable instead
-func (p Place) AddTimetable(ctx context.Context, placeID uuid.UUID, interval models.TimeInterval) error {
-	_, err := p.Get(ctx, placeID, constant.DefaultLocale)
+func (p Place) SetTimetable(ctx context.Context, placeID uuid.UUID, intervals models.Timetable) (models.PlaceWithDetails, error) {
+	place, err := p.Get(ctx, placeID, constant.DefaultLocale)
 	if err != nil {
-		return err
-	}
-
-	count, err := p.timetable.New().FilterPlaceID(placeID).Count(ctx)
-	if err != nil {
-		return errx.ErrorInternal.Raise(
-			fmt.Errorf("could not create timetable, cause: %w", err),
-		)
-	}
-	if count >= 70 {
-		return errx.ErrorInternal.Raise( //TODO: custom error
-			fmt.Errorf("could not create timetable, cause: max timetables reached"),
-		)
-	}
-
-	start, end := interval.ToNumberMinutes()
-
-	count, err = p.timetable.New().FilterPlaceID(placeID).FilterBetween(start, end).Count(ctx)
-	if err != nil {
-		return errx.ErrorInternal.Raise(
-			fmt.Errorf("could not create timetable, cause: %w", err),
-		)
-	}
-
-	if count > 0 {
-		err = p.timetable.New().FilterPlaceID(placeID).FilterBetween(start, end).Delete(ctx)
-		if err != nil {
-			return errx.ErrorInternal.Raise(
-				fmt.Errorf("could not create timetable, cause: %w", err),
-			)
-		}
-	}
-
-	err = p.timetable.New().Insert(ctx, dbx.PlaceTimetable{
-		ID:       uuid.New(),
-		PlaceID:  placeID,
-		StartMin: start,
-		EndMin:   end,
-	})
-	if err != nil {
-		return errx.ErrorInternal.Raise(
-			fmt.Errorf("could not create timetable, cause: %w", err),
-		)
-	}
-
-	return nil
-}
-
-func (p Place) SetTimetable(ctx context.Context, placeID uuid.UUID, intervals ...models.TimeInterval) error {
-	_, err := p.Get(ctx, placeID, constant.DefaultLocale)
-	if err != nil {
-		return err
+		return models.PlaceWithDetails{}, err
 	}
 
 	err = p.timetable.New().FilterPlaceID(placeID).Delete(ctx)
 	if err != nil {
-		return errx.ErrorInternal.Raise(
+		return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("could not upsert timetable, cause: %w", err),
 		)
 	}
 
-	stmt := make([]dbx.PlaceTimetable, 0, len(intervals))
-	for _, interval := range intervals {
+	stmt := make([]dbx.PlaceTimetable, 0, len(intervals.Table))
+	for _, interval := range intervals.Table {
 		start, end := interval.ToNumberMinutes()
 		stmt = append(stmt, dbx.PlaceTimetable{
 			ID:       uuid.New(),
@@ -104,30 +53,17 @@ func (p Place) SetTimetable(ctx context.Context, placeID uuid.UUID, intervals ..
 
 	err = p.timetable.New().Insert(ctx, stmt...)
 	if err != nil {
-		return errx.ErrorInternal.Raise(
+		return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("could not upsert timetable, cause: %w", err),
 		)
 	}
 
-	return nil
+	place.Timetable = intervals
+
+	return place, nil
 }
 
-// GetTimetable deprecated: use ListTimetable instead
-func (p Place) GetTimetable(ctx context.Context, ID uuid.UUID) (models.TimeInterval, error) {
-	row, err := p.timetable.New().FilterByID(ID).Get(ctx)
-	if err != nil {
-		return models.TimeInterval{}, errx.ErrorInternal.Raise(
-			fmt.Errorf("could not get timetable, cause: %w", err),
-		)
-	}
-
-	return models.TimeInterval{
-		From: models.NumberMinutesToMoment(row.StartMin),
-		To:   models.NumberMinutesToMoment(row.EndMin),
-	}, nil
-}
-
-func (p Place) ListTimetable(ctx context.Context, placeID uuid.UUID) (models.Timetable, error) {
+func (p Place) GetTimetable(ctx context.Context, placeID uuid.UUID) (models.Timetable, error) {
 	rows, err := p.timetable.New().FilterPlaceID(placeID).Select(ctx)
 	if err != nil {
 		return models.Timetable{}, errx.ErrorInternal.Raise(
@@ -148,20 +84,13 @@ func (p Place) ListTimetable(ctx context.Context, placeID uuid.UUID) (models.Tim
 	}, nil
 }
 
-// DeleteTimetable deprecated: use DeleteAllTimetable instead
-func (p Place) DeleteTimetable(ctx context.Context, ID uuid.UUID) error {
-	err := p.timetable.New().FilterPlaceID(ID).Delete(ctx)
+func (p Place) DeleteTimetable(ctx context.Context, placeID uuid.UUID) error {
+	_, err := p.Get(ctx, placeID, constant.DefaultLocale)
 	if err != nil {
-		return errx.ErrorInternal.Raise(
-			fmt.Errorf("could not delete timetable, cause: %w", err),
-		)
+		return err
 	}
 
-	return nil
-}
-
-func (p Place) DeleteAllTimetable(ctx context.Context, placeID uuid.UUID) error {
-	err := p.timetable.New().FilterPlaceID(placeID).Delete(ctx)
+	err = p.timetable.New().FilterPlaceID(placeID).Delete(ctx)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
 			fmt.Errorf("could not delete timetable, cause: %w", err),

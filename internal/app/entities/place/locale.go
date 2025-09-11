@@ -46,7 +46,7 @@ func (p Place) SetLocales(
 	for _, param := range locales {
 		err := constant.IsValidLocaleSupported(param.Locale)
 		if err != nil {
-			return errx.ErrorNeedAtLeastOneLocaleForPlace.Raise(
+			return errx.ErrorInvalidLocale.Raise(
 				fmt.Errorf("invalid locale provided: %s, cause %w", param.Locale, err),
 			)
 		}
@@ -67,6 +67,12 @@ func (p Place) SetLocales(
 		}
 
 		stmts = append(stmts, stmt)
+	}
+
+	if len(stmts) == 0 {
+		return errx.ErrorNeedAtLeastOneLocaleForPlace.Raise(
+			fmt.Errorf("at least one locale must be provided for place %s", placeID),
+		)
 	}
 
 	err = p.locale.Upsert(ctx, stmts...)

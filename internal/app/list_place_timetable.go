@@ -8,5 +8,5 @@ import (
 )
 
 func (a App) ListPlaceTimetable(ctx context.Context, placeID uuid.UUID) (models.Timetable, error) {
-	return a.place.ListTimetable(ctx, placeID)
+	return a.place.GetTimetable(ctx, placeID)
 }

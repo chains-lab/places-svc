@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/chains-lab/ape"
@@ -8,6 +10,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/app"
+	"github.com/chains-lab/places-svc/internal/errx"
 )
 
 func (a Adapter) CreateClass(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +35,10 @@ func (a Adapter) CreateClass(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.log.WithError(err).Error("error creating class")
 		switch {
+		case errors.Is(err, errx.ErrorClassCodeAlreadyTaken):
+			ape.RenderErr(w, problems.Conflict(
+				fmt.Sprintf("class %s already exists", req.Data.Attributes.Name)),
+			)
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/chains-lab/ape"
@@ -8,6 +10,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/app"
+	"github.com/chains-lab/places-svc/internal/errx"
 )
 
 func (a Adapter) UpdateClass(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +40,14 @@ func (a Adapter) UpdateClass(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.log.WithError(err).Error("error updating class")
 		switch {
+		case errors.Is(err, errx.ErrorClassNotFound):
+			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class %s not found", req.Data.Id)))
+		case errors.Is(err, errx.ErrorClassParentCycle):
+			ape.RenderErr(w, problems.PreconditionFailed(
+				fmt.Sprintf("parent cycle detected for class with code %s", req.Data.Id)))
+		case errors.Is(err, errx.ErrorClassParentEqualCode):
+			ape.RenderErr(w, problems.PreconditionFailed(
+				fmt.Sprintf("parent equal code for class with code %s", req.Data.Id)))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

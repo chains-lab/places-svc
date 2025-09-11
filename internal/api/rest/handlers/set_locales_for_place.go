@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/chains-lab/ape"
 	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/app"
+	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -41,7 +43,12 @@ func (a Adapter) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.Log(r).WithError(err).Error("failed to set place locales")
 		switch {
-
+		case errors.Is(err, errx.ErrorPlaceNotFound):
+			ape.RenderErr(w, problems.NotFound("place not found"))
+		case errors.Is(err, errx.ErrorNeedAtLeastOneLocaleForPlace):
+			ape.RenderErr(w, problems.InvalidParameter("locales", err))
+		case errors.Is(err, errx.ErrorInvalidLocale):
+			ape.RenderErr(w, problems.InvalidParameter("locales", err))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}
