@@ -1,4 +1,4 @@
-package dbx_test
+package dbxtest
 
 import (
 	"database/sql"
@@ -46,7 +46,7 @@ func setupClean(t *testing.T) {
 //	now := time.Now().UTC()
 //	err := dbx.NewCategoryQ(db).Insert(context.Background(), dbx.PlaceCategory{
 //		Code:      code,
-//		Status:    "active",
+//		Statuses:    "active",
 //		Icon:      "🧩",
 //		CreatedAt: now,
 //		UpdatedAt: now,
@@ -63,7 +63,7 @@ func setupClean(t *testing.T) {
 //	err := dbx.NewPlaceKindsQ(db).Insert(context.Background(), dbx.PlaceKind{
 //		Code:         code,
 //		CategoryCode: catCode,
-//		Status:       "active",
+//		Statuses:       "active",
 //		Icon:         "🏷️",
 //		CreatedAt:    now,
 //		UpdatedAt:    now,

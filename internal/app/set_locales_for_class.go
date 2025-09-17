@@ -11,7 +11,7 @@ type SetClassLocaleParams struct {
 	Name   string
 }
 
-func (a App) SetLocalesForClass(ctx context.Context, code string, locales ...SetClassLocaleParams) error {
+func (a App) SetClassLocales(ctx context.Context, code string, locales ...SetClassLocaleParams) error {
 	out := make([]class.SetClassLocaleParams, 0, len(locales))
 	for _, locale := range locales {
 		s := class.SetClassLocaleParams{

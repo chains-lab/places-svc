@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/dbx"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
@@ -38,46 +38,53 @@ func (p Place) UpdatePlace(
 	stmt := dbx.UpdatePlaceParams{
 		UpdatedAt: time.Now().UTC(),
 	}
+
 	if params.Class != nil {
 		stmt.Class = params.Class
-		place.Place.Class = *params.Class
+		place.Class = *params.Class
 	}
+
 	if params.Status != nil {
 		stmt.Status = params.Status
-		place.Place.Status = *params.Status
+		place.Status = *params.Status
 	}
+
 	if params.Verified != nil {
 		stmt.Verified = params.Verified
-		place.Place.Verified = *params.Verified
+		place.Verified = *params.Verified
 	}
+
 	if params.Point != nil {
 		stmt.Point = params.Point
-		place.Place.Point = *params.Point
+		place.Point = *params.Point
 	}
+
 	if params.Website != nil {
 		switch *params.Website {
 		case "":
 			stmt.Website = &sql.NullString{Valid: false}
-			place.Place.Website = nil
+			place.Website = nil
 		default:
 			stmt.Website = &sql.NullString{String: *params.Website, Valid: true}
-			place.Place.Website = params.Website
+			place.Website = params.Website
 		}
 	}
+
 	if params.Phone != nil {
 		switch *params.Phone {
 		case "":
 			stmt.Phone = &sql.NullString{Valid: false}
-			place.Place.Phone = nil
+			place.Phone = nil
 		default:
 			stmt.Phone = &sql.NullString{String: *params.Phone, Valid: true}
-			place.Place.Phone = params.Phone
+			place.Phone = params.Phone
 		}
 	}
-	err = p.query.New().Update(ctx, stmt)
+
+	err = p.query.New().FilterID(placeID).Update(ctx, stmt)
 	if err != nil {
 		return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
-			fmt.Errorf("failed to update Location with id %s, cause: %w", placeID, err),
+			fmt.Errorf("failed to update place with id %s, cause: %w", placeID, err),
 		)
 	}
 
@@ -85,9 +92,9 @@ func (p Place) UpdatePlace(
 }
 
 type UpdatePlacesFilter struct {
-	Class         []string
-	CityID        []uuid.UUID
-	DistributorID []uuid.UUID
+	Class         *string
+	CityID        *uuid.UUID
+	DistributorID *uuid.UUID
 }
 
 type UpdatePlacesParams struct {
@@ -103,14 +110,14 @@ func (p Place) UpdatePlaces(
 ) error {
 	query := p.query.New()
 
-	if len(filter.Class) > 0 && filter.Class != nil {
-		query = query.FilterClass(filter.Class...)
+	if filter.Class != nil {
+		query = query.FilterClass(*filter.Class)
 	}
-	if len(filter.CityID) > 0 && filter.CityID != nil {
-		query = query.FilterCityID(filter.CityID...)
+	if filter.CityID != nil {
+		query = query.FilterCityID(*filter.CityID)
 	}
-	if len(filter.DistributorID) > 0 && filter.DistributorID != nil {
-		query = query.FilterDistributorID(filter.DistributorID...)
+	if filter.DistributorID != nil {
+		query = query.FilterDistributorID(*filter.DistributorID)
 	}
 
 	stmt := dbx.UpdatePlaceParams{}
@@ -118,7 +125,7 @@ func (p Place) UpdatePlaces(
 		stmt.Class = params.Class
 	}
 	if params.Status != nil {
-		err := constant.IsValidPlaceStatus(*params.Status)
+		err := enum.IsValidPlaceStatus(*params.Status)
 		if err != nil {
 			return errx.ErrorPlaceStatusInvalid.Raise(
 				fmt.Errorf("invalid place status, cause: %w", err),

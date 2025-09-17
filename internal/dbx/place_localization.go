@@ -70,7 +70,7 @@ func (q PlaceLocalesQ) Upsert(ctx context.Context, in ...PlaceLocale) error {
 		return nil
 	}
 
-	const cols = "(place_id, locale, name, address, description)"
+	const cols = "(place_id, locale, name, description)"
 	var (
 		args []any
 		ph   []string
@@ -78,9 +78,9 @@ func (q PlaceLocalesQ) Upsert(ctx context.Context, in ...PlaceLocale) error {
 	)
 
 	for _, row := range in {
-		// на каждый ряд по 5 плейсхолдеров: ($1,$2,$3,$4,$5), ($6,$7,$8,$9,$10), ...
+		// на каждый ряд по 4 плейсхолдера: ($1,$2,$3,$4), ($5,$6,$7,$8), ...
 		ph = append(ph, fmt.Sprintf("($%d,$%d,$%d,$%d)", i, i+1, i+2, i+3))
-		i += 5
+		i += 4
 		args = append(args, row.PlaceID, row.Locale, row.Name, row.Description)
 	}
 
@@ -88,19 +88,15 @@ func (q PlaceLocalesQ) Upsert(ctx context.Context, in ...PlaceLocale) error {
 		INSERT INTO %s %s VALUES %s
 		ON CONFLICT (place_id, locale) DO UPDATE
 		SET name = EXCLUDED.name,
-		    address = EXCLUDED.address,
 		    description = EXCLUDED.description
 	`, placeLocalizationTable, cols, strings.Join(ph, ","))
 
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		_, err := tx.ExecContext(ctx, query, args...)
 		return err
-	} else {
-		_, err := q.db.ExecContext(ctx, query, args...)
-		return err
 	}
-
-	return nil
+	_, err := q.db.ExecContext(ctx, query, args...)
+	return err
 }
 
 type UpdatePlaceLocaleParams struct {

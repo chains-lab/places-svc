@@ -4,22 +4,22 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
 	"github.com/paulmach/orb"
 )
 
 type FilterListParams struct {
-	Class         []string
-	Status        []string
-	CityID        []uuid.UUID
-	DistributorID []uuid.UUID
-	Verified      *bool
-	Name          *string
-	Address       *string
+	Classes        []string
+	Statuses       []string
+	CityIDs        []uuid.UUID
+	DistributorIDs []uuid.UUID
+	Verified       *bool
+	Name           *string
+	Address        *string
 
 	Time     *models.TimeInterval
 	Location *FilterListDistance
@@ -52,20 +52,20 @@ func (p Place) List(
 
 	query := p.query.New()
 
-	if len(filter.Class) > 0 && filter.Class != nil {
-		query = query.FilterClass(filter.Class...)
+	if filter.Classes != nil && len(filter.Classes) > 0 {
+		query = query.FilterClass(filter.Classes...)
 	}
-	if len(filter.Status) > 0 && filter.Status != nil {
-		query = query.FilterStatus(filter.Status...)
+	if filter.Statuses != nil && len(filter.Statuses) > 0 {
+		query = query.FilterStatus(filter.Statuses...)
+	}
+	if filter.CityIDs != nil && len(filter.CityIDs) > 0 {
+		query = query.FilterCityID(filter.CityIDs...)
+	}
+	if filter.DistributorIDs != nil && len(filter.DistributorIDs) > 0 {
+		query = query.FilterDistributorID(filter.DistributorIDs...)
 	}
 	if filter.Verified != nil {
 		query = query.FilterVerified(*filter.Verified)
-	}
-	if len(filter.CityID) > 0 && filter.CityID != nil {
-		query = query.FilterCityID(filter.CityID...)
-	}
-	if len(filter.DistributorID) > 0 && filter.DistributorID != nil {
-		query = query.FilterDistributorID(filter.DistributorID...)
 	}
 	if filter.Name != nil {
 		query = query.FilterNameLike(*filter.Name)
@@ -73,14 +73,13 @@ func (p Place) List(
 	if filter.Address != nil {
 		query = query.FilterAddressLike(*filter.Address)
 	}
-	if filter.Location.RadiusM > 0 && filter.Location != nil {
+	if filter.Location != nil && filter.Location.RadiusM > 0 {
 		query = query.FilterWithinRadiusMeters(filter.Location.Point, filter.Location.RadiusM)
 	}
 	if filter.Time != nil {
 		query = query.FilterTimetableBetween(filter.Time.ToNumberMinutes())
 	}
-
-	count, err := p.query.Count(ctx)
+	count, err := query.Count(ctx)
 
 	for _, s := range sort {
 		switch s.Field {
@@ -93,10 +92,12 @@ func (p Place) List(
 		}
 	}
 
-	loc := constant.LocaleEN
-	err = constant.IsValidLocaleSupported(locale)
+	err = enum.IsValidLocaleSupported(locale)
+	if err != nil {
+		locale = enum.LocaleEN
+	}
 
-	rows, err := query.Page(limit, offset).SelectWithDetails(ctx, loc)
+	rows, err := query.Page(limit, offset).SelectWithDetails(ctx, locale)
 	if err != nil {
 		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to search locos, cause: %w", err),

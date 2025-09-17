@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -71,35 +72,28 @@ func (q ClassLocaleQ) Upsert(ctx context.Context, in ...PlaceClassLocale) error 
 		return nil
 	}
 
-	const cols = "(class, locale, name)"
-	var (
-		args []any
-		ph   []string
-		i    = 1
-	)
-
-	for _, row := range in {
-		ph = append(ph, fmt.Sprintf("($%d, $%d, $%d)", i, i+1, i+2))
+	args := make([]any, 0, len(in)*3)
+	ph := make([]string, 0, len(in))
+	for i, row := range in {
+		base := i*3 + 1
+		ph = append(ph, fmt.Sprintf("($%d,$%d,$%d)", base, base+1, base+2))
 		args = append(args, row.Class, row.Locale, row.Name)
-		i += 3
 	}
 
 	query := fmt.Sprintf(`
 		INSERT INTO %s (class, locale, name)
-		VALUES ($1, $2, $3)
+		VALUES %s
 		ON CONFLICT (class, locale) DO UPDATE
 		SET name = EXCLUDED.name
-    `, PlaceClassLocalesTable)
+	`, PlaceClassLocalesTable, strings.Join(ph, ","))
 
+	var err error
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		_, err := tx.ExecContext(ctx, query, args...)
-		return err
+		_, err = tx.ExecContext(ctx, query, args...)
 	} else {
-		_, err := q.db.ExecContext(ctx, query, args...)
-		return err
+		_, err = q.db.ExecContext(ctx, query, args...)
 	}
-
-	return nil
+	return err
 }
 
 func (q ClassLocaleQ) Get(ctx context.Context) (PlaceClassLocale, error) {

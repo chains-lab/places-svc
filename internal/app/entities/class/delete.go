@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/chains-lab/places-svc/internal/constant"
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/errx"
 )
 
@@ -13,7 +13,7 @@ func (c Classificator) DeleteClass(
 	ctx context.Context,
 	code string,
 ) error {
-	_, err := c.Get(ctx, code, constant.LocaleEN)
+	_, err := c.Get(ctx, code, enum.LocaleEN)
 	if err != nil {
 		return err
 	}

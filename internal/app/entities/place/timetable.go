@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/dbx"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
@@ -28,7 +28,7 @@ type timetableQ interface {
 }
 
 func (p Place) SetTimetable(ctx context.Context, placeID uuid.UUID, intervals models.Timetable) (models.PlaceWithDetails, error) {
-	place, err := p.Get(ctx, placeID, constant.DefaultLocale)
+	place, err := p.Get(ctx, placeID, enum.DefaultLocale)
 	if err != nil {
 		return models.PlaceWithDetails{}, err
 	}
@@ -85,7 +85,7 @@ func (p Place) GetTimetable(ctx context.Context, placeID uuid.UUID) (models.Time
 }
 
 func (p Place) DeleteTimetable(ctx context.Context, placeID uuid.UUID) error {
-	_, err := p.Get(ctx, placeID, constant.DefaultLocale)
+	_, err := p.Get(ctx, placeID, enum.DefaultLocale)
 	if err != nil {
 		return err
 	}

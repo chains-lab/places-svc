@@ -1,6 +1,6 @@
 server:
-  name: "voting-svc"
-  port: ":8002"
+  name: "places-svc"
+  port: ":8004"
   log:
     level: "debug"
     format: "text"

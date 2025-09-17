@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/entities/place"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/google/uuid"
 )
 
@@ -21,7 +21,7 @@ func (a App) SetPlaceLocales(
 ) error {
 	out := make([]place.SetLocaleParams, 0, len(locales))
 	for _, locale := range locales {
-		err := constant.IsValidLocaleSupported(locale.Locale)
+		err := enum.IsValidLocaleSupported(locale.Locale)
 		if err != nil {
 			return err
 		}

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/dbx"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
@@ -44,7 +44,7 @@ func (p Place) SetLocales(
 	locales ...SetLocaleParams,
 ) error {
 	for _, param := range locales {
-		err := constant.IsValidLocaleSupported(param.Locale)
+		err := enum.IsValidLocaleSupported(param.Locale)
 		if err != nil {
 			return errx.ErrorInvalidLocale.Raise(
 				fmt.Errorf("invalid locale provided: %s, cause %w", param.Locale, err),
@@ -52,7 +52,7 @@ func (p Place) SetLocales(
 		}
 	}
 
-	_, err := p.Get(ctx, placeID, constant.LocaleEN)
+	_, err := p.Get(ctx, placeID, enum.LocaleEN)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (p Place) ListLocales(
 	limit := pag.Size + 1
 	offset := (pag.Page - 1) * pag.Size
 
-	_, err := p.Get(ctx, placeID, constant.LocaleEN)
+	_, err := p.Get(ctx, placeID, enum.LocaleEN)
 	if err != nil {
 		return nil, pagi.Response{}, err
 	}

@@ -32,7 +32,7 @@ CREATE TABLE place_i18n (
     "name"        VARCHAR    NOT NULL,
     "description" VARCHAR    NOT NULL,
 
-    CHECK (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+    CHECK (locale ~ '^[a-z]{2}$'),
     PRIMARY KEY (place_id, locale)
 );
 

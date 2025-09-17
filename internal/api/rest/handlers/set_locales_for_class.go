@@ -38,7 +38,7 @@ func (a Adapter) SetLocalesForClass(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = a.app.SetLocalesForClass(r.Context(), classCode.String(), locales...)
+	err = a.app.SetClassLocales(r.Context(), classCode.String(), locales...)
 	if err != nil {
 		a.Log(r).WithError(err).Error("failed to set class locales")
 		switch {

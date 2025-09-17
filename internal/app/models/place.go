@@ -34,7 +34,26 @@ type PlaceLocale struct {
 }
 
 type PlaceWithDetails struct {
-	Place     Place
-	Locale    PlaceLocale
+	ID            uuid.UUID  `json:"id"`
+	CityID        uuid.UUID  `json:"city_id"`
+	DistributorID *uuid.UUID `json:"distributor_id"`
+	Class         string     `json:"class"`
+
+	Status    string    `json:"status"`
+	Verified  bool      `json:"verified"`
+	Ownership string    `json:"ownership"`
+	Point     orb.Point `json:"point"`
+	Address   string    `json:"address"`
+
+	Locale      string `json:"locale"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+
+	Website *string `json:"website"`
+	Phone   *string `json:"phone"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+
 	Timetable Timetable
 }

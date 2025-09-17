@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/dbx"
 	"github.com/chains-lab/places-svc/internal/errx"
 )
@@ -29,7 +29,7 @@ func (c Classificator) LocalesList(
 	limit := pag.Size + 1
 	offset := (pag.Page - 1) * pag.Size
 
-	_, err := c.Get(ctx, class, constant.LocaleEN)
+	_, err := c.Get(ctx, class, enum.LocaleEN)
 	if err != nil {
 		return nil, pagi.Response{}, err
 	}
@@ -75,7 +75,7 @@ func (c Classificator) SetLocales(
 	locales ...SetClassLocaleParams,
 ) error {
 	for _, param := range locales {
-		err := constant.IsValidLocaleSupported(param.Locale)
+		err := enum.IsValidLocaleSupported(param.Locale)
 		if err != nil {
 			return errx.ErrorInvalidLocale.Raise(
 				fmt.Errorf("invalid locale provided: %s, cause %w", param.Locale, err),
@@ -83,7 +83,7 @@ func (c Classificator) SetLocales(
 		}
 	}
 
-	_, err := c.Get(ctx, code, constant.DefaultLocale)
+	_, err := c.Get(ctx, code, enum.DefaultLocale)
 	if err != nil {
 		return err
 	}

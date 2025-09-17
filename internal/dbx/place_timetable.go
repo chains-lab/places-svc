@@ -13,10 +13,10 @@ import (
 const placeTimetablesTable = "place_timetables"
 
 type PlaceTimetable struct {
-	ID       uuid.UUID `db:"id"`
-	PlaceID  uuid.UUID `db:"place_id"`
-	StartMin int       `db:"start_min"`
-	EndMin   int       `db:"end_min"`
+	ID       uuid.UUID `db:"id"        json:"id"`
+	PlaceID  uuid.UUID `db:"place_id"  json:"place_id"`
+	StartMin int       `db:"start_min" json:"start_min"`
+	EndMin   int       `db:"end_min"   json:"end_min"`
 }
 
 type PlaceTimetablesQ struct {

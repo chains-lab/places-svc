@@ -10,7 +10,7 @@ import (
 
 type FilterListClassesParams struct {
 	Parent      *string
-	ParentCycle *bool
+	ParentCycle bool
 	Status      *string
 }
 
@@ -20,13 +20,13 @@ func (a App) ListClasses(
 	filter FilterListClassesParams,
 	pag pagi.Request,
 ) ([]models.ClassWithLocale, pagi.Response, error) {
-	ent := class.FilterListParams{}
+	ent := class.FilterListParams{
+		ParentCycle: filter.ParentCycle,
+	}
 	if filter.Parent != nil {
 		ent.Parent = filter.Parent
 	}
-	if filter.ParentCycle != nil {
-		ent.ParentCycle = filter.ParentCycle
-	}
+	ent.ParentCycle = filter.ParentCycle
 	if filter.Status != nil {
 		ent.Status = filter.Status
 	}

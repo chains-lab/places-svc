@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/chains-lab/places-svc/internal/constant"
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
 )
 
 func (p Place) DeletePlace(ctx context.Context, placeID uuid.UUID) error {
-	place, err := p.Get(ctx, placeID, constant.LocaleEN)
+	place, err := p.Get(ctx, placeID, enum.LocaleEN)
 	if err != nil {
 		return err
 	}
 
-	if place.Place.Status != constant.PlaceStatusInactive {
+	if place.Status != enum.PlaceStatusInactive {
 		return errx.ErrorPlaceForDeleteMustBeInactive.Raise(
-			fmt.Errorf("place %s is not in inactive status", place.Place.ID.String()),
+			fmt.Errorf("place %s is not in inactive status", place.ID.String()),
 		)
 	}
 

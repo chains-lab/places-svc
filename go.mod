@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/chains-lab/ape v0.4.12
+	github.com/chains-lab/enum v0.1.1
 	github.com/chains-lab/gatekit v0.2.3
 	github.com/chains-lab/logium v0.1.1
 	github.com/chains-lab/pagi v0.1.4

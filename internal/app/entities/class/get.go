@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/errx"
 )
 
@@ -15,9 +15,9 @@ func (c Classificator) Get(
 	ctx context.Context,
 	code, locale string,
 ) (models.ClassWithLocale, error) {
-	err := constant.IsValidLocaleSupported(locale)
+	err := enum.IsValidLocaleSupported(locale)
 	if err != nil {
-		locale = constant.LocaleEN
+		locale = enum.LocaleEN
 	}
 
 	class, err := c.query.New().FilterCode(code).GetWithLocale(ctx, locale)

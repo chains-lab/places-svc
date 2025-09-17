@@ -23,9 +23,10 @@ CREATE TABLE IF NOT EXISTS place_classes (
 
 CREATE TABLE IF NOT EXISTS place_class_i18n (
     class  VARCHAR(16) NOT NULL REFERENCES place_classes(code) ON DELETE CASCADE,
-    locale TEXT        NOT NULL CHECK (locale ~ '^[a-z]{2}(-[A-Z]{2})?$'),
+    locale TEXT        NOT NULL,
     name   VARCHAR(255) NOT NULL,
 
+    CHECK (locale ~ '^[a-z]{2}$'),
     PRIMARY KEY (class, locale),
     UNIQUE (name, locale)
 );

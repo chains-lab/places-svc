@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/errx"
 )
 
 type FilterListParams struct {
 	Parent      *string
-	ParentCycle *bool
+	ParentCycle bool
 	Status      *string
 }
 
@@ -52,16 +52,18 @@ func (c Classificator) List(
 			)
 		}
 
-		if filter.ParentCycle != nil && *filter.ParentCycle {
+		if filter.ParentCycle {
 			query = query.FilterParentCycle(*filter.Parent)
+		} else {
+			query = query.FilterParent(sql.NullString{
+				String: *filter.Parent,
+				Valid:  true,
+			})
 		}
-		query = query.FilterParent(sql.NullString{
-			String: *filter.Parent,
-			Valid:  true,
-		})
+
 	}
 	if filter.Status != nil {
-		err := constant.IsValidPlaceStatus(*filter.Status)
+		err := enum.IsValidPlaceStatus(*filter.Status)
 		if err != nil {
 			return nil, pagi.Response{}, errx.ErrorClassStatusInvalid.Raise(
 				fmt.Errorf("invalid status filter: %s", *filter.Status),
@@ -73,9 +75,9 @@ func (c Classificator) List(
 	query = query.Page(limit, offset)
 
 	l := locale
-	err := constant.IsValidLocaleSupported(l)
+	err := enum.IsValidLocaleSupported(l)
 	if err != nil {
-		l = constant.DefaultLocale
+		l = enum.DefaultLocale
 	}
 
 	rows, err := query.SelectWithLocale(ctx, l)

@@ -3,6 +3,7 @@ package dbx
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -33,9 +34,11 @@ type Place struct {
 }
 
 type PlaceWithDetails struct {
-	Place     Place
-	Locale    PlaceLocale
-	Timetable []PlaceTimetable
+	Place
+	Locale      string
+	Name        string
+	Description string
+	Timetable   []PlaceTimetable
 }
 
 type PlacesQ struct {
@@ -50,32 +53,28 @@ type PlacesQ struct {
 func NewPlacesQ(db *sql.DB) PlacesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-	cols := []string{
-		"p.id",
-		"p.city_id",
-		"p.distributor_id",
-		"p.class",
-		"p.status",
-		"p.verified",
-		"ST_X(p.point::geometry) AS point_lon",
-		"ST_Y(p.point::geometry) AS point_lat",
-		"p.address",
-		"p.website",
-		"p.phone",
-		"p.created_at",
-		"p.updated_at",
-		"NULL AS loc_locale",
-		"NULL AS loc_name",
-		"NULL AS loc_description",
-	}
-
 	return PlacesQ{
-		db:       db,
-		selector: b.Select(cols...).From(placesTable + " p"),
+		db: db,
+		selector: b.Select(
+			"p.id",
+			"p.city_id",
+			"p.distributor_id",
+			"p.class",
+			"p.status",
+			"p.verified",
+			"ST_X(p.point::geometry) AS point_lon",
+			"ST_Y(p.point::geometry) AS point_lat",
+			"p.address",
+			"p.website",
+			"p.phone",
+			"p.created_at",
+			"p.updated_at",
+		).From(placesTable + " AS p"),
 		inserter: b.Insert(placesTable),
-		updater:  b.Update(placesTable),
-		deleter:  b.Delete(placesTable),
-		counter:  b.Select("COUNT(*) AS count").From(placesTable + " p"),
+		updater:  b.Update(placesTable + " AS p"),
+		deleter:  b.Delete(placesTable + " AS p"),
+		counter:  b.Select("COUNT(DISTINCT p.id) AS count").From(placesTable + " AS p"),
+		//counter: b.Select("COUNT(*) AS count").From(placesTable + " AS p"), // DISTINCT не нужен, т.к. нет JOIN'ов по таблицам с множеством записей на place
 	}
 }
 
@@ -83,10 +82,8 @@ func (q PlacesQ) New() PlacesQ { return NewPlacesQ(q.db) }
 
 func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	var (
-		p                  Place
-		lon, lat           float64
-		locLocale, locName *string
-		locDescription     *sql.NullString
+		p        Place
+		lon, lat float64
 	)
 	if err := scanner.Scan(
 		&p.ID,
@@ -102,9 +99,6 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		&p.Phone,
 		&p.CreatedAt,
 		&p.UpdatedAt,
-		&locLocale,
-		&locName,
-		&locDescription,
 	); err != nil {
 		return Place{}, err
 	}
@@ -114,20 +108,14 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	return p, nil
 }
 
-func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (
-	Place, *string, *string, *string, *PlaceTimetable, error,
-) {
+func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (PlaceWithDetails, error) {
 	var (
 		p         Place
 		lon, lat  float64
-		locLocale *string
-		locName   *string
-		locDesc   *string
-
-		ttID      uuid.NullUUID
-		ttPlaceID uuid.NullUUID
-		ttStart   sql.NullInt32
-		ttEnd     sql.NullInt32
+		locLocale string
+		locName   string
+		locDesc   string
+		ttJSON    []byte
 	)
 
 	if err := scanner.Scan(
@@ -147,27 +135,27 @@ func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (
 		&locLocale,
 		&locName,
 		&locDesc,
-		&ttID,
-		&ttPlaceID,
-		&ttStart,
-		&ttEnd,
+		&ttJSON, // ← агрегированное расписание
 	); err != nil {
-		return Place{}, nil, nil, nil, nil, err
+		return PlaceWithDetails{}, err
 	}
 
 	p.Point = orb.Point{lon, lat}
 
-	var tt *PlaceTimetable
-	if ttID.Valid {
-		t := PlaceTimetable{
-			ID:       ttID.UUID,
-			PlaceID:  p.ID,
-			StartMin: int(ttStart.Int32),
-			EndMin:   int(ttEnd.Int32),
+	var tt []PlaceTimetable
+	if len(ttJSON) > 0 {
+		if err := json.Unmarshal(ttJSON, &tt); err != nil {
+			return PlaceWithDetails{}, fmt.Errorf("unmarshal timetable: %w", err)
 		}
-		tt = &t
 	}
-	return p, locLocale, locName, locDesc, tt, nil
+
+	return PlaceWithDetails{
+		Place:       p,
+		Locale:      locLocale,
+		Name:        locName,
+		Description: locDesc,
+		Timetable:   tt,
+	}, nil
 }
 
 func (q PlacesQ) Insert(ctx context.Context, in Place) error {
@@ -269,44 +257,40 @@ type UpdatePlaceParams struct {
 }
 
 func (q PlacesQ) Update(ctx context.Context, p UpdatePlaceParams) error {
-	values := map[string]interface{}{
-		"updated_at": p.UpdatedAt,
-	}
+	upd := q.updater.Set("updated_at", p.UpdatedAt)
+
 	if p.Class != nil {
-		values["class"] = *p.Class
+		upd = upd.Set("class", *p.Class)
 	}
 	if p.Status != nil {
-		values["status"] = *p.Status
+		upd = upd.Set("status", *p.Status)
 	}
 	if p.Verified != nil {
-		values["verified"] = *p.Verified
+		upd = upd.Set("verified", *p.Verified)
 	}
 	if p.Point != nil {
-		values["point"] = sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", (*p.Point)[0], (*p.Point)[1])
+		lon, lat := (*p.Point)[0], (*p.Point)[1] // lon,lat
+		upd = upd.Set("point", sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", lon, lat))
 	}
 	if p.Address != nil {
-		values["address"] = *p.Address
+		upd = upd.Set("address", *p.Address)
 	}
 	if p.Website != nil {
 		if p.Website.Valid {
-			values["website"] = p.Website.String
+			upd = upd.Set("website", p.Website.String)
 		} else {
-			values["website"] = nil
+			upd = upd.Set("website", nil)
 		}
 	}
 	if p.Phone != nil {
 		if p.Phone.Valid {
-			values["phone"] = p.Phone.String
+			upd = upd.Set("phone", p.Phone.String)
 		} else {
-			values["phone"] = nil
+			upd = upd.Set("phone", nil)
 		}
 	}
 
-	if len(values) == 0 {
-		return nil
-	}
-
-	query, args, err := q.updater.SetMap(values).ToSql()
+	query, args, err := upd.ToSql()
 	if err != nil {
 		return fmt.Errorf("building update query for %s: %w", placesTable, err)
 	}
@@ -316,7 +300,6 @@ func (q PlacesQ) Update(ctx context.Context, p UpdatePlaceParams) error {
 	} else {
 		_, err = q.db.ExecContext(ctx, query, args...)
 	}
-
 	return err
 }
 
@@ -338,8 +321,8 @@ func (q PlacesQ) Delete(ctx context.Context) error {
 func (q PlacesQ) FilterID(id uuid.UUID) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.id": id})
 	q.counter = q.counter.Where(sq.Eq{"p.id": id})
-	q.updater = q.updater.Where(sq.Eq{"id": id})
-	q.deleter = q.deleter.Where(sq.Eq{"id": id})
+	q.updater = q.updater.Where(sq.Eq{"p.id": id})
+	q.deleter = q.deleter.Where(sq.Eq{"p.id": id})
 
 	return q
 }
@@ -347,8 +330,8 @@ func (q PlacesQ) FilterID(id uuid.UUID) PlacesQ {
 func (q PlacesQ) FilterCityID(cityID ...uuid.UUID) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.city_id": cityID})
 	q.counter = q.counter.Where(sq.Eq{"p.city_id": cityID})
-	q.updater = q.updater.Where(sq.Eq{"city_id": cityID})
-	q.deleter = q.deleter.Where(sq.Eq{"city_id": cityID})
+	q.updater = q.updater.Where(sq.Eq{"p.city_id": cityID})
+	q.deleter = q.deleter.Where(sq.Eq{"p.city_id": cityID})
 
 	return q
 }
@@ -356,26 +339,89 @@ func (q PlacesQ) FilterCityID(cityID ...uuid.UUID) PlacesQ {
 func (q PlacesQ) FilterDistributorID(distributorID ...uuid.UUID) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.distributor_id": distributorID})
 	q.counter = q.counter.Where(sq.Eq{"p.distributor_id": distributorID})
-	q.updater = q.updater.Where(sq.Eq{"distributor_id": distributorID})
-	q.deleter = q.deleter.Where(sq.Eq{"distributor_id": distributorID})
+	q.updater = q.updater.Where(sq.Eq{"p.distributor_id": distributorID})
+	q.deleter = q.deleter.Where(sq.Eq{"p.distributor_id": distributorID})
 
 	return q
 }
 
-func (q PlacesQ) FilterClass(Class ...string) PlacesQ {
-	q.selector = q.selector.Where(sq.Eq{"p.class": Class})
-	q.counter = q.counter.Where(sq.Eq{"p.class": Class})
-	q.updater = q.updater.Where(sq.Eq{"class": Class})
-	q.deleter = q.deleter.Where(sq.Eq{"class": Class})
+func (q PlacesQ) FilterClass(codes ...string) PlacesQ {
+	if len(codes) == 0 {
+		return q
+	}
+
+	// placeholders для IN (?, ?, ...)
+	ph := make([]byte, 0, len(codes)*2-1)
+	for i := range codes {
+		if i > 0 {
+			ph = append(ph, ',')
+		}
+		ph = append(ph, '?')
+	}
+
+	// Аргументы как []any
+	args := make([]any, len(codes))
+	for i, v := range codes {
+		args[i] = v
+	}
+
+	// Рекурсивно строим множество: seed-ы (codes) + все их потомки
+	cte := `
+		WITH RECURSIVE cls(code) AS (
+		    SELECT pc.code
+		    FROM ` + placeClassesTable + ` pc
+		    WHERE pc.code IN (` + string(ph) + `)
+		  UNION ALL
+		    SELECT pc2.code
+		    FROM ` + placeClassesTable + ` pc2
+		    JOIN cls ON pc2.parent = cls.code
+		)
+		SELECT 1 FROM cls WHERE cls.code = p.class
+	`
+
+	cond := sq.Expr("EXISTS ("+cte+")", args...)
+
+	// ВАЖНО: без лишних JOIN-ов, чтобы не раздувать выборку и Total
+	q.selector = q.selector.Where(cond)
+	q.counter = q.counter.Where(cond)
+	q.updater = q.updater.Where(cond)
+	q.deleter = q.deleter.Where(cond)
 
 	return q
 }
+
+//func (q PlacesQ) FilterClass(codes ...string) PlacesQ {
+//	if len(codes) == 0 {
+//		return q
+//	}
+//
+//	join := placeClassesTable + " pc ON pc.code = p.class"
+//
+//	cond := sq.Or{
+//		sq.Eq{"pc.code": codes},
+//		sq.Eq{"pc.parent": codes},
+//	}
+//
+//	q.selector = q.selector.LeftJoin(join).Where(cond)
+//	q.counter = q.counter.LeftJoin(join).Where(cond)
+//
+//	sub := sq.Select("1").
+//		From(placeClassesTable + " pc").
+//		Where("pc.code = p.class").
+//		Where(cond)
+//
+//	subSQL, subArgs, _ := sub.ToSql()
+//
+//	q.updater = q.updater.Where(sq.Expr("EXISTS ("+subSQL+")", subArgs...))
+//	q.deleter = q.deleter.Where(sq.Expr("EXISTS ("+subSQL+")", subArgs...))
+//	return q
+//}
 
 func (q PlacesQ) FilterStatus(status ...string) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.status": status})
 	q.counter = q.counter.Where(sq.Eq{"p.status": status})
-	q.updater = q.updater.Where(sq.Eq{"status": status})
-	q.deleter = q.deleter.Where(sq.Eq{"status": status})
+	q.updater = q.updater.Where(sq.Eq{"p.status": status})
+	q.deleter = q.deleter.Where(sq.Eq{"p.status": status})
 
 	return q
 }
@@ -383,8 +429,8 @@ func (q PlacesQ) FilterStatus(status ...string) PlacesQ {
 func (q PlacesQ) FilterVerified(verified bool) PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.verified": verified})
 	q.counter = q.counter.Where(sq.Eq{"p.verified": verified})
-	q.updater = q.updater.Where(sq.Eq{"verified": verified})
-	q.deleter = q.deleter.Where(sq.Eq{"verified": verified})
+	q.updater = q.updater.Where(sq.Eq{"p.verified": verified})
+	q.deleter = q.deleter.Where(sq.Eq{"p.verified": verified})
 
 	return q
 }
@@ -423,26 +469,36 @@ func (q PlacesQ) FilterWithinPolygonWKT(polyWKT string) PlacesQ {
 
 func (q PlacesQ) FilterNameLike(name string) PlacesQ {
 	pattern := "%" + name + "%"
-
-	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeLocalizationTable)
-
-	q.selector = q.selector.LeftJoin(join).Where("pd.name ILIKE ?", pattern).Distinct()
-	q.counter = q.counter.LeftJoin(join).Where("pd.name ILIKE ?", pattern).Distinct()
-
 	sub := sq.Select("1").
 		From(placeLocalizationTable+" pd").
-		Where("pd.place_id = places.id").
+		Where("pd.place_id = p.id").
 		Where("pd.name ILIKE ?", pattern)
 
-	subSQL, subArgs, _ := sub.ToSql()
-
-	expr := sq.Expr("EXISTS ("+subSQL+")", subArgs...)
-
-	q.updater = q.updater.Where(expr)
-	q.deleter = q.deleter.Where(expr)
-
+	q.selector = q.selector.Where(sq.Expr("EXISTS (?)", sub))
+	q.counter = q.counter.Where(sq.Expr("EXISTS (?)", sub))
+	// updater/deleter аналогично, если нужно
+	q.updater = q.updater.Where(sq.Expr("EXISTS (?)", sub))
+	q.deleter = q.deleter.Where(sq.Expr("EXISTS (?)", sub))
 	return q
 }
+
+//func (q PlacesQ) FilterNameLike(name string) PlacesQ {
+//	pattern := "%" + name + "%"
+//
+//	join := fmt.Sprintf("%s pd ON pd.place_id = p.id", placeLocalizationTable)
+//	q.selector = q.selector.LeftJoin(join).Where("pd.name ILIKE ?", pattern).Distinct()
+//	q.counter = q.counter.LeftJoin(join).Where("pd.name ILIKE ?", pattern).Distinct()
+//
+//	sub := sq.Select("1").
+//		From(placeLocalizationTable+" pd").
+//		Where("pd.place_id = places.id").
+//		Where("pd.name ILIKE ?", pattern)
+//
+//	q.updater = q.updater.Where(sq.Expr("EXISTS (?)", sub))
+//	q.deleter = q.deleter.Where(sq.Expr("EXISTS (?)", sub))
+//
+//	return q
+//}
 
 func (q PlacesQ) FilterAddressLike(addr string) PlacesQ {
 	q.selector = q.selector.Where("p.address ILIKE ?", "%"+addr+"%")
@@ -451,9 +507,59 @@ func (q PlacesQ) FilterAddressLike(addr string) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
-	const week = 7 * 24 * 60 // 10080
+//func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
+//	const week = 7 * 24 * 60 // 10080
+//
+//	norm := func(x int) int {
+//		x %= week
+//		if x < 0 {
+//			x += week
+//		}
+//		return x
+//	}
+//	s := norm(start)
+//	e := norm(end)
+//
+//	if s == e {
+//		return q
+//	}
+//
+//	buildOverlap := func(alias string) sq.Sqlizer {
+//		colS := alias + ".start_min"
+//		colE := alias + ".end_min"
+//		if s < e {
+//			// [s, e) обычный случай
+//			return sq.And{
+//				sq.Lt{colS: e}, // start < e
+//				sq.Gt{colE: s}, // end   > s
+//			}
+//		}
+//		// Перелом недели: [s, 10080) ∪ [0, e)
+//		return sq.Or{
+//			sq.Gt{colE: s}, // кусок до конца недели
+//			sq.Lt{colS: e}, // кусок с начала недели
+//		}
+//	}
+//
+//	// Для selector/counter — JOIN + DISTINCT
+//	join := fmt.Sprintf("%s pt ON pt.place_id = p.id", placeTimetablesTable)
+//	q.selector = q.selector.LeftJoin(join).Where(buildOverlap("pt")).Distinct()
+//	q.counter = q.counter.LeftJoin(join).Where(buildOverlap("pt")).Distinct()
+//
+//	// Для updater/deleter — EXISTS (подзапрос)
+//	sub := sq.Select("1").
+//		From(placeTimetablesTable + " pt").
+//		Where("pt.place_id = places.id").
+//		Where(buildOverlap("pt"))
+//
+//	q.updater = q.updater.Where(sq.Expr("EXISTS (?)", sub))
+//	q.deleter = q.deleter.Where(sq.Expr("EXISTS (?)", sub))
+//
+//	return q
+//}
 
+func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
+	const week = 7 * 24 * 60
 	norm := func(x int) int {
 		x %= week
 		if x < 0 {
@@ -461,9 +567,7 @@ func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
 		}
 		return x
 	}
-	s := norm(start)
-	e := norm(end)
-
+	s, e := norm(start), norm(end)
 	if s == e {
 		return q
 	}
@@ -472,141 +576,80 @@ func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
 		colS := alias + ".start_min"
 		colE := alias + ".end_min"
 		if s < e {
-			return sq.And{
-				sq.Lt{colS: e},
-				sq.Gt{colE: s},
-			}
+			return sq.And{sq.Lt{colS: e}, sq.Gt{colE: s}}
 		}
-		return sq.Or{
-			sq.Gt{colE: s},
-			sq.Lt{colS: e},
-		}
+		return sq.Or{sq.Gt{colE: s}, sq.Lt{colS: e}}
 	}
 
-	join := fmt.Sprintf("%s pt ON pt.place_id = p.id", placeTimetablesTable)
-
-	q.selector = q.selector.LeftJoin(join).Where(buildOverlap("pt")).Distinct()
-	q.counter = q.counter.LeftJoin(join).Where(buildOverlap("pt")).Distinct()
-
-	sub := sq.
-		Select("1").
+	sub := sq.Select("1").
 		From(placeTimetablesTable + " pt").
-		Where("pt.place_id = places.id").
+		Where("pt.place_id = p.id").
 		Where(buildOverlap("pt"))
 
-	subSQL, subArgs, _ := sub.ToSql()
-	expr := sq.Expr("EXISTS ("+subSQL+")", subArgs...)
-
-	q.updater = q.updater.Where(expr)
-	q.deleter = q.deleter.Where(expr)
-
+	q.selector = q.selector.Where(sq.Expr("EXISTS (?)", sub))
+	q.counter = q.counter.Where(sq.Expr("EXISTS (?)", sub))
+	q.updater = q.updater.Where(sq.Expr("EXISTS (?)", sub))
+	q.deleter = q.deleter.Where(sq.Expr("EXISTS (?)", sub))
 	return q
 }
 
 func (q PlacesQ) withLocale(locale string) PlacesQ {
-	base := placesTable
-	i18n := placeLocalizationTable
-
 	l := sanitizeLocale(locale)
 
-	col := func(field, alias string) sq.Sqlizer {
+	// выбираем запись i18n по приоритету: нужная → 'en' → любая
+	col := func(field, alias string, def any) sq.Sqlizer {
 		return sq.Expr(
-			`CASE
-                WHEN EXISTS (
-                    SELECT 1 FROM `+i18n+` i
-                    WHERE i.place_id = p.id AND i.locale = ?
-                )
-                THEN (SELECT i.`+field+`  FROM `+i18n+` i  WHERE i.place_id = p.id AND i.locale = ?)
-                ELSE (SELECT i2.`+field+` FROM `+i18n+` i2 WHERE i2.place_id = p.id AND i2.locale = 'en')
-             END AS `+alias,
-			l, l, // ← первый ? для EXISTS, второй ? для THEN-подзапроса
+			`COALESCE(
+			   (SELECT i.`+field+`
+			      FROM `+placeLocalizationTable+` i
+			     WHERE i.place_id = p.id
+			     ORDER BY CASE
+			       WHEN i.locale = ?     THEN 0
+			       WHEN i.locale = 'en'  THEN 1
+			       ELSE 2
+			     END
+			     LIMIT 1),
+			   ?
+			 ) AS `+alias,
+			l, def,
 		)
 	}
 
-	q.selector = sq.StatementBuilder.PlaceholderFormat(sq.Dollar).
-		Select(
-			"p.id",
-			"p.city_id",
-			"p.distributor_id",
-			"p.class",
-			"p.status",
-			"p.verified",
-			"ST_X(p.point::geometry) AS point_lon",
-			"ST_Y(p.point::geometry) AS point_lat",
-			"p.address",
-			"p.website",
-			"p.phone",
-			"p.created_at",
-			"p.updated_at",
-		).
-		Column(col("locale", "loc_locale")).
-		Column(col("name", "loc_name")).
-		Column(col("description", "loc_description")).
-		From(base + " AS p")
+	q.selector = q.selector.
+		Column(col("locale", "loc_locale", "en")).
+		Column(col("name", "loc_name", "")).
+		Column(col("description", "loc_description", ""))
 
 	return q
 }
 
 func (q PlacesQ) withTimetable() PlacesQ {
 	q.selector = q.selector.
-		Column(
-			"pt.id AS tt_id",
-			"pt.place_id AS tt_place_id",
-			"pt.start_min AS tt_start_min",
-			"pt.end_min AS tt_end_min",
-		).
-		LeftJoin(placeTimetablesTable + " pt ON pt.place_id = p.id")
-
+		LeftJoin("LATERAL (" +
+			"SELECT json_agg(json_build_object(" +
+			" 'id', pt.id, 'place_id', pt.place_id, 'start_min', pt.start_min, 'end_min', pt.end_min" +
+			") ORDER BY pt.start_min) AS tt_json " +
+			"FROM " + placeTimetablesTable + " pt WHERE pt.place_id = p.id" +
+			") tt ON TRUE").
+		Column("COALESCE(tt.tt_json, '[]'::json) AS tt_json")
 	return q
 }
 
 func (q PlacesQ) GetWithDetails(ctx context.Context, locale string) (PlaceWithDetails, error) {
 	qq := q.withLocale(locale).withTimetable()
 
-	query, args, err := qq.selector.ToSql()
+	query, args, err := qq.selector.Limit(1).ToSql()
 	if err != nil {
 		return PlaceWithDetails{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
 	}
 
-	var rows *sql.Rows
+	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
-		rows, err = tx.QueryContext(ctx, query, args...)
+		row = tx.QueryRowContext(ctx, query, args...)
 	} else {
-		rows, err = q.db.QueryContext(ctx, query, args...)
+		row = q.db.QueryRowContext(ctx, query, args...)
 	}
-	if err != nil {
-		return PlaceWithDetails{}, err
-	}
-	defer rows.Close()
-
-	var (
-		out  PlaceWithDetails
-		seen bool
-	)
-
-	for rows.Next() {
-		p, locLocale, locName, locDesc, tt, err := scanPlaceWihDetails(rows)
-		if err != nil {
-			return PlaceWithDetails{}, err
-		}
-		if !seen {
-			out.Place = p
-			out.Locale = PlaceLocale{
-				PlaceID:     p.ID,
-				Locale:      strOrEmpty(locLocale),
-				Name:        strOrEmpty(locName),
-				Description: strOrEmpty(locDesc),
-			}
-			seen = true
-		}
-		if tt != nil {
-			out.Timetable = append(out.Timetable, *tt)
-		}
-	}
-	if !seen {
-		return PlaceWithDetails{}, sql.ErrNoRows
-	}
-	return out, rows.Err()
+	return scanPlaceWihDetails(row)
 }
 
 func (q PlacesQ) SelectWithDetails(ctx context.Context, locale string) ([]PlaceWithDetails, error) {
@@ -628,35 +671,14 @@ func (q PlacesQ) SelectWithDetails(ctx context.Context, locale string) ([]PlaceW
 	}
 	defer rows.Close()
 
-	out := make([]PlaceWithDetails, 0, 16)
-	indexByID := make(map[uuid.UUID]int)
-
+	var out []PlaceWithDetails
 	for rows.Next() {
-		p, locLocale, locName, locDesc, tt, err := scanPlaceWihDetails(rows)
+		item, err := scanPlaceWihDetails(rows)
 		if err != nil {
 			return nil, err
 		}
-
-		idx, ok := indexByID[p.ID]
-		if !ok {
-			item := PlaceWithDetails{
-				Place: p,
-				Locale: PlaceLocale{
-					PlaceID:     p.ID,
-					Locale:      strOrEmpty(locLocale),
-					Name:        strOrEmpty(locName),
-					Description: strOrEmpty(locDesc),
-				},
-			}
-			out = append(out, item)
-			idx = len(out) - 1
-			indexByID[p.ID] = idx
-		}
-		if tt != nil {
-			out[idx].Timetable = append(out[idx].Timetable, *tt)
-		}
+		out = append(out, item)
 	}
-
 	return out, rows.Err()
 }
 
@@ -689,20 +711,17 @@ func (q PlacesQ) Count(ctx context.Context) (uint64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("building count query for %s: %w", placesTable, err)
 	}
-
-	var count uint64
 	var row *sql.Row
 	if tx, ok := ctx.Value(TxKey).(*sql.Tx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)
 	} else {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
-
-	if err := row.Scan(&count); err != nil {
-		return 0, fmt.Errorf("scanning count for %s: %w", placesTable, err)
+	var cnt uint64
+	if err := row.Scan(&cnt); err != nil {
+		return 0, err
 	}
-
-	return count, nil
+	return cnt, nil
 }
 
 func (q PlacesQ) Page(limit, offset uint64) PlacesQ {

@@ -47,11 +47,11 @@ func (a Adapter) ListPlace(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if classes := q["class"]; len(classes) > 0 {
-		filters.Class = classes
+		filters.Classes = classes
 	}
 
 	if statuses := q["status"]; len(statuses) > 0 {
-		filters.Status = statuses
+		filters.Statuses = statuses
 	}
 
 	if name := strings.TrimSpace(q.Get("name")); name != "" {

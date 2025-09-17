@@ -1,4 +1,4 @@
-package dbx_test
+package dbxtest
 
 import (
 	"context"
@@ -16,7 +16,7 @@ func ensurePlace(t *testing.T, db *sql.DB) uuid.UUID {
 	t.Helper()
 	insertBaseKindInfra(t) // уже есть в твоих тестах
 	pid := uuid.New()
-	insertPlace(t, pid) // уже есть в твоих тестах
+	//insertPlace(t, pid) // уже есть в твоих тестах
 	return pid
 }
 

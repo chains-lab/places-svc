@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/entities/place"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +23,7 @@ func (a App) UpdatePlace(
 ) (models.PlaceWithDetails, error) {
 	input := place.UpdatePlaceParams{}
 	if params.Class != nil {
-		_, err := a.classificator.Get(ctx, *params.Class, constant.LocaleEN)
+		_, err := a.classificator.Get(ctx, *params.Class, enum.LocaleEN)
 		if err != nil {
 			return models.PlaceWithDetails{}, err
 		}

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/dbx"
 	"github.com/chains-lab/places-svc/internal/errx"
 )
@@ -20,11 +20,11 @@ func (c Classificator) Activate(
 		return models.ClassWithLocale{}, err
 	}
 
-	if class.Data.Status == constant.PlaceClassStatusesActive {
+	if class.Data.Status == enum.PlaceClassStatusesActive {
 		return class, nil
 	}
 
-	status := constant.PlaceClassStatusesActive
+	status := enum.PlaceClassStatusesActive
 	now := time.Now().UTC()
 	err = c.query.New().FilterCode(code).Update(ctx, dbx.UpdatePlaceClassParams{
 		Status:    &status,
@@ -64,17 +64,17 @@ func (c Classificator) Deactivate(
 		)
 	}
 
-	if replaceClass.Data.Status == constant.PlaceClassStatusesInactive {
+	if replaceClass.Data.Status == enum.PlaceClassStatusesInactive {
 		return models.ClassWithLocale{}, errx.ErrorClassDeactivateReplaceInactive.Raise(
 			fmt.Errorf("cannot replace with inactive class %s", replaceClasses),
 		)
 	}
 
-	if class.Data.Status == constant.PlaceClassStatusesInactive {
+	if class.Data.Status == enum.PlaceClassStatusesInactive {
 		return class, nil
 	}
 
-	status := constant.PlaceClassStatusesInactive
+	status := enum.PlaceClassStatusesInactive
 	now := time.Now().UTC()
 	err = c.query.New().FilterCode(code).Update(ctx, dbx.UpdatePlaceClassParams{
 		Status:    &status,

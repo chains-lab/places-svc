@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
 )
@@ -17,9 +17,9 @@ func (p Place) Get(
 	placeID uuid.UUID,
 	locale string,
 ) (models.PlaceWithDetails, error) {
-	err := constant.IsValidLocaleSupported(locale)
+	err := enum.IsValidLocaleSupported(locale)
 	if err != nil {
-		locale = constant.LocaleEN
+		locale = enum.LocaleEN
 	}
 
 	place, err := p.query.New().FilterID(placeID).GetWithDetails(ctx, locale)
@@ -31,7 +31,7 @@ func (p Place) Get(
 			)
 		default:
 			return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
-				fmt.Errorf("failed to get Location with id %s: %w", placeID, err),
+				fmt.Errorf("failed to get place with id %s: %w", placeID, err),
 			)
 		}
 	}

@@ -30,3 +30,5 @@ var ErrorClassDeactivateReplaceInactive = ape.DeclareError("CLASS_DEACTIVATE_REP
 var ErrorParentClassNotFound = ape.DeclareError("PARENT_CLASS_NOT_FOUND")
 
 var ErrorClassStatusInvalid = ape.DeclareError("CLASS_STATUS_INVALID")
+
+var ErrorClassStatusIsNotActive = ape.DeclareError("CLASS_STATUS_IS_NOT_ACTIVE")

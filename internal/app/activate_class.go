@@ -10,23 +10,21 @@ import (
 func (a App) DeactivateClass(
 	ctx context.Context,
 	code, locale string,
-	replaceClasses string,
+	replace string,
 ) (models.ClassWithLocale, error) {
 	var err error
 	var updated models.ClassWithLocale
 	txErr := a.transaction(func(txCtx context.Context) error {
 		err = a.place.UpdatePlaces(ctx,
 			place.UpdatePlacesFilter{
-				Class: []string{
-					code,
-				},
+				Class: &code,
 			},
 			place.UpdatePlaceParams{
-				Class: &replaceClasses,
+				Class: &replace,
 			},
 		)
 
-		updated, err = a.classificator.Deactivate(ctx, locale, code, replaceClasses)
+		updated, err = a.classificator.Deactivate(ctx, locale, code, replace)
 		if err != nil {
 			return err
 		}

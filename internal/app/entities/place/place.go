@@ -53,21 +53,43 @@ type Place struct {
 
 func NewPlace(db *sql.DB) Place {
 	return Place{
-		query:  dbx.NewPlacesQ(db),
-		locale: dbx.NewPlaceLocalesQ(db),
-		geo:    geo.NewGuesser(),
+		query:     dbx.NewPlacesQ(db),
+		locale:    dbx.NewPlaceLocalesQ(db),
+		timetable: dbx.NewPlaceTimetablesQ(db),
+		geo:       geo.NewGuesser(),
 	}
 }
 
 func placeWithDetailsModelFromDB(in dbx.PlaceWithDetails) models.PlaceWithDetails {
 	p := placeModelFromDB(in.Place)
-	l := placeLocaleModelFromDB(in.Locale)
 	t := placeTimeTableModelFromDB(in.Timetable)
 
 	out := models.PlaceWithDetails{
-		Place:     p,
-		Locale:    l,
+		ID:            p.ID,
+		CityID:        p.CityID,
+		DistributorID: p.DistributorID,
+		Class:         p.Class,
+
+		Status:    p.Status,
+		Verified:  p.Verified,
+		Ownership: p.Ownership,
+		Point:     p.Point,
+		Address:   p.Address,
+
+		Locale:      in.Locale,
+		Name:        in.Name,
+		Description: in.Description,
+
+		CreatedAt: p.CreatedAt,
+		UpdatedAt: p.UpdatedAt,
+
 		Timetable: t,
+	}
+	if p.Website != nil {
+		out.Website = p.Website
+	}
+	if p.Phone != nil {
+		out.Phone = p.Phone
 	}
 
 	return out

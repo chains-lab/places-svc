@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/dbx"
 	"github.com/chains-lab/places-svc/internal/errx"
 )
@@ -44,7 +44,7 @@ func (c Classificator) Create(
 	err = c.query.New().Insert(ctx, dbx.PlaceClass{
 		Code:      params.Code,
 		Parent:    parentValue,
-		Status:    constant.PlaceClassStatusesInactive,
+		Status:    enum.PlaceClassStatusesInactive,
 		Icon:      params.Icon,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -57,7 +57,7 @@ func (c Classificator) Create(
 
 	err = c.localeQ.Insert(ctx, dbx.PlaceClassLocale{
 		Class:  params.Code,
-		Locale: constant.PlaceClassStatusesInactive,
+		Locale: enum.DefaultLocale,
 		Name:   params.Name,
 	})
 	if err != nil {
@@ -66,5 +66,5 @@ func (c Classificator) Create(
 		)
 	}
 
-	return c.Get(ctx, params.Code, constant.PlaceClassStatusesInactive)
+	return c.Get(ctx, params.Code, enum.DefaultLocale)
 }

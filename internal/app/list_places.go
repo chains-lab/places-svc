@@ -11,8 +11,8 @@ import (
 )
 
 type FilterListPlaces struct {
-	Class          []string
-	Status         []string
+	Classes        []string
+	Statuses       []string
 	CityIDs        []uuid.UUID
 	DistributorIDs []uuid.UUID
 	Verified       *bool
@@ -35,18 +35,19 @@ func (a App) ListPlaces(
 	sort []pagi.SortField,
 ) ([]models.PlaceWithDetails, pagi.Response, error) {
 	ents := place.FilterListParams{}
-	if len(filter.Class) > 0 && filter.Class != nil {
-		ents.Class = filter.Class
+	if filter.Classes != nil && len(filter.Classes) > 0 {
+		ents.Classes = filter.Classes
 	}
-	if len(filter.Status) > 0 && filter.Status != nil {
-		ents.Status = filter.Status
+	if filter.Statuses != nil && len(filter.Statuses) > 0 {
+		ents.Statuses = filter.Statuses
 	}
-	if len(filter.CityIDs) > 0 && filter.CityIDs != nil {
-		ents.CityID = filter.CityIDs
+	if filter.CityIDs != nil && len(filter.CityIDs) > 0 {
+		ents.CityIDs = filter.CityIDs
 	}
-	if len(filter.DistributorIDs) > 0 && filter.DistributorIDs != nil {
-		ents.DistributorID = filter.DistributorIDs
+	if filter.DistributorIDs != nil && len(filter.DistributorIDs) > 0 {
+		ents.DistributorIDs = filter.DistributorIDs
 	}
+
 	if filter.Verified != nil {
 		ents.Verified = filter.Verified
 	}

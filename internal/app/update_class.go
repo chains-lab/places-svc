@@ -30,12 +30,12 @@ func (a App) UpdateClass(
 		ent.Parent = params.Parent
 	}
 
-	err = a.classificator.Update(ctx, *params.Parent, ent)
+	err = a.classificator.Update(ctx, code, ent)
 	if err != nil {
 		return models.ClassWithLocale{}, err
 	}
 
-	c, err = a.classificator.Get(ctx, *params.Parent, locale)
+	c, err = a.classificator.Get(ctx, code, locale)
 	if err != nil {
 		return models.ClassWithLocale{}, err
 	}

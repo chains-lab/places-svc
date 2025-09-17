@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app/models"
-	"github.com/chains-lab/places-svc/internal/constant"
 	"github.com/chains-lab/places-svc/internal/dbx"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
@@ -19,22 +19,19 @@ type CreateParams struct {
 	CityID        uuid.UUID
 	DistributorID *uuid.UUID
 	Class         string
-	Status        string
 	Website       *string
+	Address       string
+	Status        string
 	Phone         *string
 	Point         orb.Point
-}
-
-type CreateLocalParams struct {
-	Locale      string
-	Name        string
-	Description string
+	Locale        string
+	Name          string
+	Description   string
 }
 
 func (p Place) Create(
 	ctx context.Context,
 	params CreateParams,
-	locale CreateLocalParams,
 ) (models.PlaceWithDetails, error) {
 	now := time.Now().UTC()
 
@@ -42,9 +39,10 @@ func (p Place) Create(
 		ID:        params.ID,
 		CityID:    params.CityID,
 		Class:     params.Class,
-		Status:    constant.PlaceStatusActive,
+		Status:    enum.PlaceStatusActive,
 		Verified:  false,
 		Point:     params.Point,
+		Address:   params.Address,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -67,9 +65,9 @@ func (p Place) Create(
 
 	stmtLocale := dbx.PlaceLocale{
 		PlaceID:     params.ID,
-		Locale:      locale.Locale,
-		Name:        locale.Name,
-		Description: locale.Description,
+		Locale:      params.Locale,
+		Name:        params.Name,
+		Description: params.Description,
 	}
 	err = p.locale.Insert(ctx, stmtLocale)
 	if err != nil {
@@ -85,16 +83,20 @@ func (p Place) Create(
 		)
 	}
 
-	res := models.Place{
-		ID:        params.ID,
-		CityID:    params.CityID,
-		Class:     params.Class,
-		Status:    params.Status,
-		Verified:  false,
-		Point:     params.Point,
-		CreatedAt: now,
-		UpdatedAt: now,
-		Address:   fmt.Sprintf("%+v\n", addr),
+	res := models.PlaceWithDetails{
+		ID:          params.ID,
+		CityID:      params.CityID,
+		Class:       params.Class,
+		Status:      params.Status,
+		Verified:    false,
+		Point:       params.Point,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		Address:     fmt.Sprintf("%+v\n", addr),
+		Locale:      params.Locale,
+		Name:        params.Name,
+		Description: params.Description,
+		Timetable:   models.Timetable{},
 	}
 	if params.DistributorID != nil {
 		res.DistributorID = params.DistributorID
@@ -106,15 +108,5 @@ func (p Place) Create(
 		res.Phone = params.Phone
 	}
 
-	paramsLocale := models.PlaceLocale{
-		PlaceID:     params.ID,
-		Locale:      locale.Locale,
-		Name:        locale.Name,
-		Description: locale.Description,
-	}
-
-	return models.PlaceWithDetails{
-		Place:  res,
-		Locale: paramsLocale,
-	}, nil
+	return res, nil
 }
