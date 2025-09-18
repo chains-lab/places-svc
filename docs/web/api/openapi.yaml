@@ -81,7 +81,7 @@ components:
     Class:
       properties:
         data:
-          $ref: "#/components/schemas/Class_data"
+          $ref: '#/components/schemas/Class_data'
       required:
       - data
       type: object
@@ -89,10 +89,10 @@ components:
       properties:
         data:
           items:
-            $ref: "#/components/schemas/Class/properties/data"
+            $ref: '#/components/schemas/Class/properties/data'
           type: array
         links:
-          $ref: "#/components/schemas/PaginationData"
+          $ref: '#/components/schemas/PaginationData'
       required:
       - data
       - links
@@ -100,14 +100,14 @@ components:
     ClassRelationships:
       properties:
         parent:
-          $ref: "#/components/schemas/ClassRelationships_parent"
+          $ref: '#/components/schemas/ClassRelationships_parent'
       required:
       - parent
       type: object
     ClassLocale:
       properties:
         data:
-          $ref: "#/components/schemas/ClassLocale_data"
+          $ref: '#/components/schemas/ClassLocale_data'
       required:
       - data
       type: object
@@ -115,11 +115,11 @@ components:
       properties:
         data:
           items:
-            $ref: "#/components/schemas/RelationshipDataObject"
+            $ref: '#/components/schemas/RelationshipDataObject'
           type: array
         included:
           items:
-            $ref: "#/components/schemas/ClassLocale/properties/data"
+            $ref: '#/components/schemas/ClassLocale/properties/data'
           type: array
       required:
       - data
@@ -128,39 +128,39 @@ components:
     CreateClass:
       properties:
         data:
-          $ref: "#/components/schemas/CreateClass_data"
+          $ref: '#/components/schemas/CreateClass_data'
       required:
       - data
       type: object
     UpdateClass:
       properties:
         data:
-          $ref: "#/components/schemas/UpdateClass_data"
+          $ref: '#/components/schemas/UpdateClass_data'
       required:
       - data
       type: object
     DeactivateClass:
       properties:
         data:
-          $ref: "#/components/schemas/DeactivateClass_data"
+          $ref: '#/components/schemas/DeactivateClass_data'
       required:
       - data
       type: object
     SetLocalesForClass:
       properties:
         data:
-          $ref: "#/components/schemas/SetLocalesForClass_data"
+          $ref: '#/components/schemas/SetLocalesForClass_data'
       required:
       - data
       type: object
     Place:
       properties:
         data:
-          $ref: "#/components/schemas/Place_data"
+          $ref: '#/components/schemas/Place_data'
         included:
           description: Array of related resources
           items:
-            $ref: "#/components/schemas/Timetable/properties/data"
+            $ref: '#/components/schemas/Timetable/properties/data'
           type: array
       required:
       - data
@@ -170,14 +170,14 @@ components:
       properties:
         data:
           items:
-            $ref: "#/components/schemas/Place/properties/data"
+            $ref: '#/components/schemas/Place/properties/data'
           type: array
         included:
           items:
-            $ref: "#/components/schemas/Timetable/properties/data"
+            $ref: '#/components/schemas/Timetable/properties/data'
           type: array
         links:
-          $ref: "#/components/schemas/PaginationData"
+          $ref: '#/components/schemas/PaginationData'
       required:
       - data
       - included
@@ -186,11 +186,11 @@ components:
     PlaceRelationships:
       properties:
         class:
-          $ref: "#/components/schemas/ClassRelationships_parent"
+          $ref: '#/components/schemas/ClassRelationships_parent'
         city:
-          $ref: "#/components/schemas/ClassRelationships_parent"
+          $ref: '#/components/schemas/ClassRelationships_parent'
         distributor:
-          $ref: "#/components/schemas/ClassRelationships_parent"
+          $ref: '#/components/schemas/ClassRelationships_parent'
       required:
       - city
       - class
@@ -198,21 +198,21 @@ components:
     CreatePlace:
       properties:
         data:
-          $ref: "#/components/schemas/CreatePlace_data"
+          $ref: '#/components/schemas/CreatePlace_data'
       required:
       - data
       type: object
     UpdatePlace:
       properties:
         data:
-          $ref: "#/components/schemas/UpdatePlace_data"
+          $ref: '#/components/schemas/UpdatePlace_data'
       required:
       - data
       type: object
     PlaceLocale:
       properties:
         data:
-          $ref: "#/components/schemas/PlaceLocale_data"
+          $ref: '#/components/schemas/PlaceLocale_data'
       required:
       - data
       type: object
@@ -220,11 +220,11 @@ components:
       properties:
         data:
           items:
-            $ref: "#/components/schemas/RelationshipDataObject"
+            $ref: '#/components/schemas/RelationshipDataObject'
           type: array
         included:
           items:
-            $ref: "#/components/schemas/PlaceLocale/properties/data"
+            $ref: '#/components/schemas/PlaceLocale/properties/data'
           type: array
       required:
       - data
@@ -233,23 +233,23 @@ components:
     SetLocalesForPlace:
       properties:
         data:
-          $ref: "#/components/schemas/SetLocalesForPlace_data"
+          $ref: '#/components/schemas/SetLocalesForPlace_data'
       required:
       - data
       type: object
     Timetable:
       properties:
         data:
-          $ref: "#/components/schemas/Timetable_data"
+          $ref: '#/components/schemas/Timetable_data'
       required:
       - data
       type: object
     TimetableInterval:
       properties:
         from:
-          $ref: "#/components/schemas/TimeMoment"
+          $ref: '#/components/schemas/TimeMoment'
         to:
-          $ref: "#/components/schemas/TimeMoment"
+          $ref: '#/components/schemas/TimeMoment'
       required:
       - from
       - to
@@ -278,7 +278,7 @@ components:
     SetPlaceTimetable:
       properties:
         data:
-          $ref: "#/components/schemas/Timetable_data"
+          $ref: '#/components/schemas/Timetable_data'
       required:
       - data
       type: object
@@ -321,9 +321,9 @@ components:
           - place_class
           type: string
         attributes:
-          $ref: "#/components/schemas/Class_data_attributes"
+          $ref: '#/components/schemas/Class_data_attributes'
         relationships:
-          $ref: "#/components/schemas/ClassRelationships"
+          $ref: '#/components/schemas/ClassRelationships'
       required:
       - attributes
       - id
@@ -332,9 +332,9 @@ components:
     ClassRelationships_parent:
       properties:
         links:
-          $ref: "#/components/schemas/RelationshipLinks"
+          $ref: '#/components/schemas/RelationshipLinks'
         data:
-          $ref: "#/components/schemas/RelationshipDataObject"
+          $ref: '#/components/schemas/RelationshipDataObject'
       type: object
     ClassLocale_data_attributes:
       properties:
@@ -356,7 +356,7 @@ components:
           - class_locale
           type: string
         attributes:
-          $ref: "#/components/schemas/ClassLocale_data_attributes"
+          $ref: '#/components/schemas/ClassLocale_data_attributes'
       required:
       - attributes
       - id
@@ -390,7 +390,7 @@ components:
           - classes
           type: string
         attributes:
-          $ref: "#/components/schemas/CreateClass_data_attributes"
+          $ref: '#/components/schemas/CreateClass_data_attributes'
       required:
       - attributes
       - id
@@ -421,7 +421,7 @@ components:
           - classes
           type: string
         attributes:
-          $ref: "#/components/schemas/UpdateClass_data_attributes"
+          $ref: '#/components/schemas/UpdateClass_data_attributes'
       required:
       - attributes
       - id
@@ -448,7 +448,7 @@ components:
           - place_class
           type: string
         attributes:
-          $ref: "#/components/schemas/DeactivateClass_data_attributes"
+          $ref: '#/components/schemas/DeactivateClass_data_attributes'
       required:
       - attributes
       - id
@@ -470,7 +470,7 @@ components:
       properties:
         locales:
           items:
-            $ref: "#/components/schemas/SetLocalesForClass_data_attributes_locales_inner"
+            $ref: '#/components/schemas/SetLocalesForClass_data_attributes_locales_inner'
           type: array
       required:
       - locales
@@ -486,7 +486,7 @@ components:
           - class_code_locale
           type: string
         attributes:
-          $ref: "#/components/schemas/SetLocalesForClass_data_attributes"
+          $ref: '#/components/schemas/SetLocalesForClass_data_attributes'
       required:
       - attributes
       - id
@@ -512,7 +512,10 @@ components:
           description: is place verified
           type: boolean
         point:
-          $ref: "#/components/schemas/Point"
+          $ref: '#/components/schemas/Point'
+        locale:
+          description: place locale
+          type: string
         name:
           description: place name
           type: string
@@ -543,6 +546,7 @@ components:
       - class
       - created_at
       - description
+      - locale
       - name
       - point
       - status
@@ -560,9 +564,9 @@ components:
           - place
           type: string
         attributes:
-          $ref: "#/components/schemas/Place_data_attributes"
+          $ref: '#/components/schemas/Place_data_attributes'
         relationships:
-          $ref: "#/components/schemas/PlaceRelationships"
+          $ref: '#/components/schemas/PlaceRelationships'
       required:
       - attributes
       - id
@@ -583,7 +587,7 @@ components:
           description: place class
           type: string
         point:
-          $ref: "#/components/schemas/Point"
+          $ref: '#/components/schemas/Point'
         locale:
           description: locale
           type: string
@@ -619,7 +623,7 @@ components:
           - place
           type: string
         attributes:
-          $ref: "#/components/schemas/CreatePlace_data_attributes"
+          $ref: '#/components/schemas/CreatePlace_data_attributes'
       required:
       - attributes
       - id
@@ -652,7 +656,7 @@ components:
           - place
           type: string
         attributes:
-          $ref: "#/components/schemas/UpdatePlace_data_attributes"
+          $ref: '#/components/schemas/UpdatePlace_data_attributes'
       required:
       - attributes
       - id
@@ -682,7 +686,7 @@ components:
           - place_locale
           type: string
         attributes:
-          $ref: "#/components/schemas/PlaceLocale_data_attributes"
+          $ref: '#/components/schemas/PlaceLocale_data_attributes'
       required:
       - attributes
       - id
@@ -708,7 +712,7 @@ components:
       properties:
         locales:
           items:
-            $ref: "#/components/schemas/SetLocalesForPlace_data_attributes_locales_inner"
+            $ref: '#/components/schemas/SetLocalesForPlace_data_attributes_locales_inner'
           type: array
       required:
       - locales
@@ -724,7 +728,7 @@ components:
           - place_locale
           type: string
         attributes:
-          $ref: "#/components/schemas/SetLocalesForPlace_data_attributes"
+          $ref: '#/components/schemas/SetLocalesForPlace_data_attributes'
       required:
       - attributes
       - id
@@ -735,7 +739,7 @@ components:
         table:
           description: timetable table
           items:
-            $ref: "#/components/schemas/TimetableInterval"
+            $ref: '#/components/schemas/TimetableInterval'
           type: array
       required:
       - table
@@ -751,7 +755,7 @@ components:
           - place_timetable
           type: string
         attributes:
-          $ref: "#/components/schemas/Timetable_data_attributes"
+          $ref: '#/components/schemas/Timetable_data_attributes'
       required:
       - attributes
       - id

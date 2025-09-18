@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 **Status** | **string** | place status | 
 **Verified** | **bool** | is place verified | 
 **Point** | [**Point**](Point.md) |  | 
+**Locale** | **string** | place locale | 
 **Name** | **string** | place name | 
 **Address** | **string** | place address | 
 **Description** | **string** | place description | 
@@ -22,7 +23,7 @@ Name | Type | Description | Notes
 
 ### NewPlaceDataAttributes
 
-`func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, point Point, name string, address string, description string, createdAt time.Time, updatedAt time.Time, ) *PlaceDataAttributes`
+`func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, point Point, locale string, name string, address string, description string, createdAt time.Time, updatedAt time.Time, ) *PlaceDataAttributes`
 
 NewPlaceDataAttributes instantiates a new PlaceDataAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -160,6 +161,26 @@ and a boolean to check if the value has been set.
 `func (o *PlaceDataAttributes) SetPoint(v Point)`
 
 SetPoint sets Point field to given value.
+
+
+### GetLocale
+
+`func (o *PlaceDataAttributes) GetLocale() string`
+
+GetLocale returns the Locale field if non-nil, zero value otherwise.
+
+### GetLocaleOk
+
+`func (o *PlaceDataAttributes) GetLocaleOk() (*string, bool)`
+
+GetLocaleOk returns a tuple with the Locale field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLocale
+
+`func (o *PlaceDataAttributes) SetLocale(v string)`
+
+SetLocale sets Locale field to given value.
 
 
 ### GetName

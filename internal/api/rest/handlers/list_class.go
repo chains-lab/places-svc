@@ -28,11 +28,9 @@ func (a Adapter) ListClass(w http.ResponseWriter, r *http.Request) {
 
 	if parentCycle := q.Get("parent_cycle"); parentCycle != "" {
 		if parentCycle == "true" {
-			t := true
-			filters.ParentCycle = &t
+			filters.ParentCycle = true
 		} else if parentCycle == "false" {
-			f := false
-			filters.ParentCycle = &f
+			filters.ParentCycle = false
 		} else {
 			ape.RenderErr(w, problems.InvalidParameter(
 				"verified",

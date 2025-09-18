@@ -33,6 +33,8 @@ type PlaceDataAttributes struct {
 	// is place verified
 	Verified bool `json:"verified"`
 	Point Point `json:"point"`
+	// place locale
+	Locale string `json:"locale"`
 	// place name
 	Name string `json:"name"`
 	// place address
@@ -55,13 +57,14 @@ type _PlaceDataAttributes PlaceDataAttributes
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, point Point, name string, address string, description string, createdAt time.Time, updatedAt time.Time) *PlaceDataAttributes {
+func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, point Point, locale string, name string, address string, description string, createdAt time.Time, updatedAt time.Time) *PlaceDataAttributes {
 	this := PlaceDataAttributes{}
 	this.CityId = cityId
 	this.Class = class
 	this.Status = status
 	this.Verified = verified
 	this.Point = point
+	this.Locale = locale
 	this.Name = name
 	this.Address = address
 	this.Description = description
@@ -228,6 +231,30 @@ func (o *PlaceDataAttributes) GetPointOk() (*Point, bool) {
 // SetPoint sets field value
 func (o *PlaceDataAttributes) SetPoint(v Point) {
 	o.Point = v
+}
+
+// GetLocale returns the Locale field value
+func (o *PlaceDataAttributes) GetLocale() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Locale
+}
+
+// GetLocaleOk returns a tuple with the Locale field value
+// and a boolean to check if the value has been set.
+func (o *PlaceDataAttributes) GetLocaleOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Locale, true
+}
+
+// SetLocale sets field value
+func (o *PlaceDataAttributes) SetLocale(v string) {
+	o.Locale = v
 }
 
 // GetName returns the Name field value
@@ -432,6 +459,7 @@ func (o PlaceDataAttributes) ToMap() (map[string]interface{}, error) {
 	toSerialize["status"] = o.Status
 	toSerialize["verified"] = o.Verified
 	toSerialize["point"] = o.Point
+	toSerialize["locale"] = o.Locale
 	toSerialize["name"] = o.Name
 	toSerialize["address"] = o.Address
 	toSerialize["description"] = o.Description
@@ -456,6 +484,7 @@ func (o *PlaceDataAttributes) UnmarshalJSON(data []byte) (err error) {
 		"status",
 		"verified",
 		"point",
+		"locale",
 		"name",
 		"address",
 		"description",

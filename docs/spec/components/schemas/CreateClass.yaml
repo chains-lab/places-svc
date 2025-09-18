@@ -14,8 +14,7 @@ properties:
         description: "class code"
       type:
         type: string
-        enum:
-        - classes
+        enum: [ place_class ]
         description: "Resource type"
       attributes:
         type: object

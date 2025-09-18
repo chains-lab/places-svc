@@ -15,7 +15,7 @@ properties:
         description: "class_code"
       type:
         type: string
-        enum: [ class_code_locale ]
+        enum: [ place_class_locale ]
       attributes:
         type: object
         required:

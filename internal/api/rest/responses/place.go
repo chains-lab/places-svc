@@ -9,35 +9,36 @@ import (
 func Place(m models.PlaceWithDetails) resources.Place {
 	resp := resources.Place{
 		Data: resources.PlaceData{
-			Id:   m.Place.ID.String(),
+			Id:   m.ID.String(),
 			Type: resources.PlaceType,
 			Attributes: resources.PlaceDataAttributes{
-				CityId:   m.Place.CityID.String(),
-				Class:    m.Place.Class,
-				Status:   m.Place.Status,
-				Verified: m.Place.Verified,
+				CityId:   m.CityID.String(),
+				Class:    m.Class,
+				Status:   m.Status,
+				Verified: m.Verified,
 				Point: resources.Point{
-					Lon: m.Place.Point[0],
-					Lat: m.Place.Point[1],
+					Lon: m.Point[0],
+					Lat: m.Point[1],
 				},
-				Name:        m.Locale.Name,
-				Address:     m.Place.Address,
-				Description: m.Locale.Description,
-				CreatedAt:   m.Place.CreatedAt,
-				UpdatedAt:   m.Place.UpdatedAt,
+				Locale:      m.Locale,
+				Name:        m.Name,
+				Address:     m.Address,
+				Description: m.Description,
+				CreatedAt:   m.CreatedAt,
+				UpdatedAt:   m.UpdatedAt,
 			},
 		},
 	}
 
-	if m.Place.DistributorID != nil {
-		disID := m.Place.DistributorID.String()
+	if m.DistributorID != nil {
+		disID := m.DistributorID.String()
 		resp.Data.Attributes.DistributorId = &disID
 	}
-	if m.Place.Website != nil {
-		resp.Data.Attributes.Website = m.Place.Website
+	if m.Website != nil {
+		resp.Data.Attributes.Website = m.Website
 	}
-	if m.Place.Phone != nil {
-		resp.Data.Attributes.Phone = m.Place.Phone
+	if m.Phone != nil {
+		resp.Data.Attributes.Phone = m.Phone
 	}
 
 	if m.Timetable.Table != nil {

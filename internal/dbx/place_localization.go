@@ -263,15 +263,14 @@ func (q PlaceLocalesQ) Count(ctx context.Context) (uint64, error) {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
 
-	err = row.Scan(&count)
-	if err != nil {
+	if err = row.Scan(&count); err != nil {
 		return 0, fmt.Errorf("failed to scan count for %s: %w", placeLocalizationTable, err)
 	}
 
 	return count, nil
 }
 
-func (q PlaceLocalesQ) Page(offset, limit uint64) PlaceLocalesQ {
+func (q PlaceLocalesQ) Page(limit, offset uint64) PlaceLocalesQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
 
 	return q

@@ -41,7 +41,7 @@ func (c Classificator) LocalesList(
 		)
 	}
 
-	count, err := c.localeQ.New().FilterLocale(class).Count(ctx)
+	count, err := c.localeQ.New().FilterClass(class).Count(ctx)
 	if err != nil {
 		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to count locales for class %s, cause: %w", class, err),
@@ -49,7 +49,7 @@ func (c Classificator) LocalesList(
 	}
 
 	if len(rows) == int(limit) {
-		rows = rows[:limit]
+		rows = rows[:pag.Size]
 	}
 
 	result := make([]models.ClassLocale, 0, len(rows))

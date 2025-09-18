@@ -122,8 +122,8 @@ func (p Place) ListLocales(
 		)
 	}
 
-	if len(rows) > int(limit) {
-		rows = rows[:limit]
+	if len(rows) == int(limit) {
+		rows = rows[:pag.Size]
 	}
 
 	result := make([]models.PlaceLocale, 0, len(rows))

@@ -35,6 +35,7 @@ func NewClassLocaleQ(db *sql.DB) ClassLocaleQ {
 		inserter: b.Insert(PlaceClassLocalesTable),
 		updater:  b.Update(PlaceClassLocalesTable),
 		deleter:  b.Delete(PlaceClassLocalesTable),
+		counter:  b.Select("COUNT(*) AS count").From(PlaceClassLocalesTable),
 	}
 }
 
@@ -255,5 +256,6 @@ func (q ClassLocaleQ) Count(ctx context.Context) (uint64, error) {
 
 func (q ClassLocaleQ) Page(limit, offset uint64) ClassLocaleQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
+
 	return q
 }

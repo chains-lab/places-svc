@@ -33,7 +33,7 @@ type UpdateClassDataAttributes struct {
 // will change when the set of required properties is changed
 func NewUpdateClassDataAttributes() *UpdateClassDataAttributes {
 	this := UpdateClassDataAttributes{}
-	var name string = "New Classes"
+	var name string = "New Class"
 	this.Name = &name
 	return &this
 }
@@ -43,7 +43,7 @@ func NewUpdateClassDataAttributes() *UpdateClassDataAttributes {
 // but it doesn't guarantee that properties required by API are set
 func NewUpdateClassDataAttributesWithDefaults() *UpdateClassDataAttributes {
 	this := UpdateClassDataAttributes{}
-	var name string = "New Classes"
+	var name string = "New Class"
 	this.Name = &name
 	return &this
 }

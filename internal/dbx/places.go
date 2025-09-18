@@ -699,10 +699,10 @@ func (q PlacesQ) OrderByDistance(point orb.Point, asc bool) PlacesQ {
 		dir = "DESC"
 	}
 
-	geog := sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", point[0], point[1])
-
-	q.selector = q.selector.OrderByClause("ST_Distance(p.point, ?) "+dir, geog)
-
+	q.selector = q.selector.OrderByClause(
+		"ST_Distance(p.point, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) "+dir,
+		point[0], point[1],
+	)
 	return q
 }
 

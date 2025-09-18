@@ -363,6 +363,7 @@ components:
                 - status
                 - verified
                 - point
+                - locale
                 - name
                 - address
                 - description
@@ -388,6 +389,9 @@ components:
                   description: is place verified
                 point:
                   $ref: '#/components/schemas/Point'
+                locale:
+                  type: string
+                  description: place locale
                 name:
                   type: string
                   description: place name

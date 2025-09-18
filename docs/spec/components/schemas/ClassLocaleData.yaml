@@ -11,6 +11,6 @@ properties:
     example: "yoga:en"
   type:
     type: string
-    enum: [ class_locale ]
+    enum: [ place_class_locale ]
   attributes:
     $ref: './ClassLocaleAttributes.yaml'

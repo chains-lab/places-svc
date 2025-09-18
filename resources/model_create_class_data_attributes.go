@@ -47,7 +47,7 @@ func NewCreateClassDataAttributes(icon string, name string) *CreateClassDataAttr
 // but it doesn't guarantee that properties required by API are set
 func NewCreateClassDataAttributesWithDefaults() *CreateClassDataAttributes {
 	this := CreateClassDataAttributes{}
-	var name string = "New Classes"
+	var name string = "New Class"
 	this.Name = name
 	return &this
 }

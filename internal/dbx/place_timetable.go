@@ -283,7 +283,7 @@ func (q PlaceTimetablesQ) Count(ctx context.Context) (uint64, error) {
 	return count, nil
 }
 
-func (q PlaceTimetablesQ) Page(offset, limit uint64) PlaceTimetablesQ {
+func (q PlaceTimetablesQ) Page(limit, offset uint64) PlaceTimetablesQ {
 	q.selector = q.selector.Offset(offset).Limit(limit)
 
 	return q

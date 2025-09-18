@@ -24,7 +24,7 @@ type timetableQ interface {
 	FilterBetween(startMin, endMin int) dbx.PlaceTimetablesQ
 
 	Count(ctx context.Context) (uint64, error)
-	Page(offset, limit uint64) dbx.PlaceTimetablesQ
+	Page(limit, offset uint64) dbx.PlaceTimetablesQ
 }
 
 func (p Place) SetTimetable(ctx context.Context, placeID uuid.UUID, intervals models.Timetable) (models.PlaceWithDetails, error) {

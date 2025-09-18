@@ -48,6 +48,9 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 			req.Data.Attributes.Point.Lon,
 			req.Data.Attributes.Point.Lat,
 		},
+		Locale:      req.Data.Attributes.Locale,
+		Name:        req.Data.Attributes.Name,
+		Description: req.Data.Attributes.Description,
 	}
 	if req.Data.Attributes.DistributorId != nil {
 		distributorID, err := uuid.Parse(*req.Data.Attributes.DistributorId)
@@ -67,13 +70,7 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		params.Website = req.Data.Attributes.Website
 	}
 
-	locate := app.CreatePlaceLocalParams{
-		Locale:      req.Data.Attributes.Locale,
-		Name:        req.Data.Attributes.Name,
-		Description: req.Data.Attributes.Description,
-	}
-
-	place, err := a.app.CreatePlace(r.Context(), params, locate)
+	place, err := a.app.CreatePlace(r.Context(), params)
 	if err != nil {
 		a.log.WithError(err).Error("error creating place")
 		switch {
@@ -86,7 +83,7 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.log.Infof("created place with id %s by user %s", place.Place.ID, initiator.ID)
+	a.log.Infof("created place with id %s by user %s", place.ID, initiator.ID)
 
 	ape.Render(w, http.StatusCreated, responses.Place(place))
 }

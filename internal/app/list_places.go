@@ -20,6 +20,7 @@ type FilterListPlaces struct {
 	Address        *string
 
 	Location *GeoFilterListPlaces
+	Time     *models.TimeInterval
 }
 
 type GeoFilterListPlaces struct {
@@ -58,9 +59,15 @@ func (a App) ListPlaces(
 		ents.Address = filter.Address
 	}
 
-	if filter.Location != nil {
-		ents.Location.Point = filter.Location.Point
-		ents.Location.RadiusM = filter.Location.RadiusM
+	if filter.Location != nil && filter.Location.RadiusM > 0 {
+		ents.Location = &place.FilterListDistance{
+			Point:   filter.Location.Point,
+			RadiusM: filter.Location.RadiusM,
+		}
+	}
+
+	if filter.Time != nil {
+		ents.Time = filter.Time
 	}
 
 	return a.place.List(ctx, locale, ents, pag, sort)
