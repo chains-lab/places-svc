@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (p Place) Deactivate(ctx context.Context, locale string, placeID uuid.UUID) (models.PlaceWithDetails, error) {
+func (p Place) Deactivate(ctx context.Context, placeID uuid.UUID, locale string) (models.PlaceWithDetails, error) {
 	place, err := p.Get(ctx, placeID, locale)
 	if err != nil {
 		return models.PlaceWithDetails{}, err
@@ -29,7 +29,7 @@ func (p Place) Deactivate(ctx context.Context, locale string, placeID uuid.UUID)
 	return updated, nil
 }
 
-func (p Place) Activate(ctx context.Context, locale string, placeID uuid.UUID) (models.PlaceWithDetails, error) {
+func (p Place) Activate(ctx context.Context, placeID uuid.UUID, locale string) (models.PlaceWithDetails, error) {
 	place, err := p.Get(ctx, placeID, locale)
 	if err != nil {
 		return models.PlaceWithDetails{}, err

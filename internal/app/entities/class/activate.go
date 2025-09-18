@@ -46,7 +46,7 @@ func (c Classificator) Activate(
 
 func (c Classificator) Deactivate(
 	ctx context.Context,
-	locale, code string,
+	code, locale string,
 	replaceClasses string,
 ) (models.ClassWithLocale, error) {
 	class, err := c.Get(ctx, code, locale)

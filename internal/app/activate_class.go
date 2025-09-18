@@ -24,7 +24,7 @@ func (a App) DeactivateClass(
 			},
 		)
 
-		updated, err = a.classificator.Deactivate(ctx, locale, code, replace)
+		updated, err = a.classificator.Deactivate(ctx, code, locale, replace)
 		if err != nil {
 			return err
 		}

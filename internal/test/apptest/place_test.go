@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/app"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
@@ -38,6 +39,11 @@ func TestCreatingPlace(t *testing.T) {
 		t.Fatalf("CreateClass: %v", err)
 	}
 
+	classFirst, err = s.app.ActivateClass(ctx, classFirst.Data.Code, enum.LocaleUK)
+	if err != nil {
+		t.Fatalf("ActivateClass: %v", err)
+	}
+
 	distributorID := uuid.New()
 	cityID := uuid.New()
 
@@ -62,7 +68,9 @@ func TestCreatingPlace(t *testing.T) {
 		t.Fatalf("CreatePlace: expected city ID %s, got %s", cityID, place.CityID)
 	}
 
-	place, err = s.app.UpdatePlace(ctx, place.ID, place.Locale, app.UpdatePlaceParams{})
+	placeID := place.ID
+
+	place, err = s.app.UpdatePlace(ctx, placeID, place.Locale, app.UpdatePlaceParams{})
 	if err != nil {
 		t.Fatalf("UpdatePlace: %v", err)
 	}
@@ -74,7 +82,7 @@ func TestCreatingPlace(t *testing.T) {
 	}
 
 	noneID := "none"
-	place, err = s.app.UpdatePlace(ctx, place.ID, place.Locale, app.UpdatePlaceParams{
+	place, err = s.app.UpdatePlace(ctx, placeID, place.Locale, app.UpdatePlaceParams{
 		Class: &noneID,
 	})
 	if !errors.Is(err, errx.ErrorClassNotFound) {
@@ -83,7 +91,7 @@ func TestCreatingPlace(t *testing.T) {
 
 	ws := "website"
 	ph := "+1234567890"
-	place, err = s.app.UpdatePlace(ctx, place.ID, place.Locale, app.UpdatePlaceParams{
+	place, err = s.app.UpdatePlace(ctx, placeID, place.Locale, app.UpdatePlaceParams{
 		Class:   &classSecond.Data.Code,
 		Website: &ws,
 		Phone:   &ph,
@@ -102,7 +110,7 @@ func TestCreatingPlace(t *testing.T) {
 	}
 
 	emtp := ""
-	place, err = s.app.UpdatePlace(ctx, place.ID, place.Locale, app.UpdatePlaceParams{
+	place, err = s.app.UpdatePlace(ctx, placeID, place.Locale, app.UpdatePlaceParams{
 		Class:   &classSecond.Data.Code,
 		Website: &emtp,
 		Phone:   &emtp,

@@ -27,7 +27,7 @@ func (p Place) Get(
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			return models.PlaceWithDetails{}, errx.ErrorPlaceNotFound.Raise(
-				fmt.Errorf("location with id %s not found, cause %w", placeID, err),
+				fmt.Errorf("place with id %s not found, cause %w", placeID, err),
 			)
 		default:
 			return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
