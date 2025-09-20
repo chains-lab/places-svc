@@ -13,10 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid place_id")
+		h.Log(r).WithError(err).Error("invalid place_id")
 		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
 
 		return
@@ -24,7 +24,7 @@ func (a Adapter) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 
 	req, err := requests.SetLocalesForPlace(r)
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid request body")
+		h.Log(r).WithError(err).Error("invalid request body")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -39,9 +39,9 @@ func (a Adapter) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = a.app.SetPlaceLocales(r.Context(), placeID, locales...)
+	err = h.app.SetPlaceLocales(r.Context(), placeID, locales...)
 	if err != nil {
-		a.Log(r).WithError(err).Error("failed to set place locales")
+		h.Log(r).WithError(err).Error("failed to set place locales")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
 			ape.RenderErr(w, problems.NotFound("place not found"))

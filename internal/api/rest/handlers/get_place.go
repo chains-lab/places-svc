@@ -12,20 +12,20 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) GetPlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) GetPlace(w http.ResponseWriter, r *http.Request) {
 	locale := DetectLocale(w, r)
 
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid place_id")
+		h.Log(r).WithError(err).Error("invalid place_id")
 		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
 
 		return
 	}
 
-	place, err := a.app.GetPlace(r.Context(), placeID, locale)
+	place, err := h.app.GetPlace(r.Context(), placeID, locale)
 	if err != nil {
-		a.Log(r).WithError(err).WithField("place_id", placeID).Error("error getting place")
+		h.Log(r).WithError(err).WithField("place_id", placeID).Error("error getting place")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
 			ape.RenderErr(w, problems.NotFound("place not found"))

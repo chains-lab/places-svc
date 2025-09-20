@@ -8,7 +8,6 @@ import (
 	"github.com/chains-lab/gatekit/mdlv"
 	"github.com/chains-lab/gatekit/roles"
 	"github.com/chains-lab/places-svc/internal/api/rest/meta"
-	"github.com/chains-lab/places-svc/internal/config"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -41,9 +40,9 @@ type Handlers interface {
 	SetLocalesForClass(w http.ResponseWriter, r *http.Request)
 }
 
-func (s *Service) Api(ctx context.Context, cfg config.Config, h Handlers) {
-	svc := mdlv.ServiceGrant(enum.CitiesSVC, cfg.JWT.Service.SecretKey)
-	auth := mdlv.Auth(meta.UserCtxKey, cfg.JWT.User.AccessToken.SecretKey)
+func (s *Service) Run(ctx context.Context, h Handlers) {
+	svc := mdlv.ServiceGrant(enum.CitiesSVC, s.cfg.JWT.Service.SecretKey)
+	auth := mdlv.Auth(meta.UserCtxKey, s.cfg.JWT.User.AccessToken.SecretKey)
 	sysadmin := mdlv.RoleGrant(meta.UserCtxKey, map[string]bool{
 		roles.Admin:     true,
 		roles.SuperUser: true,

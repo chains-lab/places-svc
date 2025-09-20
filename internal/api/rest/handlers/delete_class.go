@@ -11,12 +11,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (a Adapter) DeleteClass(w http.ResponseWriter, r *http.Request) {
+func (h Handler) DeleteClass(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "class_code")
 
-	err := a.app.DeleteClass(r.Context(), code)
+	err := h.app.DeleteClass(r.Context(), code)
 	if err != nil {
-		a.log.WithError(err).WithField("class_code", code).Error("error deleting place")
+		h.log.WithError(err).WithField("class_code", code).Error("error deleting place")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class with code %q not found", code)))

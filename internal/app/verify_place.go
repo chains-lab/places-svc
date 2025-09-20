@@ -10,3 +10,7 @@ import (
 func (a App) VerifyPlace(ctx context.Context, placeID uuid.UUID) (models.PlaceWithDetails, error) {
 	return a.place.VerifyPlace(ctx, placeID)
 }
+
+func (a App) UnverifyPlace(ctx context.Context, placeID uuid.UUID) (models.PlaceWithDetails, error) {
+	return a.place.UnverifyPlace(ctx, placeID)
+}

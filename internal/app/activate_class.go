@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 
-	"github.com/chains-lab/places-svc/internal/app/entities/place"
+	"github.com/chains-lab/places-svc/internal/app/domain/place"
 	"github.com/chains-lab/places-svc/internal/app/models"
 )
 

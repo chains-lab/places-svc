@@ -11,18 +11,18 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) DeleteTimetable(w http.ResponseWriter, r *http.Request) {
+func (h Handler) DeleteTimetable(w http.ResponseWriter, r *http.Request) {
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid place_id")
+		h.Log(r).WithError(err).Error("invalid place_id")
 		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
 
 		return
 	}
 
-	err = a.app.DeleteTimetable(r.Context(), placeID)
+	err = h.app.DeleteTimetable(r.Context(), placeID)
 	if err != nil {
-		a.Log(r).WithError(err).Error("failed to delete timetable")
+		h.Log(r).WithError(err).Error("failed to delete timetable")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
 			ape.RenderErr(w, problems.NotFound("place not found"))

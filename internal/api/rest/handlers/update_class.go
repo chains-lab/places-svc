@@ -13,10 +13,10 @@ import (
 	"github.com/chains-lab/places-svc/internal/errx"
 )
 
-func (a Adapter) UpdateClass(w http.ResponseWriter, r *http.Request) {
+func (h Handler) UpdateClass(w http.ResponseWriter, r *http.Request) {
 	req, err := requests.UpdateClass(r)
 	if err != nil {
-		a.log.WithError(err).Error("error updating class")
+		h.log.WithError(err).Error("error updating class")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -31,14 +31,14 @@ func (a Adapter) UpdateClass(w http.ResponseWriter, r *http.Request) {
 		params.Icon = req.Data.Attributes.Icon
 	}
 
-	class, err := a.app.UpdateClass(
+	class, err := h.app.UpdateClass(
 		r.Context(),
 		req.Data.Id,
 		DetectLocale(w, r),
 		params,
 	)
 	if err != nil {
-		a.log.WithError(err).Error("error updating class")
+		h.log.WithError(err).Error("error updating class")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class %s not found", req.Data.Id)))

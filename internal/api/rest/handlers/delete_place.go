@@ -11,10 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) DeletePlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) DeletePlace(w http.ResponseWriter, r *http.Request) {
 	//initiator, err := meta.User(r.Context())
 	//if err != nil {
-	//	a.log.WithError(err).Error("failed to get user from context")
+	//	h.log.WithError(err).Error("failed to get user from context")
 	//	ape.RenderErr(w, problems.Unauthorized("failed to get user from context"))
 	//
 	//	return
@@ -22,15 +22,15 @@ func (a Adapter) DeletePlace(w http.ResponseWriter, r *http.Request) {
 
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.log.WithError(err).Error("invalid place_id")
+		h.log.WithError(err).Error("invalid place_id")
 		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
 
 		return
 	}
 
-	err = a.app.DeletePlace(r.Context(), placeID)
+	err = h.app.DeletePlace(r.Context(), placeID)
 	if err != nil {
-		a.log.WithError(err).Error("failed to delete place")
+		h.log.WithError(err).Error("failed to delete place")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceForDeleteMustBeInactive):
 			ape.RenderErr(w, problems.PreconditionFailed("cannot delete place that is not inactive"))

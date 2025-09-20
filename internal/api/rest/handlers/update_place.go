@@ -15,10 +15,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) UpdatePlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 	req, err := requests.UpdatePlace(r)
 	if err != nil {
-		a.log.WithError(err).Error("error updating place")
+		h.log.WithError(err).Error("error updating place")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -26,14 +26,14 @@ func (a Adapter) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 
 	placeId, err := uuid.Parse(req.Data.Id)
 	if err != nil {
-		a.log.WithError(err).Error("invalid place id")
+		h.log.WithError(err).Error("invalid place id")
 		ape.RenderErr(w, problems.InvalidParameter("data/id", err))
 
 		return
 	}
 
 	if placeId.String() != chi.URLParam(r, "place_id") {
-		a.log.Error("place id in body does not match place id in URL")
+		h.log.Error("place id in body does not match place id in URL")
 		ape.RenderErr(w,
 			problems.InvalidParameter("data/id", fmt.Errorf("query param and body do not match")),
 			problems.InvalidParameter("place_id", fmt.Errorf("query param and body do not match")),
@@ -54,14 +54,14 @@ func (a Adapter) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 		params.Class = req.Data.Attributes.Class
 	}
 
-	place, err := a.app.UpdatePlace(
+	place, err := h.app.UpdatePlace(
 		r.Context(),
 		placeId,
 		DetectLocale(w, r),
 		params,
 	)
 	if err != nil {
-		a.log.WithError(err).Error("error updating place")
+		h.log.WithError(err).Error("error updating place")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class %s not found", *params.Class)))

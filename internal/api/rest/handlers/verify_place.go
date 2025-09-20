@@ -12,18 +12,18 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) VerifyPlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) VerifyPlace(w http.ResponseWriter, r *http.Request) {
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid place_id")
+		h.Log(r).WithError(err).Error("invalid place_id")
 		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
 
 		return
 	}
 
-	place, err := a.app.VerifyPlace(r.Context(), placeID)
+	place, err := h.app.VerifyPlace(r.Context(), placeID)
 	if err != nil {
-		a.Log(r).WithError(err).Error("failed to verify place")
+		h.Log(r).WithError(err).Error("failed to verify place")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound("class not found"))

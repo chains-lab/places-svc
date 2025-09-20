@@ -13,20 +13,20 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) ListLocalesForPlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) ListLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 	pag, _ := pagi.GetPagination(r)
 
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid place_id")
+		h.Log(r).WithError(err).Error("invalid place_id")
 		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
 
 		return
 	}
 
-	locales, pagResp, err := a.app.ListPlaceLocales(r.Context(), placeID, pag)
+	locales, pagResp, err := h.app.ListPlaceLocales(r.Context(), placeID, pag)
 	if err != nil {
-		a.Log(r).WithError(err).Error("failed to get place locales")
+		h.Log(r).WithError(err).Error("failed to get place locales")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
 			ape.RenderErr(w, problems.NotFound("place not found"))

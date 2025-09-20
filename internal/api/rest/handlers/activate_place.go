@@ -12,19 +12,19 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) ActivatePlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) ActivatePlace(w http.ResponseWriter, r *http.Request) {
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.log.WithError(err).Error("activate place")
+		h.log.WithError(err).Error("activate place")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
 
 	locale := DetectLocale(w, r)
 
-	place, err := a.app.ActivatePlace(r.Context(), placeID, locale)
+	place, err := h.app.ActivatePlace(r.Context(), placeID, locale)
 	if err != nil {
-		a.log.WithError(err).WithField("place_id", placeID).Error("error activating place")
+		h.log.WithError(err).WithField("place_id", placeID).Error("error activating place")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound("class not found"))

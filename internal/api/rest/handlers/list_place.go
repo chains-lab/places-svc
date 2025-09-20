@@ -16,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) ListPlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) ListPlace(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	var filters app.FilterListPlaces
 
@@ -130,7 +130,7 @@ func (a Adapter) ListPlace(w http.ResponseWriter, r *http.Request) {
 
 	pag, sort := pagi.GetPagination(r)
 
-	places, pagResp, err := a.app.ListPlaces(r.Context(), DetectLocale(w, r), filters, pag, sort)
+	places, pagResp, err := h.app.ListPlaces(r.Context(), DetectLocale(w, r), filters, pag, sort)
 	if err != nil {
 		ape.RenderErr(w, problems.InternalError())
 		return

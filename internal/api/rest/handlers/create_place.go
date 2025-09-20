@@ -16,10 +16,10 @@ import (
 	"github.com/paulmach/orb"
 )
 
-func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	initiator, err := meta.User(r.Context())
 	if err != nil {
-		a.log.WithError(err).Error("failed to get user from context")
+		h.log.WithError(err).Error("failed to get user from context")
 		ape.RenderErr(w, problems.Unauthorized("failed to get user from context"))
 
 		return
@@ -27,7 +27,7 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 
 	req, err := requests.CreatePlace(r)
 	if err != nil {
-		a.log.WithError(err).Error("error creating place")
+		h.log.WithError(err).Error("error creating place")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -35,7 +35,7 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 
 	cityID, err := uuid.Parse(req.Data.Attributes.CityId)
 	if err != nil {
-		a.log.WithError(err).Error("invalid city_id")
+		h.log.WithError(err).Error("invalid city_id")
 		ape.RenderErr(w, problems.InvalidPointer("data/attributes/city_id", err))
 
 		return
@@ -55,7 +55,7 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	if req.Data.Attributes.DistributorId != nil {
 		distributorID, err := uuid.Parse(*req.Data.Attributes.DistributorId)
 		if err != nil {
-			a.log.WithError(err).Error("invalid distributor_id")
+			h.log.WithError(err).Error("invalid distributor_id")
 			ape.RenderErr(w, problems.InvalidPointer("data/attributes/distributor_id", err))
 
 			return
@@ -70,9 +70,9 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		params.Website = req.Data.Attributes.Website
 	}
 
-	place, err := a.app.CreatePlace(r.Context(), params)
+	place, err := h.app.CreatePlace(r.Context(), params)
 	if err != nil {
-		a.log.WithError(err).Error("error creating place")
+		h.log.WithError(err).Error("error creating place")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class with code %s not found", params.Class)))
@@ -83,7 +83,7 @@ func (a Adapter) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.log.Infof("created place with id %s by user %s", place.ID, initiator.ID)
+	h.log.Infof("created place with id %s by user %s", place.ID, initiator.ID)
 
 	ape.Render(w, http.StatusCreated, responses.Place(place))
 }

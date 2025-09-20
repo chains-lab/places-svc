@@ -13,19 +13,19 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) DeactivatePlace(w http.ResponseWriter, r *http.Request) {
+func (h Handler) DeactivatePlace(w http.ResponseWriter, r *http.Request) {
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.log.WithError(err).Error("deactivate place")
+		h.log.WithError(err).Error("deactivate place")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
 
 	locale := DetectLocale(w, r)
 
-	place, err := a.app.DeactivatePlace(r.Context(), placeID, locale)
+	place, err := h.app.DeactivatePlace(r.Context(), placeID, locale)
 	if err != nil {
-		a.log.WithError(err).Errorf("error deactivating place with id %s", placeID)
+		h.log.WithError(err).Errorf("error deactivating place with id %s", placeID)
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("place with id %s not found", placeID)))

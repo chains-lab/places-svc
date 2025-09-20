@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 
-	"github.com/chains-lab/places-svc/internal/app/entities/class"
+	"github.com/chains-lab/pagi"
+	"github.com/chains-lab/places-svc/internal/app/domain/class"
+	"github.com/chains-lab/places-svc/internal/app/models"
 )
 
 type SetClassLocaleParams struct {
@@ -28,4 +30,12 @@ func (a App) SetClassLocales(ctx context.Context, code string, locales ...SetCla
 	}
 
 	return nil
+}
+
+func (a App) ListClassLocales(
+	ctx context.Context,
+	class string,
+	pag pagi.Request,
+) ([]models.ClassLocale, pagi.Response, error) {
+	return a.classificator.LocalesList(ctx, class, pag)
 }

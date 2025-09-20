@@ -68,23 +68,23 @@ func validateNoOverlaps(spans []daySpan) error {
 	return nil
 }
 
-func (a Adapter) SetTimetable(w http.ResponseWriter, r *http.Request) {
+func (h Handler) SetTimetable(w http.ResponseWriter, r *http.Request) {
 	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid placeID")
+		h.Log(r).WithError(err).Error("invalid placeID")
 		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
 		return
 	}
 
 	req, err := requests.SetTimetable(r)
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid request")
+		h.Log(r).WithError(err).Error("invalid request")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
 
 	if req.Data.Id != placeID.String() {
-		a.Log(r).Errorf("id mismatch: %s != %s", req.Data.Id, placeID)
+		h.Log(r).Errorf("id mismatch: %s != %s", req.Data.Id, placeID)
 		ape.RenderErr(w,
 			problems.InvalidParameter("place_id", fmt.Errorf("id mismatch: %s", req.Data.Id)),
 			problems.InvalidPointer("data/id", fmt.Errorf("id mismatch: %s", req.Data.Id)),
@@ -149,9 +149,9 @@ func (a Adapter) SetTimetable(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	place, err := a.app.SetPlaceTimeTable(r.Context(), placeID, params)
+	place, err := h.app.SetPlaceTimeTable(r.Context(), placeID, params)
 	if err != nil {
-		a.Log(r).WithError(err).Error("could not set timetable")
+		h.Log(r).WithError(err).Error("could not set timetable")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("place %s not found", placeID)))

@@ -13,10 +13,10 @@ import (
 	"github.com/chains-lab/places-svc/internal/errx"
 )
 
-func (a Adapter) CreateClass(w http.ResponseWriter, r *http.Request) {
+func (h Handler) CreateClass(w http.ResponseWriter, r *http.Request) {
 	req, err := requests.CreateClass(r)
 	if err != nil {
-		a.log.WithError(err).Error("error creating class")
+		h.log.WithError(err).Error("error creating class")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -31,9 +31,9 @@ func (a Adapter) CreateClass(w http.ResponseWriter, r *http.Request) {
 		params.Parent = req.Data.Attributes.Parent
 	}
 
-	class, err := a.app.CreateClass(r.Context(), params)
+	class, err := h.app.CreateClass(r.Context(), params)
 	if err != nil {
-		a.log.WithError(err).Error("error creating class")
+		h.log.WithError(err).Error("error creating class")
 		switch {
 		case errors.Is(err, errx.ErrorClassCodeAlreadyTaken):
 			ape.RenderErr(w, problems.Conflict(

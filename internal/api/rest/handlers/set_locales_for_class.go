@@ -13,10 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (a Adapter) SetLocalesForClass(w http.ResponseWriter, r *http.Request) {
+func (h Handler) SetLocalesForClass(w http.ResponseWriter, r *http.Request) {
 	classCode, err := uuid.Parse(chi.URLParam(r, "class_code"))
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid class_code")
+		h.Log(r).WithError(err).Error("invalid class_code")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -24,7 +24,7 @@ func (a Adapter) SetLocalesForClass(w http.ResponseWriter, r *http.Request) {
 
 	req, err := requests.SetLocalesForClass(r)
 	if err != nil {
-		a.Log(r).WithError(err).Error("invalid request body")
+		h.Log(r).WithError(err).Error("invalid request body")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -38,9 +38,9 @@ func (a Adapter) SetLocalesForClass(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = a.app.SetClassLocales(r.Context(), classCode.String(), locales...)
+	err = h.app.SetClassLocales(r.Context(), classCode.String(), locales...)
 	if err != nil {
-		a.Log(r).WithError(err).Error("failed to set class locales")
+		h.Log(r).WithError(err).Error("failed to set class locales")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound("class not found"))

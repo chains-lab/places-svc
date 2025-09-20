@@ -13,7 +13,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/errx"
 )
 
-func (a Adapter) ListClass(w http.ResponseWriter, r *http.Request) {
+func (h Handler) ListClass(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
 	var filters app.FilterListClassesParams
@@ -43,9 +43,9 @@ func (a Adapter) ListClass(w http.ResponseWriter, r *http.Request) {
 	pag, _ := pagi.GetPagination(r)
 	locale := DetectLocale(w, r)
 
-	classes, pagResp, err := a.app.ListClasses(r.Context(), locale, filters, pag)
+	classes, pagResp, err := h.app.ListClasses(r.Context(), locale, filters, pag)
 	if err != nil {
-		a.Log(r).WithError(err).Error("failed to list classes")
+		h.Log(r).WithError(err).Error("failed to list classes")
 		switch {
 		case errors.Is(err, errx.ErrorClassStatusInvalid):
 			ape.RenderErr(w, problems.InvalidParameter(

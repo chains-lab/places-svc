@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/chains-lab/places-svc/internal/app/entities/class"
-	"github.com/chains-lab/places-svc/internal/app/entities/place"
+	"github.com/chains-lab/places-svc/internal/app/domain/class"
+	"github.com/chains-lab/places-svc/internal/app/domain/place"
 	"github.com/chains-lab/places-svc/internal/config"
 	"github.com/chains-lab/places-svc/internal/dbx"
 )
