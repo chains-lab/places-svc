@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/chains-lab/logium"
-	"github.com/chains-lab/places-svc/cmd/config"
+	"github.com/chains-lab/places-svc/internal"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -16,10 +16,10 @@ type Service struct {
 	router *chi.Mux
 
 	log logium.Logger
-	cfg config.Config
+	cfg internal.Config
 }
 
-func NewRest(cfg config.Config, log logium.Logger) Service {
+func NewRest(cfg internal.Config, log logium.Logger) Service {
 	logger := log.WithField("module", "rest")
 	router := chi.NewRouter()
 	server := &http.Server{

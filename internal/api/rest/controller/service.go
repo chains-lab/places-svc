@@ -10,10 +10,10 @@ import (
 	"github.com/chains-lab/enum"
 	"github.com/chains-lab/logium"
 	"github.com/chains-lab/pagi"
-	"github.com/chains-lab/places-svc/cmd/config"
+	"github.com/chains-lab/places-svc/internal"
 	"github.com/chains-lab/places-svc/internal/domain/models"
-	"github.com/chains-lab/places-svc/internal/domain/modules/class"
-	"github.com/chains-lab/places-svc/internal/domain/modules/place"
+	"github.com/chains-lab/places-svc/internal/domain/services/class"
+	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/google/uuid"
 )
 
@@ -147,31 +147,25 @@ type Place interface {
 		params place.UpdateParams,
 	) (models.PlaceWithDetails, error)
 
-	UpdatePlaces(
-		ctx context.Context,
-		filter place.UpdatePlacesFilter,
-		params place.UpdateParams,
-	) error
-
 	Verify(ctx context.Context, placeID uuid.UUID) (models.PlaceWithDetails, error)
 
 	Unverify(ctx context.Context, placeID uuid.UUID) (models.PlaceWithDetails, error)
 }
 
-type modules struct {
+type domain struct {
 	Class
 	Place
 }
 
 type Service struct {
-	domain modules
+	domain domain
 	log    logium.Logger
-	cfg    config.Config
+	cfg    internal.Config
 }
 
-func NewService(cfg config.Config, log logium.Logger, class class.Module, place place.Module) Service {
+func NewService(cfg internal.Config, log logium.Logger, class class.Service, place place.Service) Service {
 	return Service{
-		domain: modules{
+		domain: domain{
 			Class: class,
 			Place: place,
 		},

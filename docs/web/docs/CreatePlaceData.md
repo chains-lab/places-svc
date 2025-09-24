@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | **string** | place id | 
+**Id** | [**uuid.UUID**](uuid.UUID.md) | place id | 
 **Type** | **string** |  | 
 **Attributes** | [**CreatePlaceDataAttributes**](CreatePlaceDataAttributes.md) |  | 
 
@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 
 ### NewCreatePlaceData
 
-`func NewCreatePlaceData(id string, type_ string, attributes CreatePlaceDataAttributes, ) *CreatePlaceData`
+`func NewCreatePlaceData(id uuid.UUID, type_ string, attributes CreatePlaceDataAttributes, ) *CreatePlaceData`
 
 NewCreatePlaceData instantiates a new CreatePlaceData object
 This constructor will assign default values to properties that have it defined,
@@ -29,20 +29,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetId
 
-`func (o *CreatePlaceData) GetId() string`
+`func (o *CreatePlaceData) GetId() uuid.UUID`
 
 GetId returns the Id field if non-nil, zero value otherwise.
 
 ### GetIdOk
 
-`func (o *CreatePlaceData) GetIdOk() (*string, bool)`
+`func (o *CreatePlaceData) GetIdOk() (*uuid.UUID, bool)`
 
 GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetId
 
-`func (o *CreatePlaceData) SetId(v string)`
+`func (o *CreatePlaceData) SetId(v uuid.UUID)`
 
 SetId sets Id field to given value.
 

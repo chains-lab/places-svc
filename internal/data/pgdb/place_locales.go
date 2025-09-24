@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/chains-lab/places-svc/internal/data"
+	"github.com/chains-lab/places-svc/internal/data/schemas"
 	"github.com/google/uuid"
 )
 
@@ -22,7 +22,7 @@ type placeLocalesQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewPlaceLocalesQ(db *sql.DB) data.PlaceLocalesQ {
+func NewPlaceLocalesQ(db *sql.DB) schemas.PlaceLocalesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 	return &placeLocalesQ{
@@ -40,9 +40,9 @@ func NewPlaceLocalesQ(db *sql.DB) data.PlaceLocalesQ {
 	}
 }
 
-func (q *placeLocalesQ) New() data.PlaceLocalesQ { return NewPlaceLocalesQ(q.db) }
+func (q *placeLocalesQ) New() schemas.PlaceLocalesQ { return NewPlaceLocalesQ(q.db) }
 
-func (q *placeLocalesQ) Insert(ctx context.Context, in data.PlaceLocale) error {
+func (q *placeLocalesQ) Insert(ctx context.Context, in schemas.PlaceLocale) error {
 	values := map[string]any{
 		"place_id":    in.PlaceID,
 		"locale":      sanitizeLocale(in.Locale),
@@ -62,7 +62,7 @@ func (q *placeLocalesQ) Insert(ctx context.Context, in data.PlaceLocale) error {
 	return err
 }
 
-func (q *placeLocalesQ) Upsert(ctx context.Context, in ...data.PlaceLocale) error {
+func (q *placeLocalesQ) Upsert(ctx context.Context, in ...schemas.PlaceLocale) error {
 	if len(in) == 0 {
 		return nil
 	}
@@ -93,10 +93,10 @@ func (q *placeLocalesQ) Upsert(ctx context.Context, in ...data.PlaceLocale) erro
 	return err
 }
 
-func (q *placeLocalesQ) Get(ctx context.Context) (data.PlaceLocale, error) {
+func (q *placeLocalesQ) Get(ctx context.Context) (schemas.PlaceLocale, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return data.PlaceLocale{}, fmt.Errorf("build select %s: %w", placeLocalizationTable, err)
+		return schemas.PlaceLocale{}, fmt.Errorf("build select %s: %w", placeLocalizationTable, err)
 	}
 
 	var row *sql.Row
@@ -106,14 +106,14 @@ func (q *placeLocalesQ) Get(ctx context.Context) (data.PlaceLocale, error) {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
 
-	var out data.PlaceLocale
+	var out schemas.PlaceLocale
 	if err := row.Scan(&out.PlaceID, &out.Locale, &out.Name, &out.Description); err != nil {
 		return out, err
 	}
 	return out, nil
 }
 
-func (q *placeLocalesQ) Select(ctx context.Context) ([]data.PlaceLocale, error) {
+func (q *placeLocalesQ) Select(ctx context.Context) ([]schemas.PlaceLocale, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("build select %s: %w", placeLocalizationTable, err)
@@ -130,9 +130,9 @@ func (q *placeLocalesQ) Select(ctx context.Context) ([]data.PlaceLocale, error) 
 	}
 	defer rows.Close()
 
-	var out []data.PlaceLocale
+	var out []schemas.PlaceLocale
 	for rows.Next() {
-		var pl data.PlaceLocale
+		var pl schemas.PlaceLocale
 		if err := rows.Scan(&pl.PlaceID, &pl.Locale, &pl.Name, &pl.Description); err != nil {
 			return nil, fmt.Errorf("scan %s: %w", placeLocalizationTable, err)
 		}
@@ -141,7 +141,7 @@ func (q *placeLocalesQ) Select(ctx context.Context) ([]data.PlaceLocale, error) 
 	return out, rows.Err()
 }
 
-func (q *placeLocalesQ) Update(ctx context.Context, params data.UpdatePlaceLocaleParams) error {
+func (q *placeLocalesQ) Update(ctx context.Context, params schemas.UpdatePlaceLocaleParams) error {
 	updates := map[string]any{}
 	if params.Name != nil {
 		updates["name"] = *params.Name
@@ -179,7 +179,7 @@ func (q *placeLocalesQ) Delete(ctx context.Context) error {
 	return err
 }
 
-func (q *placeLocalesQ) FilterPlaceID(id uuid.UUID) data.PlaceLocalesQ {
+func (q *placeLocalesQ) FilterPlaceID(id uuid.UUID) schemas.PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"place_id": id})
 	q.updater = q.updater.Where(sq.Eq{"place_id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"place_id": id})
@@ -187,7 +187,7 @@ func (q *placeLocalesQ) FilterPlaceID(id uuid.UUID) data.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) FilterByLocale(locale string) data.PlaceLocalesQ {
+func (q *placeLocalesQ) FilterByLocale(locale string) schemas.PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"locale": locale})
 	q.updater = q.updater.Where(sq.Eq{"locale": locale})
 	q.deleter = q.deleter.Where(sq.Eq{"locale": locale})
@@ -195,7 +195,7 @@ func (q *placeLocalesQ) FilterByLocale(locale string) data.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) FilterByName(name string) data.PlaceLocalesQ {
+func (q *placeLocalesQ) FilterByName(name string) schemas.PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"name": name})
 	q.updater = q.updater.Where(sq.Eq{"name": name})
 	q.deleter = q.deleter.Where(sq.Eq{"name": name})
@@ -203,7 +203,7 @@ func (q *placeLocalesQ) FilterByName(name string) data.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) OrderByLocale(asc bool) data.PlaceLocalesQ {
+func (q *placeLocalesQ) OrderByLocale(asc bool) schemas.PlaceLocalesQ {
 	dir := "DESC"
 	if asc {
 		dir = "ASC"
@@ -212,7 +212,7 @@ func (q *placeLocalesQ) OrderByLocale(asc bool) data.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) Page(limit, offset uint64) data.PlaceLocalesQ {
+func (q *placeLocalesQ) Page(limit, offset uint64) schemas.PlaceLocalesQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
 	return q
 }

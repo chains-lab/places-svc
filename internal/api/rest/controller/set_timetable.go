@@ -13,10 +13,8 @@ import (
 	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
+	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
-	"github.com/chains-lab/places-svc/internal/errx"
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 )
 
 var hhmmRe = regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
@@ -69,26 +67,10 @@ func validateNoOverlaps(spans []daySpan) error {
 }
 
 func (h Service) SetTimetable(w http.ResponseWriter, r *http.Request) {
-	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
-	if err != nil {
-		h.log.WithError(err).Error("invalid placeID")
-		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
-		return
-	}
-
 	req, err := requests.SetTimetable(r)
 	if err != nil {
 		h.log.WithError(err).Error("invalid request")
 		ape.RenderErr(w, problems.BadRequest(err)...)
-		return
-	}
-
-	if req.Data.Id != placeID.String() {
-		h.log.Errorf("id mismatch: %s != %s", req.Data.Id, placeID)
-		ape.RenderErr(w,
-			problems.InvalidParameter("place_id", fmt.Errorf("id mismatch: %s", req.Data.Id)),
-			problems.InvalidPointer("data/id", fmt.Errorf("id mismatch: %s", req.Data.Id)),
-		)
 		return
 	}
 
@@ -149,12 +131,12 @@ func (h Service) SetTimetable(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res, err := h.domain.Place.SetTimetable(r.Context(), placeID, params)
+	res, err := h.domain.Place.SetTimetable(r.Context(), req.Data.Id, params)
 	if err != nil {
 		h.log.WithError(err).Error("could not set timetable")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
-			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("place %s not found", placeID)))
+			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("place %s not found", req.Data.Id)))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

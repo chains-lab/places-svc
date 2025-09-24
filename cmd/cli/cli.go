@@ -9,13 +9,14 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/chains-lab/logium"
-	"github.com/chains-lab/places-svc/cmd/config"
-	"github.com/chains-lab/places-svc/internal/data/migrations"
+	cmd2 "github.com/chains-lab/places-svc/cmd"
+	"github.com/chains-lab/places-svc/cmd/migrations"
+	"github.com/chains-lab/places-svc/internal"
 	"github.com/sirupsen/logrus"
 )
 
 func Run(args []string) bool {
-	cfg, err := config.LoadConfig()
+	cfg, err := internal.LoadConfig()
 	if err != nil {
 		logrus.Fatalf("failed to load config: %v", err)
 	}
@@ -29,8 +30,8 @@ func Run(args []string) bool {
 
 		serviceCmd     = runCmd.Command("service", "run service")
 		migrateCmd     = service.Command("migrate", "migrate command")
-		migrateUpCmd   = migrateCmd.Command("up", "migrate db up")
-		migrateDownCmd = migrateCmd.Command("down", "migrate db down")
+		migrateUpCmd   = migrateCmd.Command("up", "migrate storage up")
+		migrateDownCmd = migrateCmd.Command("down", "migrate storage down")
 	)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -46,7 +47,7 @@ func Run(args []string) bool {
 
 	switch cmd {
 	case serviceCmd.FullCommand():
-		StartServices(ctx, cfg, log, &wg)
+		cmd2.StartServices(ctx, cfg, log, &wg)
 	case migrateUpCmd.FullCommand():
 		err = migrations.MigrateUp(cfg.Database.SQL.URL)
 	case migrateDownCmd.FullCommand():

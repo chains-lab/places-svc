@@ -7,21 +7,11 @@ import (
 	"github.com/chains-lab/ape"
 	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
-	"github.com/chains-lab/places-svc/internal/domain/modules/place"
-	"github.com/chains-lab/places-svc/internal/errx"
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
+	"github.com/chains-lab/places-svc/internal/domain/errx"
+	"github.com/chains-lab/places-svc/internal/domain/services/place"
 )
 
 func (h Service) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
-	placeID, err := uuid.Parse(chi.URLParam(r, "place_id"))
-	if err != nil {
-		h.log.WithError(err).Error("invalid place_id")
-		ape.RenderErr(w, problems.InvalidParameter("place_id", err))
-
-		return
-	}
-
 	req, err := requests.SetLocalesForPlace(r)
 	if err != nil {
 		h.log.WithError(err).Error("invalid request body")
@@ -39,7 +29,7 @@ func (h Service) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = h.domain.Place.SetLocales(r.Context(), placeID, locales...)
+	err = h.domain.Place.SetLocales(r.Context(), req.Data.Id, locales...)
 	if err != nil {
 		h.log.WithError(err).Error("failed to set place locales")
 		switch {

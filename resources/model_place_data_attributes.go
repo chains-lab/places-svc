@@ -12,6 +12,7 @@ package resources
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"time"
 	"bytes"
 	"fmt"
@@ -23,9 +24,9 @@ var _ MappedNullable = &PlaceDataAttributes{}
 // PlaceDataAttributes struct for PlaceDataAttributes
 type PlaceDataAttributes struct {
 	// city id
-	CityId string `json:"city_id"`
+	CityId uuid.UUID `json:"city_id"`
 	// distributor id
-	DistributorId *string `json:"distributor_id,omitempty"`
+	DistributorId *uuid.UUID `json:"distributor_id,omitempty"`
 	// place class
 	Class string `json:"class"`
 	// place status
@@ -57,7 +58,7 @@ type _PlaceDataAttributes PlaceDataAttributes
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, point Point, locale string, name string, address string, description string, createdAt time.Time, updatedAt time.Time) *PlaceDataAttributes {
+func NewPlaceDataAttributes(cityId uuid.UUID, class string, status string, verified bool, point Point, locale string, name string, address string, description string, createdAt time.Time, updatedAt time.Time) *PlaceDataAttributes {
 	this := PlaceDataAttributes{}
 	this.CityId = cityId
 	this.Class = class
@@ -82,9 +83,9 @@ func NewPlaceDataAttributesWithDefaults() *PlaceDataAttributes {
 }
 
 // GetCityId returns the CityId field value
-func (o *PlaceDataAttributes) GetCityId() string {
+func (o *PlaceDataAttributes) GetCityId() uuid.UUID {
 	if o == nil {
-		var ret string
+		var ret uuid.UUID
 		return ret
 	}
 
@@ -93,7 +94,7 @@ func (o *PlaceDataAttributes) GetCityId() string {
 
 // GetCityIdOk returns a tuple with the CityId field value
 // and a boolean to check if the value has been set.
-func (o *PlaceDataAttributes) GetCityIdOk() (*string, bool) {
+func (o *PlaceDataAttributes) GetCityIdOk() (*uuid.UUID, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -101,14 +102,14 @@ func (o *PlaceDataAttributes) GetCityIdOk() (*string, bool) {
 }
 
 // SetCityId sets field value
-func (o *PlaceDataAttributes) SetCityId(v string) {
+func (o *PlaceDataAttributes) SetCityId(v uuid.UUID) {
 	o.CityId = v
 }
 
 // GetDistributorId returns the DistributorId field value if set, zero value otherwise.
-func (o *PlaceDataAttributes) GetDistributorId() string {
+func (o *PlaceDataAttributes) GetDistributorId() uuid.UUID {
 	if o == nil || IsNil(o.DistributorId) {
-		var ret string
+		var ret uuid.UUID
 		return ret
 	}
 	return *o.DistributorId
@@ -116,7 +117,7 @@ func (o *PlaceDataAttributes) GetDistributorId() string {
 
 // GetDistributorIdOk returns a tuple with the DistributorId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *PlaceDataAttributes) GetDistributorIdOk() (*string, bool) {
+func (o *PlaceDataAttributes) GetDistributorIdOk() (*uuid.UUID, bool) {
 	if o == nil || IsNil(o.DistributorId) {
 		return nil, false
 	}
@@ -132,8 +133,8 @@ func (o *PlaceDataAttributes) HasDistributorId() bool {
 	return false
 }
 
-// SetDistributorId gets a reference to the given string and assigns it to the DistributorId field.
-func (o *PlaceDataAttributes) SetDistributorId(v string) {
+// SetDistributorId gets a reference to the given uuid.UUID and assigns it to the DistributorId field.
+func (o *PlaceDataAttributes) SetDistributorId(v uuid.UUID) {
 	o.DistributorId = &v
 }
 

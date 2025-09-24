@@ -9,8 +9,8 @@ import (
 	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
-	"github.com/chains-lab/places-svc/internal/domain/modules/class"
-	"github.com/chains-lab/places-svc/internal/errx"
+	"github.com/chains-lab/places-svc/internal/domain/errx"
+	"github.com/chains-lab/places-svc/internal/domain/services/class"
 )
 
 func (h Service) UpdateClass(w http.ResponseWriter, r *http.Request) {

@@ -21,8 +21,6 @@ var _ MappedNullable = &UpdatePlaceDataAttributes{}
 type UpdatePlaceDataAttributes struct {
 	// place class
 	Class *string `json:"class,omitempty"`
-	// place status
-	Status *string `json:"status,omitempty"`
 	// place website
 	Website *string `json:"website,omitempty"`
 	// place phone number
@@ -76,38 +74,6 @@ func (o *UpdatePlaceDataAttributes) HasClass() bool {
 // SetClass gets a reference to the given string and assigns it to the Class field.
 func (o *UpdatePlaceDataAttributes) SetClass(v string) {
 	o.Class = &v
-}
-
-// GetStatus returns the Status field value if set, zero value otherwise.
-func (o *UpdatePlaceDataAttributes) GetStatus() string {
-	if o == nil || IsNil(o.Status) {
-		var ret string
-		return ret
-	}
-	return *o.Status
-}
-
-// GetStatusOk returns a tuple with the Status field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *UpdatePlaceDataAttributes) GetStatusOk() (*string, bool) {
-	if o == nil || IsNil(o.Status) {
-		return nil, false
-	}
-	return o.Status, true
-}
-
-// HasStatus returns a boolean if a field has been set.
-func (o *UpdatePlaceDataAttributes) HasStatus() bool {
-	if o != nil && !IsNil(o.Status) {
-		return true
-	}
-
-	return false
-}
-
-// SetStatus gets a reference to the given string and assigns it to the Status field.
-func (o *UpdatePlaceDataAttributes) SetStatus(v string) {
-	o.Status = &v
 }
 
 // GetWebsite returns the Website field value if set, zero value otherwise.
@@ -186,9 +152,6 @@ func (o UpdatePlaceDataAttributes) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	if !IsNil(o.Class) {
 		toSerialize["class"] = o.Class
-	}
-	if !IsNil(o.Status) {
-		toSerialize["status"] = o.Status
 	}
 	if !IsNil(o.Website) {
 		toSerialize["website"] = o.Website

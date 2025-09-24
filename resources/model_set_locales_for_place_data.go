@@ -12,6 +12,7 @@ package resources
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"bytes"
 	"fmt"
 )
@@ -22,7 +23,7 @@ var _ MappedNullable = &SetLocalesForPlaceData{}
 // SetLocalesForPlaceData struct for SetLocalesForPlaceData
 type SetLocalesForPlaceData struct {
 	// place_id
-	Id string `json:"id"`
+	Id uuid.UUID `json:"id"`
 	Type string `json:"type"`
 	Attributes SetLocalesForPlaceDataAttributes `json:"attributes"`
 }
@@ -33,7 +34,7 @@ type _SetLocalesForPlaceData SetLocalesForPlaceData
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSetLocalesForPlaceData(id string, type_ string, attributes SetLocalesForPlaceDataAttributes) *SetLocalesForPlaceData {
+func NewSetLocalesForPlaceData(id uuid.UUID, type_ string, attributes SetLocalesForPlaceDataAttributes) *SetLocalesForPlaceData {
 	this := SetLocalesForPlaceData{}
 	this.Id = id
 	this.Type = type_
@@ -50,9 +51,9 @@ func NewSetLocalesForPlaceDataWithDefaults() *SetLocalesForPlaceData {
 }
 
 // GetId returns the Id field value
-func (o *SetLocalesForPlaceData) GetId() string {
+func (o *SetLocalesForPlaceData) GetId() uuid.UUID {
 	if o == nil {
-		var ret string
+		var ret uuid.UUID
 		return ret
 	}
 
@@ -61,7 +62,7 @@ func (o *SetLocalesForPlaceData) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
-func (o *SetLocalesForPlaceData) GetIdOk() (*string, bool) {
+func (o *SetLocalesForPlaceData) GetIdOk() (*uuid.UUID, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -69,7 +70,7 @@ func (o *SetLocalesForPlaceData) GetIdOk() (*string, bool) {
 }
 
 // SetId sets field value
-func (o *SetLocalesForPlaceData) SetId(v string) {
+func (o *SetLocalesForPlaceData) SetId(v uuid.UUID) {
 	o.Id = v
 }
 

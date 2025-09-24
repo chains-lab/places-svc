@@ -5,7 +5,6 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Class** | Pointer to **string** | place class | [optional] 
-**Status** | Pointer to **string** | place status | [optional] 
 **Website** | Pointer to **string** | place website | [optional] 
 **Phone** | Pointer to **string** | place phone number | [optional] 
 
@@ -52,31 +51,6 @@ SetClass sets Class field to given value.
 `func (o *UpdatePlaceDataAttributes) HasClass() bool`
 
 HasClass returns a boolean if a field has been set.
-
-### GetStatus
-
-`func (o *UpdatePlaceDataAttributes) GetStatus() string`
-
-GetStatus returns the Status field if non-nil, zero value otherwise.
-
-### GetStatusOk
-
-`func (o *UpdatePlaceDataAttributes) GetStatusOk() (*string, bool)`
-
-GetStatusOk returns a tuple with the Status field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetStatus
-
-`func (o *UpdatePlaceDataAttributes) SetStatus(v string)`
-
-SetStatus sets Status field to given value.
-
-### HasStatus
-
-`func (o *UpdatePlaceDataAttributes) HasStatus() bool`
-
-HasStatus returns a boolean if a field has been set.
 
 ### GetWebsite
 

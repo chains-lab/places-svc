@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/chains-lab/places-svc/internal/data"
+	"github.com/chains-lab/places-svc/internal/data/schemas"
 	"github.com/google/uuid"
 
 	"github.com/paulmach/orb"
@@ -24,7 +24,7 @@ type placesQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewPlacesQ(db *sql.DB) data.PlacesQ {
+func NewPlacesQ(db *sql.DB) schemas.PlacesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 	return &placesQ{
@@ -51,9 +51,9 @@ func NewPlacesQ(db *sql.DB) data.PlacesQ {
 	}
 }
 
-func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (data.Place, error) {
+func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (schemas.Place, error) {
 	var (
-		p        data.Place
+		p        schemas.Place
 		lon, lat float64
 	)
 	if err := scanner.Scan(
@@ -71,7 +71,7 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (data.Place, err
 		&p.CreatedAt,
 		&p.UpdatedAt,
 	); err != nil {
-		return data.Place{}, err
+		return schemas.Place{}, err
 	}
 
 	p.Point = orb.Point{lon, lat}
@@ -79,9 +79,9 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (data.Place, err
 	return p, nil
 }
 
-func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (data.PlaceWithDetails, error) {
+func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (schemas.PlaceWithDetails, error) {
 	var (
-		p         data.Place
+		p         schemas.Place
 		lon, lat  float64
 		locLocale string
 		locName   string
@@ -108,19 +108,19 @@ func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (data.Pla
 		&locDesc,
 		&ttJSON, // ← агрегированное расписание
 	); err != nil {
-		return data.PlaceWithDetails{}, err
+		return schemas.PlaceWithDetails{}, err
 	}
 
 	p.Point = orb.Point{lon, lat}
 
-	var tt []data.PlaceTimetable
+	var tt []schemas.PlaceTimetable
 	if len(ttJSON) > 0 {
 		if err := json.Unmarshal(ttJSON, &tt); err != nil {
-			return data.PlaceWithDetails{}, fmt.Errorf("unmarshal timetable: %w", err)
+			return schemas.PlaceWithDetails{}, fmt.Errorf("unmarshal timetable: %w", err)
 		}
 	}
 
-	return data.PlaceWithDetails{
+	return schemas.PlaceWithDetails{
 		Place:       p,
 		Locale:      locLocale,
 		Name:        locName,
@@ -129,7 +129,7 @@ func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (data.Pla
 	}, nil
 }
 
-func (q *placesQ) Insert(ctx context.Context, in data.Place) error {
+func (q *placesQ) Insert(ctx context.Context, in schemas.Place) error {
 	stmt := map[string]interface{}{
 		"id":             in.ID,
 		"city_id":        in.CityID,
@@ -173,10 +173,10 @@ func (q *placesQ) Insert(ctx context.Context, in data.Place) error {
 	return err
 }
 
-func (q *placesQ) Get(ctx context.Context) (data.Place, error) {
+func (q *placesQ) Get(ctx context.Context) (schemas.Place, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return data.Place{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
+		return schemas.Place{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
 	}
 
 	var row *sql.Row
@@ -189,7 +189,7 @@ func (q *placesQ) Get(ctx context.Context) (data.Place, error) {
 	return scanPlaceRow(row)
 }
 
-func (q *placesQ) Select(ctx context.Context) ([]data.Place, error) {
+func (q *placesQ) Select(ctx context.Context) ([]schemas.Place, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("building select query for %s: %w", placesTable, err)
@@ -206,7 +206,7 @@ func (q *placesQ) Select(ctx context.Context) ([]data.Place, error) {
 	}
 	defer rows.Close()
 
-	var out []data.Place
+	var out []schemas.Place
 	for rows.Next() {
 		m, err := scanPlaceRow(rows)
 		if err != nil {
@@ -218,7 +218,7 @@ func (q *placesQ) Select(ctx context.Context) ([]data.Place, error) {
 	return out, rows.Err()
 }
 
-func (q *placesQ) Update(ctx context.Context, params data.UpdatePlaceParams) error {
+func (q *placesQ) Update(ctx context.Context, params schemas.UpdatePlaceParams) error {
 	upd := q.updater.Set("updated_at", params.UpdatedAt)
 
 	if params.Class != nil {
@@ -279,7 +279,7 @@ func (q *placesQ) Delete(ctx context.Context) error {
 	return err
 }
 
-func (q *placesQ) FilterID(id uuid.UUID) data.PlacesQ {
+func (q *placesQ) FilterID(id uuid.UUID) schemas.PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.id": id})
 	q.counter = q.counter.Where(sq.Eq{"p.id": id})
 	q.updater = q.updater.Where(sq.Eq{"p.id": id})
@@ -288,7 +288,7 @@ func (q *placesQ) FilterID(id uuid.UUID) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) FilterCityID(cityID ...uuid.UUID) data.PlacesQ {
+func (q *placesQ) FilterCityID(cityID ...uuid.UUID) schemas.PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.city_id": cityID})
 	q.counter = q.counter.Where(sq.Eq{"p.city_id": cityID})
 	q.updater = q.updater.Where(sq.Eq{"p.city_id": cityID})
@@ -297,7 +297,7 @@ func (q *placesQ) FilterCityID(cityID ...uuid.UUID) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) FilterDistributorID(distributorID ...uuid.UUID) data.PlacesQ {
+func (q *placesQ) FilterDistributorID(distributorID ...uuid.UUID) schemas.PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.distributor_id": distributorID})
 	q.counter = q.counter.Where(sq.Eq{"p.distributor_id": distributorID})
 	q.updater = q.updater.Where(sq.Eq{"p.distributor_id": distributorID})
@@ -306,7 +306,7 @@ func (q *placesQ) FilterDistributorID(distributorID ...uuid.UUID) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) FilterClass(codes ...string) data.PlacesQ {
+func (q *placesQ) FilterClass(codes ...string) schemas.PlacesQ {
 	if len(codes) == 0 {
 		return q
 	}
@@ -347,7 +347,7 @@ func (q *placesQ) FilterClass(codes ...string) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) FilterStatus(status ...string) data.PlacesQ {
+func (q *placesQ) FilterStatus(status ...string) schemas.PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.status": status})
 	q.counter = q.counter.Where(sq.Eq{"p.status": status})
 	q.updater = q.updater.Where(sq.Eq{"p.status": status})
@@ -356,7 +356,7 @@ func (q *placesQ) FilterStatus(status ...string) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) FilterVerified(verified bool) data.PlacesQ {
+func (q *placesQ) FilterVerified(verified bool) schemas.PlacesQ {
 	q.selector = q.selector.Where(sq.Eq{"p.verified": verified})
 	q.counter = q.counter.Where(sq.Eq{"p.verified": verified})
 	q.updater = q.updater.Where(sq.Eq{"p.verified": verified})
@@ -365,7 +365,7 @@ func (q *placesQ) FilterVerified(verified bool) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) FilterWithinRadiusMeters(point orb.Point, radiusM uint64) data.PlacesQ {
+func (q *placesQ) FilterWithinRadiusMeters(point orb.Point, radiusM uint64) schemas.PlacesQ {
 	p := sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", point[0], point[1])
 	cond := sq.Expr("ST_DWithin(p.point, ?, ?)", p, radiusM)
 
@@ -375,7 +375,7 @@ func (q *placesQ) FilterWithinRadiusMeters(point orb.Point, radiusM uint64) data
 	return q
 }
 
-func (q *placesQ) FilterWithinBBox(minLon, minLat, maxLon, maxLat float64) data.PlacesQ {
+func (q *placesQ) FilterWithinBBox(minLon, minLat, maxLon, maxLat float64) schemas.PlacesQ {
 	env := sq.Expr("ST_MakeEnvelope(?, ?, ?, ?, 4326)", minLon, minLat, maxLon, maxLat)
 	cond := sq.Expr("ST_Within(p.point::geometry, ?)", env)
 
@@ -386,7 +386,7 @@ func (q *placesQ) FilterWithinBBox(minLon, minLat, maxLon, maxLat float64) data.
 	return q
 }
 
-func (q *placesQ) FilterWithinPolygonWKT(polyWKT string) data.PlacesQ {
+func (q *placesQ) FilterWithinPolygonWKT(polyWKT string) schemas.PlacesQ {
 	poly := sq.Expr("ST_SetSRID(ST_GeomFromText(?), 4326)", polyWKT)
 	cond := sq.Expr("ST_Within(p.point::geometry, ?)", poly)
 
@@ -397,7 +397,7 @@ func (q *placesQ) FilterWithinPolygonWKT(polyWKT string) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) FilterNameLike(name string) data.PlacesQ {
+func (q *placesQ) FilterNameLike(name string) schemas.PlacesQ {
 	pattern := "%" + name + "%"
 	sub := sq.Select("1").
 		From(placeLocalizationTable+" pd").
@@ -412,14 +412,14 @@ func (q *placesQ) FilterNameLike(name string) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) FilterAddressLike(addr string) data.PlacesQ {
+func (q *placesQ) FilterAddressLike(addr string) schemas.PlacesQ {
 	q.selector = q.selector.Where("p.address ILIKE ?", "%"+addr+"%")
 	q.counter = q.counter.Where("p.address ILIKE ?", "%"+addr+"%")
 
 	return q
 }
 
-func (q *placesQ) FilterTimetableBetween(start, end int) data.PlacesQ {
+func (q *placesQ) FilterTimetableBetween(start, end int) schemas.PlacesQ {
 	const week = 7 * 24 * 60
 	norm := func(x int) int {
 		x %= week
@@ -454,7 +454,7 @@ func (q *placesQ) FilterTimetableBetween(start, end int) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) WithLocale(locale string) data.PlacesQ {
+func (q *placesQ) WithLocale(locale string) schemas.PlacesQ {
 	l := sanitizeLocale(locale)
 
 	col := func(field, alias string, def any) sq.Sqlizer {
@@ -483,7 +483,7 @@ func (q *placesQ) WithLocale(locale string) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) WithTimetable() data.PlacesQ {
+func (q *placesQ) WithTimetable() schemas.PlacesQ {
 	q.selector = q.selector.
 		LeftJoin("LATERAL (" +
 			"SELECT json_agg(json_build_object(" +
@@ -495,14 +495,14 @@ func (q *placesQ) WithTimetable() data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) GetWithDetails(ctx context.Context, locale string) (data.PlaceWithDetails, error) {
+func (q *placesQ) GetWithDetails(ctx context.Context, locale string) (schemas.PlaceWithDetails, error) {
 	qq := *q
 	qq.WithLocale(locale)
 	qq.WithTimetable()
 
 	query, args, err := qq.selector.Limit(1).ToSql()
 	if err != nil {
-		return data.PlaceWithDetails{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
+		return schemas.PlaceWithDetails{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
 	}
 
 	var row *sql.Row
@@ -514,7 +514,7 @@ func (q *placesQ) GetWithDetails(ctx context.Context, locale string) (data.Place
 	return scanPlaceWihDetails(row)
 }
 
-func (q *placesQ) SelectWithDetails(ctx context.Context, locale string) ([]data.PlaceWithDetails, error) {
+func (q *placesQ) SelectWithDetails(ctx context.Context, locale string) ([]schemas.PlaceWithDetails, error) {
 	qq := *q
 	qq.WithLocale(locale)
 	qq.WithTimetable()
@@ -535,7 +535,7 @@ func (q *placesQ) SelectWithDetails(ctx context.Context, locale string) ([]data.
 	}
 	defer rows.Close()
 
-	var out []data.PlaceWithDetails
+	var out []schemas.PlaceWithDetails
 	for rows.Next() {
 		item, err := scanPlaceWihDetails(rows)
 		if err != nil {
@@ -546,7 +546,7 @@ func (q *placesQ) SelectWithDetails(ctx context.Context, locale string) ([]data.
 	return out, rows.Err()
 }
 
-func (q *placesQ) OrderByCreatedAt(asc bool) data.PlacesQ {
+func (q *placesQ) OrderByCreatedAt(asc bool) schemas.PlacesQ {
 	dir := "ASC"
 	if !asc {
 		dir = "DESC"
@@ -557,7 +557,7 @@ func (q *placesQ) OrderByCreatedAt(asc bool) data.PlacesQ {
 	return q
 }
 
-func (q *placesQ) OrderByDistance(point orb.Point, asc bool) data.PlacesQ {
+func (q *placesQ) OrderByDistance(point orb.Point, asc bool) schemas.PlacesQ {
 	dir := "ASC"
 	if !asc {
 		dir = "DESC"
@@ -588,7 +588,7 @@ func (q *placesQ) Count(ctx context.Context) (uint64, error) {
 	return cnt, nil
 }
 
-func (q *placesQ) Page(limit, offset uint64) data.PlacesQ {
+func (q *placesQ) Page(limit, offset uint64) schemas.PlacesQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
 
 	return q

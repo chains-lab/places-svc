@@ -10,9 +10,8 @@ import (
 	"github.com/chains-lab/places-svc/internal/api/rest/meta"
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
-	"github.com/chains-lab/places-svc/internal/domain/modules/place"
-	"github.com/chains-lab/places-svc/internal/errx"
-	"github.com/google/uuid"
+	"github.com/chains-lab/places-svc/internal/domain/errx"
+	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/paulmach/orb"
 )
 
@@ -33,16 +32,8 @@ func (h Service) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cityID, err := uuid.Parse(req.Data.Attributes.CityId)
-	if err != nil {
-		h.log.WithError(err).Error("invalid city_id")
-		ape.RenderErr(w, problems.InvalidPointer("data/attributes/city_id", err))
-
-		return
-	}
-
 	params := place.CreateParams{
-		CityID: cityID,
+		CityID: req.Data.Attributes.CityId,
 		Class:  req.Data.Attributes.Class,
 		Point: orb.Point{
 			req.Data.Attributes.Point.Lon,
@@ -53,15 +44,7 @@ func (h Service) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		Description: req.Data.Attributes.Description,
 	}
 	if req.Data.Attributes.DistributorId != nil {
-		distributorID, err := uuid.Parse(*req.Data.Attributes.DistributorId)
-		if err != nil {
-			h.log.WithError(err).Error("invalid distributor_id")
-			ape.RenderErr(w, problems.InvalidPointer("data/attributes/distributor_id", err))
-
-			return
-		}
-
-		params.DistributorID = &distributorID
+		params.DistributorID = req.Data.Attributes.DistributorId
 	}
 	if req.Data.Attributes.Phone != nil {
 		params.Phone = req.Data.Attributes.Phone

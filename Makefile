@@ -12,7 +12,8 @@ generate-models:
 	$(OPENAPI_GENERATOR) generate \
 		-i $(API_BUNDLED) -g go \
 		-o $(OUTPUT_DIR) \
-		--additional-properties=packageName=resources
+		--additional-properties=packageName=resources \
+		--import-mappings uuid.UUID=github.com/google/uuid --type-mappings string+uuid=uuid.UUID
 
 	mkdir -p $(RESOURCES_DIR)
 	find $(OUTPUT_DIR) -name '*.go' -exec mv {} $(RESOURCES_DIR)/ \;

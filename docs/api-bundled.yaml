@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: Cifra SSO REST API
   description: SSO REST API for Cifra domain
@@ -170,7 +170,7 @@ components:
             type:
               type: string
               enum:
-                - class_locale
+                - place_class_locale
             attributes:
               type: object
               required:
@@ -211,7 +211,7 @@ components:
             type:
               type: string
               enum:
-                - classes
+                - place_class
               description: Resource type
             attributes:
               type: object
@@ -313,7 +313,7 @@ components:
             type:
               type: string
               enum:
-                - class_code_locale
+                - place_class_locale
             attributes:
               type: object
               required:
@@ -541,7 +541,6 @@ components:
             id:
               type: string
               format: uuid
-              description: place id
             type:
               type: string
               enum:
@@ -552,9 +551,6 @@ components:
                 class:
                   type: string
                   description: place class
-                status:
-                  type: string
-                  description: place status
                 website:
                   type: string
                   format: uri

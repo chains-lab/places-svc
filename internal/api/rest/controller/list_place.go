@@ -12,7 +12,7 @@ import (
 	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/domain/models"
-	"github.com/chains-lab/places-svc/internal/domain/modules/place"
+	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/google/uuid"
 )
 

@@ -21,6 +21,7 @@ docs/CreateClassDataAttributes.md
 docs/CreatePlace.md
 docs/CreatePlaceData.md
 docs/CreatePlaceDataAttributes.md
+docs/Data.md
 docs/DeactivateClass.md
 docs/DeactivateClassData.md
 docs/DeactivateClassDataAttributes.md
@@ -77,6 +78,7 @@ model_create_class_data_attributes.go
 model_create_place.go
 model_create_place_data.go
 model_create_place_data_attributes.go
+model_data.go
 model_deactivate_class.go
 model_deactivate_class_data.go
 model_deactivate_class_data_attributes.go

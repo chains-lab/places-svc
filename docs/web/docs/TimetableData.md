@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | **string** | place id | 
+**Id** | [**uuid.UUID**](uuid.UUID.md) | place id | 
 **Type** | **string** |  | 
 **Attributes** | [**TimetableDataAttributes**](TimetableDataAttributes.md) |  | 
 
@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 
 ### NewTimetableData
 
-`func NewTimetableData(id string, type_ string, attributes TimetableDataAttributes, ) *TimetableData`
+`func NewTimetableData(id uuid.UUID, type_ string, attributes TimetableDataAttributes, ) *TimetableData`
 
 NewTimetableData instantiates a new TimetableData object
 This constructor will assign default values to properties that have it defined,
@@ -29,20 +29,20 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetId
 
-`func (o *TimetableData) GetId() string`
+`func (o *TimetableData) GetId() uuid.UUID`
 
 GetId returns the Id field if non-nil, zero value otherwise.
 
 ### GetIdOk
 
-`func (o *TimetableData) GetIdOk() (*string, bool)`
+`func (o *TimetableData) GetIdOk() (*uuid.UUID, bool)`
 
 GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetId
 
-`func (o *TimetableData) SetId(v string)`
+`func (o *TimetableData) SetId(v uuid.UUID)`
 
 SetId sets Id field to given value.
 

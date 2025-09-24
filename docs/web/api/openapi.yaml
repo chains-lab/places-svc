@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   description: SSO REST API for Cifra domain
   title: Cifra SSO REST API
@@ -29,7 +29,6 @@ components:
       required:
       - lat
       - lon
-      type: object
     RelationshipLinks:
       properties:
         self:
@@ -43,7 +42,6 @@ components:
       required:
       - related
       - self
-      type: object
     RelationshipDataObject:
       properties:
         type:
@@ -55,7 +53,6 @@ components:
       required:
       - id
       - type
-      type: object
     PaginationData:
       properties:
         page_number:
@@ -77,14 +74,12 @@ components:
       - page_number
       - page_size
       - total_items
-      type: object
     Class:
       properties:
         data:
           $ref: '#/components/schemas/Class_data'
       required:
       - data
-      type: object
     ClassesCollection:
       properties:
         data:
@@ -96,21 +91,18 @@ components:
       required:
       - data
       - links
-      type: object
     ClassRelationships:
       properties:
         parent:
           $ref: '#/components/schemas/ClassRelationships_parent'
       required:
       - parent
-      type: object
     ClassLocale:
       properties:
         data:
           $ref: '#/components/schemas/ClassLocale_data'
       required:
       - data
-      type: object
     ClassLocalesCollection:
       properties:
         data:
@@ -124,35 +116,30 @@ components:
       required:
       - data
       - included
-      type: object
     CreateClass:
       properties:
         data:
           $ref: '#/components/schemas/CreateClass_data'
       required:
       - data
-      type: object
     UpdateClass:
       properties:
         data:
           $ref: '#/components/schemas/UpdateClass_data'
       required:
       - data
-      type: object
     DeactivateClass:
       properties:
         data:
           $ref: '#/components/schemas/DeactivateClass_data'
       required:
       - data
-      type: object
     SetLocalesForClass:
       properties:
         data:
           $ref: '#/components/schemas/SetLocalesForClass_data'
       required:
       - data
-      type: object
     Place:
       properties:
         data:
@@ -165,7 +152,6 @@ components:
       required:
       - data
       - included
-      type: object
     PlacesCollection:
       properties:
         data:
@@ -182,7 +168,6 @@ components:
       - data
       - included
       - links
-      type: object
     PlaceRelationships:
       properties:
         class:
@@ -194,28 +179,24 @@ components:
       required:
       - city
       - class
-      type: object
     CreatePlace:
       properties:
         data:
           $ref: '#/components/schemas/CreatePlace_data'
       required:
       - data
-      type: object
     UpdatePlace:
       properties:
         data:
           $ref: '#/components/schemas/UpdatePlace_data'
       required:
       - data
-      type: object
     PlaceLocale:
       properties:
         data:
           $ref: '#/components/schemas/PlaceLocale_data'
       required:
       - data
-      type: object
     PlaceLocalesCollection:
       properties:
         data:
@@ -229,21 +210,18 @@ components:
       required:
       - data
       - included
-      type: object
     SetLocalesForPlace:
       properties:
         data:
           $ref: '#/components/schemas/SetLocalesForPlace_data'
       required:
       - data
-      type: object
     Timetable:
       properties:
         data:
           $ref: '#/components/schemas/Timetable_data'
       required:
       - data
-      type: object
     TimetableInterval:
       properties:
         from:
@@ -253,7 +231,6 @@ components:
       required:
       - from
       - to
-      type: object
     TimeMoment:
       properties:
         weekday:
@@ -274,14 +251,29 @@ components:
       required:
       - time
       - weekday
-      type: object
     SetPlaceTimetable:
       properties:
         data:
           $ref: '#/components/schemas/Timetable_data'
       required:
       - data
-      type: object
+    data:
+      properties:
+        id:
+          description: place_id + locale
+          format: string
+          pattern: "^[0-9a-fA-F-]{36}:[a-z]{2}(?:-[A-Z]{2})?$"
+          type: string
+        type:
+          enum:
+          - place_locale
+          type: string
+        attributes:
+          $ref: '#/components/schemas/PlaceLocale_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
     Class_data_attributes:
       properties:
         status:
@@ -309,7 +301,6 @@ components:
       - name
       - status
       - updated_at
-      type: object
     Class_data:
       properties:
         id:
@@ -328,14 +319,12 @@ components:
       - attributes
       - id
       - type
-      type: object
     ClassRelationships_parent:
       properties:
         links:
           $ref: '#/components/schemas/RelationshipLinks'
         data:
           $ref: '#/components/schemas/RelationshipDataObject'
-      type: object
     ClassLocale_data_attributes:
       properties:
         name:
@@ -343,7 +332,6 @@ components:
           type: string
       required:
       - name
-      type: object
     ClassLocale_data:
       properties:
         id:
@@ -353,7 +341,7 @@ components:
           type: string
         type:
           enum:
-          - class_locale
+          - place_class_locale
           type: string
         attributes:
           $ref: '#/components/schemas/ClassLocale_data_attributes'
@@ -361,7 +349,6 @@ components:
       - attributes
       - id
       - type
-      type: object
     CreateClass_data_attributes:
       properties:
         icon:
@@ -378,7 +365,6 @@ components:
       required:
       - icon
       - name
-      type: object
     CreateClass_data:
       properties:
         id:
@@ -387,7 +373,7 @@ components:
         type:
           description: Resource type
           enum:
-          - classes
+          - place_class
           type: string
         attributes:
           $ref: '#/components/schemas/CreateClass_data_attributes'
@@ -395,7 +381,6 @@ components:
       - attributes
       - id
       - type
-      type: object
     UpdateClass_data_attributes:
       properties:
         icon:
@@ -409,7 +394,6 @@ components:
         parent:
           description: parent class code
           type: string
-      type: object
     UpdateClass_data:
       properties:
         id:
@@ -426,7 +410,6 @@ components:
       - attributes
       - id
       - type
-      type: object
     DeactivateClass_data_attributes:
       properties:
         replaced_class_code:
@@ -435,7 +418,6 @@ components:
           type: string
       required:
       - replaced_class_code
-      type: object
     DeactivateClass_data:
       properties:
         id:
@@ -453,7 +435,6 @@ components:
       - attributes
       - id
       - type
-      type: object
     SetLocalesForClass_data_attributes_locales_inner:
       properties:
         locale:
@@ -465,7 +446,6 @@ components:
       required:
       - locale
       - name
-      type: object
     SetLocalesForClass_data_attributes:
       properties:
         locales:
@@ -474,7 +454,6 @@ components:
           type: array
       required:
       - locales
-      type: object
     SetLocalesForClass_data:
       properties:
         id:
@@ -483,7 +462,7 @@ components:
           type: string
         type:
           enum:
-          - class_code_locale
+          - place_class_locale
           type: string
         attributes:
           $ref: '#/components/schemas/SetLocalesForClass_data_attributes'
@@ -491,7 +470,6 @@ components:
       - attributes
       - id
       - type
-      type: object
     Place_data_attributes:
       properties:
         city_id:
@@ -552,7 +530,6 @@ components:
       - status
       - updated_at
       - verified
-      type: object
     Place_data:
       properties:
         id:
@@ -572,7 +549,6 @@ components:
       - id
       - relationships
       - type
-      type: object
     CreatePlace_data_attributes:
       properties:
         city_id:
@@ -611,7 +587,6 @@ components:
       - locale
       - name
       - point
-      type: object
     CreatePlace_data:
       properties:
         id:
@@ -628,14 +603,10 @@ components:
       - attributes
       - id
       - type
-      type: object
     UpdatePlace_data_attributes:
       properties:
         class:
           description: place class
-          type: string
-        status:
-          description: place status
           type: string
         website:
           description: place website
@@ -644,11 +615,9 @@ components:
         phone:
           description: place phone number
           type: string
-      type: object
     UpdatePlace_data:
       properties:
         id:
-          description: place id
           format: uuid
           type: string
         type:
@@ -661,7 +630,6 @@ components:
       - attributes
       - id
       - type
-      type: object
     PlaceLocale_data_attributes:
       properties:
         name:
@@ -673,7 +641,6 @@ components:
       required:
       - description
       - name
-      type: object
     PlaceLocale_data:
       properties:
         id:
@@ -691,7 +658,6 @@ components:
       - attributes
       - id
       - type
-      type: object
     SetLocalesForPlace_data_attributes_locales_inner:
       properties:
         locale:
@@ -707,7 +673,6 @@ components:
       - description
       - locale
       - name
-      type: object
     SetLocalesForPlace_data_attributes:
       properties:
         locales:
@@ -716,7 +681,6 @@ components:
           type: array
       required:
       - locales
-      type: object
     SetLocalesForPlace_data:
       properties:
         id:
@@ -733,7 +697,6 @@ components:
       - attributes
       - id
       - type
-      type: object
     Timetable_data_attributes:
       properties:
         table:
@@ -743,7 +706,6 @@ components:
           type: array
       required:
       - table
-      type: object
     Timetable_data:
       properties:
         id:
@@ -760,4 +722,3 @@ components:
       - attributes
       - id
       - type
-      type: object

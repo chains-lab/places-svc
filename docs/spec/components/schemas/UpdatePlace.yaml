@@ -12,7 +12,6 @@ properties:
       id:
         type: string
         format: uuid
-        description: "place id"
       type:
         type: string
         enum: [ place ]
@@ -22,9 +21,6 @@ properties:
           class:
             type: string
             description: "place class"
-          status:
-            type: string
-            description: "place status"
           website:
             type: string
             format: uri

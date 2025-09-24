@@ -12,6 +12,7 @@ package resources
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"bytes"
 	"fmt"
 )
@@ -22,7 +23,7 @@ var _ MappedNullable = &PlaceData{}
 // PlaceData struct for PlaceData
 type PlaceData struct {
 	// place id
-	Id string `json:"id"`
+	Id uuid.UUID `json:"id"`
 	Type string `json:"type"`
 	Attributes PlaceDataAttributes `json:"attributes"`
 	Relationships PlaceRelationships `json:"relationships"`
@@ -34,7 +35,7 @@ type _PlaceData PlaceData
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceData(id string, type_ string, attributes PlaceDataAttributes, relationships PlaceRelationships) *PlaceData {
+func NewPlaceData(id uuid.UUID, type_ string, attributes PlaceDataAttributes, relationships PlaceRelationships) *PlaceData {
 	this := PlaceData{}
 	this.Id = id
 	this.Type = type_
@@ -52,9 +53,9 @@ func NewPlaceDataWithDefaults() *PlaceData {
 }
 
 // GetId returns the Id field value
-func (o *PlaceData) GetId() string {
+func (o *PlaceData) GetId() uuid.UUID {
 	if o == nil {
-		var ret string
+		var ret uuid.UUID
 		return ret
 	}
 
@@ -63,7 +64,7 @@ func (o *PlaceData) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
-func (o *PlaceData) GetIdOk() (*string, bool) {
+func (o *PlaceData) GetIdOk() (*uuid.UUID, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -71,7 +72,7 @@ func (o *PlaceData) GetIdOk() (*string, bool) {
 }
 
 // SetId sets field value
-func (o *PlaceData) SetId(v string) {
+func (o *PlaceData) SetId(v uuid.UUID) {
 	o.Id = v
 }
 

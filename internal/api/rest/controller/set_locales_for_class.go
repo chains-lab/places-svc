@@ -7,21 +7,11 @@ import (
 	"github.com/chains-lab/ape"
 	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
-	"github.com/chains-lab/places-svc/internal/domain/modules/class"
-	"github.com/chains-lab/places-svc/internal/errx"
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
+	"github.com/chains-lab/places-svc/internal/domain/errx"
+	"github.com/chains-lab/places-svc/internal/domain/services/class"
 )
 
 func (h Service) SetLocalesForClass(w http.ResponseWriter, r *http.Request) {
-	classCode, err := uuid.Parse(chi.URLParam(r, "class_code"))
-	if err != nil {
-		h.log.WithError(err).Error("invalid class_code")
-		ape.RenderErr(w, problems.BadRequest(err)...)
-
-		return
-	}
-
 	req, err := requests.SetLocalesForClass(r)
 	if err != nil {
 		h.log.WithError(err).Error("invalid request body")
@@ -38,13 +28,13 @@ func (h Service) SetLocalesForClass(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = h.domain.Class.SetLocales(r.Context(), classCode.String(), locales...)
+	err = h.domain.Class.SetLocales(r.Context(), req.Data.Id, locales...)
 	if err != nil {
 		h.log.WithError(err).Error("failed to set class locales")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound("class not found"))
-		case errors.Is(err, errx.ErrorNedAtLeastOneLocaleForClass):
+		case errors.Is(err, errx.ErrorCannotDeleteDefaultLocaleForClass):
 			ape.RenderErr(w, problems.InvalidParameter("locales", err))
 		case errors.Is(err, errx.ErrorInvalidLocale):
 			ape.RenderErr(w, problems.InvalidParameter("locales", err))

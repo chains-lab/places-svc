@@ -9,10 +9,10 @@ import (
 func Place(m models.PlaceWithDetails) resources.Place {
 	resp := resources.Place{
 		Data: resources.PlaceData{
-			Id:   m.ID.String(),
+			Id:   m.ID,
 			Type: resources.PlaceType,
 			Attributes: resources.PlaceDataAttributes{
-				CityId:   m.CityID.String(),
+				CityId:   m.CityID,
 				Class:    m.Class,
 				Status:   m.Status,
 				Verified: m.Verified,
@@ -31,8 +31,7 @@ func Place(m models.PlaceWithDetails) resources.Place {
 	}
 
 	if m.DistributorID != nil {
-		disID := m.DistributorID.String()
-		resp.Data.Attributes.DistributorId = &disID
+		resp.Data.Attributes.DistributorId = m.DistributorID
 	}
 	if m.Website != nil {
 		resp.Data.Attributes.Website = m.Website

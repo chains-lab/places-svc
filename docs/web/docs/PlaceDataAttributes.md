@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**CityId** | **string** | city id | 
-**DistributorId** | Pointer to **string** | distributor id | [optional] 
+**CityId** | [**uuid.UUID**](uuid.UUID.md) | city id | 
+**DistributorId** | Pointer to [**uuid.UUID**](uuid.UUID.md) | distributor id | [optional] 
 **Class** | **string** | place class | 
 **Status** | **string** | place status | 
 **Verified** | **bool** | is place verified | 
@@ -23,7 +23,7 @@ Name | Type | Description | Notes
 
 ### NewPlaceDataAttributes
 
-`func NewPlaceDataAttributes(cityId string, class string, status string, verified bool, point Point, locale string, name string, address string, description string, createdAt time.Time, updatedAt time.Time, ) *PlaceDataAttributes`
+`func NewPlaceDataAttributes(cityId uuid.UUID, class string, status string, verified bool, point Point, locale string, name string, address string, description string, createdAt time.Time, updatedAt time.Time, ) *PlaceDataAttributes`
 
 NewPlaceDataAttributes instantiates a new PlaceDataAttributes object
 This constructor will assign default values to properties that have it defined,
@@ -40,40 +40,40 @@ but it doesn't guarantee that properties required by API are set
 
 ### GetCityId
 
-`func (o *PlaceDataAttributes) GetCityId() string`
+`func (o *PlaceDataAttributes) GetCityId() uuid.UUID`
 
 GetCityId returns the CityId field if non-nil, zero value otherwise.
 
 ### GetCityIdOk
 
-`func (o *PlaceDataAttributes) GetCityIdOk() (*string, bool)`
+`func (o *PlaceDataAttributes) GetCityIdOk() (*uuid.UUID, bool)`
 
 GetCityIdOk returns a tuple with the CityId field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetCityId
 
-`func (o *PlaceDataAttributes) SetCityId(v string)`
+`func (o *PlaceDataAttributes) SetCityId(v uuid.UUID)`
 
 SetCityId sets CityId field to given value.
 
 
 ### GetDistributorId
 
-`func (o *PlaceDataAttributes) GetDistributorId() string`
+`func (o *PlaceDataAttributes) GetDistributorId() uuid.UUID`
 
 GetDistributorId returns the DistributorId field if non-nil, zero value otherwise.
 
 ### GetDistributorIdOk
 
-`func (o *PlaceDataAttributes) GetDistributorIdOk() (*string, bool)`
+`func (o *PlaceDataAttributes) GetDistributorIdOk() (*uuid.UUID, bool)`
 
 GetDistributorIdOk returns a tuple with the DistributorId field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetDistributorId
 
-`func (o *PlaceDataAttributes) SetDistributorId(v string)`
+`func (o *PlaceDataAttributes) SetDistributorId(v uuid.UUID)`
 
 SetDistributorId sets DistributorId field to given value.
 
