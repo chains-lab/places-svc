@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/chains-lab/enum"
-	"github.com/chains-lab/places-svc/internal/app"
-	"github.com/chains-lab/places-svc/internal/app/models"
+	"github.com/chains-lab/places-svc/internal/domain"
+	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/google/uuid"
 )
 

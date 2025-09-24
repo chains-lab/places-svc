@@ -5,13 +5,15 @@ import (
 	"sync"
 
 	"github.com/chains-lab/logium"
-	"github.com/chains-lab/places-svc/internal/api/rest"
-	"github.com/chains-lab/places-svc/internal/api/rest/handlers"
-	"github.com/chains-lab/places-svc/internal/app"
-	"github.com/chains-lab/places-svc/internal/config"
+	"github.com/chains-lab/places-svc/cmd/config"
+	"github.com/chains-lab/places-svc/internal/api"
+	"github.com/chains-lab/places-svc/internal/api/rest/controller"
+	"github.com/chains-lab/places-svc/internal/data/fabric"
+	"github.com/chains-lab/places-svc/internal/domain/modules/class"
+	"github.com/chains-lab/places-svc/internal/domain/modules/place"
 )
 
-func StartServices(ctx context.Context, cfg config.Config, log logium.Logger, wg *sync.WaitGroup, app *app.App) {
+func StartServices(ctx context.Context, cfg config.Config, log logium.Logger, wg *sync.WaitGroup) {
 	run := func(f func()) {
 		wg.Add(1)
 		go func() {
@@ -20,11 +22,15 @@ func StartServices(ctx context.Context, cfg config.Config, log logium.Logger, wg
 		}()
 	}
 
-	restSVC := rest.NewRest(cfg, log)
+	database := fabric.NewDatabase(cfg.Database.SQL.URL)
+	classMod := class.NewModule(database)
+	placeMod := place.NewModule(database)
+
+	Api := api.NewAPI(cfg, log)
 
 	run(func() {
-		handl := handlers.NewHandler(cfg, log, app)
+		handl := controller.NewService(cfg, log, classMod, placeMod)
 
-		restSVC.Run(ctx, handl)
+		Api.RunRest(ctx, handl)
 	})
 }

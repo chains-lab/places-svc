@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/chains-lab/logium"
-	"github.com/chains-lab/places-svc/internal/config"
+	"github.com/chains-lab/places-svc/cmd/config"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -20,7 +20,7 @@ type Service struct {
 }
 
 func NewRest(cfg config.Config, log logium.Logger) Service {
-	logger := log.WithField("module", "api")
+	logger := log.WithField("module", "rest")
 	router := chi.NewRouter()
 	server := &http.Server{
 		Addr:              cfg.Server.Port,
@@ -39,7 +39,7 @@ func NewRest(cfg config.Config, log logium.Logger) Service {
 	}
 }
 
-func (s *Service) Start(ctx context.Context) {
+func (s *Service) start(ctx context.Context) {
 	go func() {
 		s.log.Infof("Starting server on port %s", s.cfg.Server.Port)
 		if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -48,7 +48,7 @@ func (s *Service) Start(ctx context.Context) {
 	}()
 }
 
-func (s *Service) Stop(ctx context.Context) {
+func (s *Service) stop(ctx context.Context) {
 	s.log.Info("Shutting down server...")
 	if err := s.server.Shutdown(ctx); err != nil {
 		s.log.Errorf("Server shutdown failed: %v", err)

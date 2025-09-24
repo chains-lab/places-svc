@@ -6,8 +6,8 @@ import (
 
 	"github.com/chains-lab/enum"
 	"github.com/chains-lab/pagi"
-	"github.com/chains-lab/places-svc/internal/app"
-	"github.com/chains-lab/places-svc/internal/app/models"
+	"github.com/chains-lab/places-svc/internal/domain"
+	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/google/uuid"
 	"github.com/paulmach/orb"
 )
@@ -270,10 +270,10 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 
 	if pRestFar.ID != pMarketCity2.ID {
 	}
-	
+
 	// Сделаем один из них verified, чтобы проверить фильтр
 	if _, err := s.app.VerifyPlace(ctx, pMarketNear.ID); err != nil {
-		t.Fatalf("VerifyPlace: %v", err)
+		t.Fatalf("Verify: %v", err)
 	}
 
 	// sanity-check: без фильтров должно быть 4

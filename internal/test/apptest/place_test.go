@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/chains-lab/enum"
-	"github.com/chains-lab/places-svc/internal/app"
+	"github.com/chains-lab/places-svc/internal/domain"
 	"github.com/chains-lab/places-svc/internal/errx"
 	"github.com/google/uuid"
 )
@@ -72,13 +72,13 @@ func TestCreatingPlace(t *testing.T) {
 
 	place, err = s.app.UpdatePlace(ctx, placeID, place.Locale, app.UpdatePlaceParams{})
 	if err != nil {
-		t.Fatalf("UpdatePlace: %v", err)
+		t.Fatalf("Update: %v", err)
 	}
 	if place.Class != classFirst.Data.Code {
-		t.Fatalf("UpdatePlace: expected classFirst %s, got %s", classFirst.Data.Code, place.Class)
+		t.Fatalf("Update: expected classFirst %s, got %s", classFirst.Data.Code, place.Class)
 	}
 	if place.CityID != cityID {
-		t.Fatalf("UpdatePlace: expected city ID %s, got \n %+v", cityID, place)
+		t.Fatalf("Update: expected city ID %s, got \n %+v", cityID, place)
 	}
 
 	noneID := "none"
@@ -86,7 +86,7 @@ func TestCreatingPlace(t *testing.T) {
 		Class: &noneID,
 	})
 	if !errors.Is(err, errx.ErrorClassNotFound) {
-		t.Fatalf("UpdatePlace with none classFirst: expected error %v, got %v", errx.ErrorClassNotFound, err)
+		t.Fatalf("Update with none classFirst: expected error %v, got %v", errx.ErrorClassNotFound, err)
 	}
 
 	ws := "website"
@@ -97,16 +97,16 @@ func TestCreatingPlace(t *testing.T) {
 		Phone:   &ph,
 	})
 	if err != nil {
-		t.Fatalf("UpdatePlace with classSecond: %v", err)
+		t.Fatalf("Update with classSecond: %v", err)
 	}
 	if place.Class != classSecond.Data.Code {
-		t.Fatalf("UpdatePlace with classSecond: expected classSecond %s, got %s", classSecond.Data.Code, place.Class)
+		t.Fatalf("Update with classSecond: expected classSecond %s, got %s", classSecond.Data.Code, place.Class)
 	}
 	if place.Website == nil || *place.Website != ws {
-		t.Fatalf("UpdatePlace with classSecond: expected website %s, got %v", ws, place.Website)
+		t.Fatalf("Update with classSecond: expected website %s, got %v", ws, place.Website)
 	}
 	if place.Phone == nil || *place.Phone != ph {
-		t.Fatalf("UpdatePlace with classSecond: expected phone %s, got %v", ph, place.Phone)
+		t.Fatalf("Update with classSecond: expected phone %s, got %v", ph, place.Phone)
 	}
 
 	emtp := ""
@@ -116,12 +116,12 @@ func TestCreatingPlace(t *testing.T) {
 		Phone:   &emtp,
 	})
 	if err != nil {
-		t.Fatalf("UpdatePlace with empty website and phone: %v", err)
+		t.Fatalf("Update with empty website and phone: %v", err)
 	}
 	if place.Website != nil {
-		t.Fatalf("UpdatePlace with empty website: expected nil, got %v", place.Website)
+		t.Fatalf("Update with empty website: expected nil, got %v", place.Website)
 	}
 	if place.Phone != nil {
-		t.Fatalf("UpdatePlace with empty phone: expected nil, got %v", place.Phone)
+		t.Fatalf("Update with empty phone: expected nil, got %v", place.Phone)
 	}
 }

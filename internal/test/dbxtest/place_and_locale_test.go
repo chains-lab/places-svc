@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chains-lab/places-svc/internal/dbx"
+	"github.com/chains-lab/places-svc/internal/data"
+	"github.com/chains-lab/places-svc/internal/data/pgdb"
 	_ "github.com/lib/pq"
 )
 
@@ -17,7 +18,7 @@ func insertBaseKindInfra(t *testing.T) {
 	now := time.Now().UTC()
 
 	// root class: food
-	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.PlaceClass{
+	if err := pgdb.NewClassesQ(db).Insert(ctx, pgdb.PlaceClass{
 		Code:      "food",
 		Parent:    sql.NullString{Valid: false},
 		Status:    "active",
@@ -29,7 +30,7 @@ func insertBaseKindInfra(t *testing.T) {
 
 	// child class: restaurant -> food
 	parent := sql.NullString{String: "food", Valid: true}
-	if err := dbx.NewClassesQ(db).Insert(ctx, dbx.PlaceClass{
+	if err := pgdb.NewClassesQ(db).Insert(ctx, pgdb.PlaceClass{
 		Code:      "restaurant",
 		Parent:    parent,
 		Status:    "active",
@@ -40,7 +41,7 @@ func insertBaseKindInfra(t *testing.T) {
 	}
 
 	// i18n (en fallback)
-	if err := dbx.NewClassLocaleQ(db).Insert(ctx, dbx.PlaceClassLocale{
+	if err := data.NewClassLocaleQ(db).Insert(ctx, pgdb.PlaceClassLocale{
 		Class: "restaurant", Locale: "en", Name: "Restaurant",
 	}); err != nil {
 		t.Fatalf("insert class_i18n restaurant en: %v", err)
@@ -51,7 +52,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	t.Helper()
 //	db := openDB(t)
 //	now := time.Now().UTC()
-//	err := dbx.NewPlacesQ(db).Insert(context.Background(), dbx.Place{
+//	err := data.NewPlacesQ(db).Insert(context.Background(), data.Place{
 //		ID:            id,
 //		CityIDs:        uuid.New(),
 //		DistributorIDs: uuid.NullUUID{}, // NULL
@@ -73,7 +74,7 @@ func insertBaseKindInfra(t *testing.T) {
 //func insertPlaceLocale(t *testing.T, placeID uuid.UUID, locale, name, addr string, desc sql.NullString) {
 //	t.Helper()
 //	db := openDB(t)
-//	err := dbx.NewPlaceLocalesQ(db).Insert(context.Background(), dbx.PlaceLocale{
+//	err := data.NewPlaceLocalesQ(db).Insert(context.Background(), data.PlaceLocale{
 //		PlaceID:     placeID,
 //		Locale:      locale,
 //		Name:        name,
@@ -111,7 +112,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	insertPlaceLocale(t, placeID, "uk", "Кавʼярня", "вул. Головна, 1", sql.NullString{Valid: false})
 //
 //	// 1) exact uk
-//	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
+//	got, err := data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 //	if err != nil {
 //		t.Fatalf("get with uk: %v", err)
 //	}
@@ -129,7 +130,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	}
 //
 //	// 2) fallback fr -> en
-//	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
+//	got, err = data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
 //	if err != nil {
 //		t.Fatalf("get with fr (fallback): %v", err)
 //	}
@@ -151,10 +152,10 @@ func insertBaseKindInfra(t *testing.T) {
 //	newAddr := "вул. Оновлена, 5"
 //	newDesc := sql.NullString{Valid: true, String: "Оновлений опис"}
 //
-//	if err := dbx.NewPlaceLocalesQ(db).
+//	if err := data.NewPlaceLocalesQ(db).
 //		FilterPlaceID(placeID).
 //		FilterByLocale("uk").
-//		Update(ctx, dbx.UpdatePlaceLocaleParams{
+//		Update(ctx, data.updatePlaceLocaleParams{
 //			Name:        &newName,
 //			Address:     &newAddr,
 //			Description: &newDesc,
@@ -162,7 +163,7 @@ func insertBaseKindInfra(t *testing.T) {
 //		t.Fatalf("update uk: %v", err)
 //	}
 //
-//	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
+//	got, err = data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 //	if err != nil {
 //		t.Fatalf("get after update uk: %v", err)
 //	}
@@ -177,10 +178,10 @@ func insertBaseKindInfra(t *testing.T) {
 //	}
 //
 //	// 4) delete uk -> fallback en
-//	if err := dbx.NewPlaceLocalesQ(db).FilterPlaceID(placeID).FilterByLocale("uk").Delete(ctx); err != nil {
+//	if err := data.NewPlaceLocalesQ(db).FilterPlaceID(placeID).FilterByLocale("uk").Delete(ctx); err != nil {
 //		t.Fatalf("delete uk: %v", err)
 //	}
-//	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
+//	got, err = data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 //	if err != nil {
 //		t.Fatalf("get after delete uk: %v", err)
 //	}
@@ -189,10 +190,10 @@ func insertBaseKindInfra(t *testing.T) {
 //	}
 //
 //	// 5) delete en -> пустые локали
-//	if err := dbx.NewPlaceLocalesQ(db).FilterPlaceID(placeID).FilterByLocale("en").Delete(ctx); err != nil {
+//	if err := data.NewPlaceLocalesQ(db).FilterPlaceID(placeID).FilterByLocale("en").Delete(ctx); err != nil {
 //		t.Fatalf("delete en: %v", err)
 //	}
-//	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
+//	got, err = data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
 //	if err != nil {
 //		t.Fatalf("get after delete en: %v", err)
 //	}
@@ -213,9 +214,9 @@ func insertBaseKindInfra(t *testing.T) {
 //	// en локаль
 //	insertPlaceLocale(t, placeID, "en", "Coffee House", "Main St 1", sql.NullString{Valid: true, String: "Cozy"})
 //
-//	// ожидается вспомогательный метод в dbx:
-//	// func (q PlacesQ) SelectorToSql() (string, []any, error) { return q.selector.ToSql() }
-//	sqlStr, args, err := dbx.NewPlacesQ(db).withLocale("uk").FilterID(placeID).SelectorToSql()
+//	// ожидается вспомогательный метод в data:
+//	// func (q placesQ) SelectorToSql() (string, []any, error) { return q.selector.ToSql() }
+//	sqlStr, args, err := data.NewPlacesQ(db).withLocale("uk").FilterID(placeID).SelectorToSql()
 //	if err != nil {
 //		t.Fatalf("ToSql(): %v", err)
 //	}
@@ -245,7 +246,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	// только EN
 //	insertPlaceLocale(t, placeID, "en", "Coffee House", "Main St 1", sql.NullString{Valid: true, String: "Cozy place"})
 //
-//	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "xx-!!")
+//	got, err := data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "xx-!!")
 //	if err != nil {
 //		t.Fatalf("get with invalid locale: %v", err)
 //	}
@@ -265,7 +266,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	insertPlaceLocale(t, placeID, "en", "Coffee House", "Main St 1", sql.NullString{Valid: true, String: "Cozy place"})
 //	insertPlaceLocale(t, placeID, "uk", "Кавʼярня", "вул. Головна, 1", sql.NullString{Valid: false})
 //
-//	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
+//	got, err := data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 //	if err != nil {
 //		t.Fatalf("get with uk: %v", err)
 //	}
@@ -289,7 +290,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	insertPlaceLocale(t, p1, "en", "Coffee House", "Main St 1", sql.NullString{})
 //	insertPlaceLocale(t, p2, "en", "Coffee Corner", "Second St 2", sql.NullString{})
 //
-//	list, err := dbx.NewPlacesQ(db).
+//	list, err := data.NewPlacesQ(db).
 //		withLocale("en").
 //		FilterNameLike("Coffee").
 //		Select(ctx)
@@ -311,7 +312,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	// только FR
 //	insertPlaceLocale(t, placeID, "fr", "Maison du Café", "Rue Principale 1", sql.NullString{})
 //
-//	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "de")
+//	got, err := data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "de")
 //	if err != nil {
 //		t.Fatalf("get with de (no en, no exact): %v", err)
 //	}
@@ -328,7 +329,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	insertPlaceLocale(t, placeID, "fr", "Maison du Café", "Rue Principale 1", sql.NullString{Valid: true, String: "Sympa"})
 //
 //	// exact: fr
-//	got, err := dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
+//	got, err := data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "fr")
 //	if err != nil {
 //		t.Fatalf("get with fr: %v", err)
 //	}
@@ -341,7 +342,7 @@ func insertBaseKindInfra(t *testing.T) {
 //	}
 //
 //	// другая: uk → ни exact (uk), ни en — пусто
-//	got, err = dbx.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
+//	got, err = data.NewPlacesQ(db).FilterID(placeID).GetWithLocale(ctx, "uk")
 //	if err != nil {
 //		t.Fatalf("get with uk (no en): %v", err)
 //	}

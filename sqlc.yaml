@@ -1,13 +1,13 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    schema: "./internal/dbx/migrations"
-    queries: "./internal/dbx/queries"
+    schema: "./internal/data/migrations"
+    queries: "./internal/data/queries"
     gen:
       go:
         emit_json_tags: true
-        package: "dbx"
-        out: "./internal/dbx"
+        package: "data"
+        out: "./internal/data"
         sql_package: "pgx/v5"
         overrides:
           - db_type: "uuid"

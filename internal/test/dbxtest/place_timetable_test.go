@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/chains-lab/places-svc/internal/dbx"
+	"github.com/chains-lab/places-svc/internal/data/pgdb"
 	"github.com/google/uuid"
 )
 
@@ -24,7 +24,7 @@ func insertTT(t *testing.T, db *sql.DB, placeID uuid.UUID, s, e int) uuid.UUID {
 	t.Helper()
 	ctx := context.Background()
 	id := uuid.New()
-	err := dbx.NewPlaceTimetablesQ(db).Insert(ctx, dbx.PlaceTimetable{
+	err := pgdb.NewPlaceTimetablesQ(db).Insert(ctx, pgdb.PlaceTimetable{
 		ID:       id,
 		PlaceID:  placeID,
 		StartMin: s,
@@ -50,7 +50,7 @@ func TestTimetables_CRUD_ExcludeOverlap(t *testing.T) {
 	_ = insertTT(t, db, pid, 13*60, 15*60)
 
 	// пробуем перекрывающийся 11:00-14:00 → ДОЛЖНО упасть на EXCLUDE
-	err := dbx.NewPlaceTimetablesQ(db).Insert(ctx, dbx.PlaceTimetable{
+	err := pgdb.NewPlaceTimetablesQ(db).Insert(ctx, pgdb.PlaceTimetable{
 		ID:       uuid.New(),
 		PlaceID:  pid,
 		StartMin: 11 * 60,
@@ -75,7 +75,7 @@ func TestTimetables_FilterBetween_StraightOverlap(t *testing.T) {
 	c := insertTT(t, db, pid, 900, 1020) // [15:00, 17:00) -- НЕ пересечёт
 
 	// фильтруем окно [11:00, 12:30) => [660, 750)
-	list, err := dbx.NewPlaceTimetablesQ(db).
+	list, err := pgdb.NewPlaceTimetablesQ(db).
 		FilterPlaceID(pid).
 		FilterBetween(660, 750).
 		Select(ctx)
@@ -107,7 +107,7 @@ func TestTimetables_FilterBetween_WrapWeek(t *testing.T) {
 	// Плюс окно далеко
 	_ = insertTT(t, db, pid, 500, 700)
 
-	list, err := dbx.NewPlaceTimetablesQ(db).
+	list, err := pgdb.NewPlaceTimetablesQ(db).
 		FilterPlaceID(pid).
 		FilterBetween(10000, 200).
 		Select(ctx)
@@ -135,7 +135,7 @@ func TestTimetables_Count_And_Page(t *testing.T) {
 		insertTT(t, db, pid, 100*i+10, 100*i+50) // непересекающиеся
 	}
 
-	cnt, err := dbx.NewPlaceTimetablesQ(db).FilterPlaceID(pid).Count(ctx)
+	cnt, err := pgdb.NewPlaceTimetablesQ(db).FilterPlaceID(pid).Count(ctx)
 	if err != nil {
 		t.Fatalf("count: %v", err)
 	}
@@ -143,7 +143,7 @@ func TestTimetables_Count_And_Page(t *testing.T) {
 		t.Fatalf("expected count=5, got=%d", cnt)
 	}
 
-	list, err := dbx.NewPlaceTimetablesQ(db).FilterPlaceID(pid).Page(0, 2).Select(ctx)
+	list, err := pgdb.NewPlaceTimetablesQ(db).FilterPlaceID(pid).Page(0, 2).Select(ctx)
 	if err != nil {
 		t.Fatalf("page select: %v", err)
 	}
@@ -161,7 +161,7 @@ func TestTimetables_Get_FilterByID_Delete(t *testing.T) {
 
 	id := insertTT(t, db, pid, 600, 700)
 
-	got, err := dbx.NewPlaceTimetablesQ(db).FilterByID(id).Get(ctx)
+	got, err := pgdb.NewPlaceTimetablesQ(db).FilterByID(id).Get(ctx)
 	if err != nil {
 		t.Fatalf("get by id: %v", err)
 	}
@@ -169,11 +169,11 @@ func TestTimetables_Get_FilterByID_Delete(t *testing.T) {
 		t.Fatalf("mismatch row: %+v", got)
 	}
 
-	if err := dbx.NewPlaceTimetablesQ(db).FilterByID(id).Delete(ctx); err != nil {
+	if err := pgdb.NewPlaceTimetablesQ(db).FilterByID(id).Delete(ctx); err != nil {
 		t.Fatalf("delete by id: %v", err)
 	}
 
-	_, err = dbx.NewPlaceTimetablesQ(db).FilterByID(id).Get(ctx)
+	_, err = pgdb.NewPlaceTimetablesQ(db).FilterByID(id).Get(ctx)
 	if err == nil {
 		t.Fatalf("expected no rows after delete")
 	}

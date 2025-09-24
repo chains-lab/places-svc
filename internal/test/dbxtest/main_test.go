@@ -44,7 +44,7 @@ func setupClean(t *testing.T) {
 //	t.Helper()
 //	db := openDB(t)
 //	now := time.Now().UTC()
-//	err := dbx.NewCategoryQ(db).Insert(context.Background(), dbx.PlaceCategory{
+//	err := data.NewCategoryQ(db).Insert(context.Background(), data.PlaceCategory{
 //		Code:      code,
 //		Statuses:    "active",
 //		Icon:      "🧩",
@@ -60,7 +60,7 @@ func setupClean(t *testing.T) {
 //	t.Helper()
 //	db := openDB(t)
 //	now := time.Now().UTC()
-//	err := dbx.NewPlaceKindsQ(db).Insert(context.Background(), dbx.PlaceKind{
+//	err := data.NewPlaceKindsQ(db).Insert(context.Background(), data.PlaceKind{
 //		Code:         code,
 //		CategoryCode: catCode,
 //		Statuses:       "active",

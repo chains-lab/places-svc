@@ -13,7 +13,7 @@ import (
 
 type Handlers interface {
 
-	// Places level handlers
+	// Places level controller
 	CreatePlace(w http.ResponseWriter, r *http.Request)
 	GetPlace(w http.ResponseWriter, r *http.Request)
 	ListPlace(w http.ResponseWriter, r *http.Request)
@@ -29,7 +29,7 @@ type Handlers interface {
 	GetTimetable(w http.ResponseWriter, r *http.Request)
 	DeleteTimetable(w http.ResponseWriter, r *http.Request)
 
-	// Classes level handlers
+	// Classes level controller
 	CreateClass(w http.ResponseWriter, r *http.Request)
 	GetClass(w http.ResponseWriter, r *http.Request)
 	ListClass(w http.ResponseWriter, r *http.Request)
@@ -99,8 +99,8 @@ func (s *Service) Run(ctx context.Context, h Handlers) {
 		})
 	})
 
-	s.Start(ctx)
+	s.start(ctx)
 
 	<-ctx.Done()
-	s.Stop(ctx)
+	s.stop(ctx)
 }

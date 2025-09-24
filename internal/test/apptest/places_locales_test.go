@@ -6,7 +6,7 @@ import (
 
 	"github.com/chains-lab/enum"
 	"github.com/chains-lab/pagi"
-	"github.com/chains-lab/places-svc/internal/app"
+	"github.com/chains-lab/places-svc/internal/domain"
 	"github.com/google/uuid"
 )
 

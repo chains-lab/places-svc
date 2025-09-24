@@ -9,9 +9,8 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/chains-lab/logium"
-	"github.com/chains-lab/places-svc/internal/app"
-	"github.com/chains-lab/places-svc/internal/config"
-	"github.com/chains-lab/places-svc/internal/dbx"
+	"github.com/chains-lab/places-svc/cmd/config"
+	"github.com/chains-lab/places-svc/internal/data/migrations"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,12 +36,6 @@ func Run(args []string) bool {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	application, err := app.NewApp(cfg)
-	if err != nil {
-		log.Fatalf("failed to create server: %v", err)
-		return false
-	}
-
 	var wg sync.WaitGroup
 
 	cmd, err := service.Parse(args[1:])
@@ -53,11 +46,11 @@ func Run(args []string) bool {
 
 	switch cmd {
 	case serviceCmd.FullCommand():
-		StartServices(ctx, cfg, log, &wg, &application)
+		StartServices(ctx, cfg, log, &wg)
 	case migrateUpCmd.FullCommand():
-		err = dbx.MigrateUp(cfg.Database.SQL.URL)
+		err = migrations.MigrateUp(cfg.Database.SQL.URL)
 	case migrateDownCmd.FullCommand():
-		err = dbx.MigrateDown(cfg.Database.SQL.URL)
+		err = migrations.MigrateDown(cfg.Database.SQL.URL)
 	default:
 		log.Errorf("unknown command %s", cmd)
 		return false

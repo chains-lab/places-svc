@@ -7,7 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chains-lab/places-svc/internal/dbx"
+	"github.com/chains-lab/places-svc/internal/data"
+	"github.com/chains-lab/places-svc/internal/data/pgdb"
 )
 
 func TestPlaceClasses_Integration(t *testing.T) {
@@ -19,10 +20,10 @@ func TestPlaceClasses_Integration(t *testing.T) {
 	mustExec(t, db, "DELETE FROM place_class_i18n")
 	mustExec(t, db, "DELETE FROM place_classes")
 
-	q := dbx.NewClassesQ(db)
+	q := pgdb.NewClassesQ(db)
 
 	// root: food
-	root := dbx.PlaceClass{
+	root := pgdb.PlaceClass{
 		Code:   "food",
 		Status: "active",
 		Icon:   "🍔",
@@ -38,7 +39,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 
 	// child: restaurant -> food
 	parent := sql.NullString{String: "food", Valid: true}
-	child := dbx.PlaceClass{
+	child := pgdb.PlaceClass{
 		Code:   "restaurant",
 		Parent: parent,
 		Status: "active",
@@ -54,7 +55,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 
 	// grandchild: cafe -> restaurant
 	parent2 := sql.NullString{String: "restaurant", Valid: true}
-	grand := dbx.PlaceClass{
+	grand := pgdb.PlaceClass{
 		Code:   "cafe",
 		Parent: parent2,
 		Status: "active",
@@ -122,7 +123,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 
 	// Cascade inactive: food -> inactive
 	depr := "inactive"
-	if err := q.New().FilterCode("food").Update(ctx, dbx.UpdatePlaceClassParams{
+	if err := q.New().FilterCode("food").Update(ctx, pgdb.updatePlaceClassParams{
 		Status:    &depr,
 		UpdatedAt: time.Now().UTC(),
 	}); err != nil {
@@ -146,7 +147,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 
 	// Forbid activation under deprecated ancestor
 	act := "active"
-	err = q.New().FilterCode("restaurant").Update(ctx, dbx.UpdatePlaceClassParams{
+	err = q.New().FilterCode("restaurant").Update(ctx, pgdb.updatePlaceClassParams{
 		Status:    &act,
 		UpdatedAt: time.Now().UTC(),
 	})
@@ -159,7 +160,7 @@ func TestPlaceClasses_Integration(t *testing.T) {
 
 	// Anti-cycle: try to move food under cafe
 	newParent := "cafe"
-	err = q.New().FilterCode("food").Update(ctx, dbx.UpdatePlaceClassParams{
+	err = q.New().FilterCode("food").Update(ctx, pgdb.updatePlaceClassParams{
 		Parent:    &newParent,
 		UpdatedAt: time.Now().UTC(),
 	})
@@ -198,14 +199,14 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 	ctx := context.Background()
 	db := openDB(t)
 
-	q := dbx.NewClassesQ(db)
+	q := pgdb.NewClassesQ(db)
 
 	// roots: food, services
-	food := dbx.PlaceClass{Code: "food", Status: "active", Icon: "🍔"}
+	food := pgdb.PlaceClass{Code: "food", Status: "active", Icon: "🍔"}
 	if err := q.Insert(ctx, food); err != nil {
 		t.Fatalf("insert food: %v", err)
 	}
-	services := dbx.PlaceClass{Code: "services", Status: "active", Icon: "🧰"}
+	services := pgdb.PlaceClass{Code: "services", Status: "active", Icon: "🧰"}
 	if err := q.Insert(ctx, services); err != nil {
 		t.Fatalf("insert services: %v", err)
 	}
@@ -216,7 +217,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 
 	// child: restaurant -> food
 	parentFood := sql.NullString{String: "food", Valid: true}
-	restaurant := dbx.PlaceClass{Code: "restaurant", Parent: parentFood, Status: "active", Icon: "🍽️"}
+	restaurant := pgdb.PlaceClass{Code: "restaurant", Parent: parentFood, Status: "active", Icon: "🍽️"}
 	if err := q.Insert(ctx, restaurant); err != nil {
 		t.Fatalf("insert restaurant: %v", err)
 	}
@@ -224,12 +225,12 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 
 	// grandchild: cafe -> restaurant
 	parentRest := sql.NullString{String: "restaurant", Valid: true}
-	cafe := dbx.PlaceClass{Code: "cafe", Parent: parentRest, Status: "active", Icon: "☕"}
+	cafe := pgdb.PlaceClass{Code: "cafe", Parent: parentRest, Status: "active", Icon: "☕"}
 	if err := q.Insert(ctx, cafe); err != nil {
 		t.Fatalf("insert cafe: %v", err)
 	}
 	// uk для кафе через Upsert
-	if err := dbx.NewClassLocaleQ(db).Upsert(ctx, dbx.PlaceClassLocale{
+	if err := data.NewClassLocaleQ(db).Upsert(ctx, pgdb.PlaceClassLocale{
 		Class:  "cafe",
 		Locale: "uk",
 		Name:   "Кав'ярня",
@@ -262,7 +263,7 @@ func TestPlaceClasses_RepathAndRoots(t *testing.T) {
 
 	// 1) reparent: restaurant -> services
 	newParent := "services"
-	if err := q.New().FilterCode("restaurant").Update(ctx, dbx.UpdatePlaceClassParams{
+	if err := q.New().FilterCode("restaurant").Update(ctx, pgdb.updatePlaceClassParams{
 		Parent:    &newParent,
 		UpdatedAt: time.Now().UTC(),
 	}); err != nil {

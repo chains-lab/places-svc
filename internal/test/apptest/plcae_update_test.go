@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/chains-lab/enum"
-	"github.com/chains-lab/places-svc/internal/app"
+	"github.com/chains-lab/places-svc/internal/domain"
 	"github.com/google/uuid"
 )
 
@@ -73,7 +73,7 @@ func TestPlaceUpdate(t *testing.T) {
 		Phone:   func(s string) *string { return &s }("+1234567890"),
 	})
 	if err != nil {
-		t.Fatalf("UpdatePlace: %v", err)
+		t.Fatalf("Update: %v", err)
 	}
 
 	if clothesNew.Class != ShoesShopClass.Data.Code {
@@ -88,7 +88,7 @@ func TestPlaceUpdate(t *testing.T) {
 
 	restaurant, err = s.app.VerifyPlace(ctx, restaurant.ID)
 	if err != nil {
-		t.Fatalf("VerifyPlace: %v", err)
+		t.Fatalf("Verify: %v", err)
 	}
 	if !restaurant.Verified {
 		t.Errorf("expected place to be verified, got not verified")

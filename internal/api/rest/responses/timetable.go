@@ -3,7 +3,7 @@ package responses
 import (
 	"fmt"
 
-	"github.com/chains-lab/places-svc/internal/app/models"
+	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/resources"
 )
 

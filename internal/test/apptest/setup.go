@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/chains-lab/logium"
-	"github.com/chains-lab/places-svc/internal/app"
-	"github.com/chains-lab/places-svc/internal/config"
-	"github.com/chains-lab/places-svc/internal/dbx"
+	"github.com/chains-lab/places-svc/cmd/config"
+	"github.com/chains-lab/places-svc/internal/domain"
+	"github.com/chains-lab/places-svc/internal/data/migrations"
 )
 
 // TEST DATABASE CONNECTION
@@ -27,11 +27,11 @@ type Setup struct {
 }
 
 func cleanDb(t *testing.T) {
-	err := dbx.MigrateDown(testDatabaseURL)
+	err := migrations.MigrateDown(testDatabaseURL)
 	if err != nil {
 		t.Fatalf("migrate down: %v", err)
 	}
-	err = dbx.MigrateUp(testDatabaseURL)
+	err = migrations.MigrateUp(testDatabaseURL)
 	if err != nil {
 		t.Fatalf("migrate up: %v", err)
 	}
