@@ -28,10 +28,10 @@ func (m Service) Update(
 	placeID uuid.UUID,
 	locale string,
 	params UpdateParams,
-) (models.PlaceWithDetails, error) {
+) (models.Place, error) {
 	place, err := m.Get(ctx, placeID, locale)
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	stmt := schemas.UpdatePlaceParams{
@@ -43,11 +43,11 @@ func (m Service) Update(
 		if err != nil {
 			switch {
 			case errors.Is(err, sql.ErrNoRows):
-				return models.PlaceWithDetails{}, errx.ErrorClassNotFound.Raise(
+				return models.Place{}, errx.ErrorClassNotFound.Raise(
 					fmt.Errorf("class with code %s not found, cause: %w", *params.Class, err),
 				)
 			default:
-				return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
+				return models.Place{}, errx.ErrorInternal.Raise(
 					fmt.Errorf("failed to get class with code %s, cause: %w", *params.Class, err),
 				)
 			}
@@ -90,7 +90,7 @@ func (m Service) Update(
 
 	err = m.db.Places().FilterID(placeID).Update(ctx, stmt)
 	if err != nil {
-		return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
+		return models.Place{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to update place with id %s, cause: %w", placeID, err),
 		)
 	}

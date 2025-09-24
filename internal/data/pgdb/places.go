@@ -570,7 +570,7 @@ func (q *placesQ) OrderByDistance(point orb.Point, asc bool) schemas.PlacesQ {
 	return q
 }
 
-func (q *placesQ) Count(ctx context.Context) (uint64, error) {
+func (q *placesQ) Count(ctx context.Context) (uint, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("building count query for %s: %w", placesTable, err)
@@ -581,15 +581,15 @@ func (q *placesQ) Count(ctx context.Context) (uint64, error) {
 	} else {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
-	var cnt uint64
+	var cnt uint
 	if err := row.Scan(&cnt); err != nil {
 		return 0, err
 	}
 	return cnt, nil
 }
 
-func (q *placesQ) Page(limit, offset uint64) schemas.PlacesQ {
-	q.selector = q.selector.Limit(limit).Offset(offset)
+func (q *placesQ) Page(limit, offset uint) schemas.PlacesQ {
+	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
 
 	return q
 }

@@ -16,7 +16,7 @@ func (m Service) Get(
 	ctx context.Context,
 	placeID uuid.UUID,
 	locale string,
-) (models.PlaceWithDetails, error) {
+) (models.Place, error) {
 	err := enum.IsValidLocaleSupported(locale)
 	if err != nil {
 		locale = enum.LocaleEN
@@ -26,15 +26,15 @@ func (m Service) Get(
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return models.PlaceWithDetails{}, errx.ErrorPlaceNotFound.Raise(
+			return models.Place{}, errx.ErrorPlaceNotFound.Raise(
 				fmt.Errorf("place with id %s not found, cause %w", placeID, err),
 			)
 		default:
-			return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
+			return models.Place{}, errx.ErrorInternal.Raise(
 				fmt.Errorf("failed to get place with id %s: %w", placeID, err),
 			)
 		}
 	}
 
-	return placeWithDetailsModelFromDB(place), nil
+	return modelFromDB(place), nil
 }

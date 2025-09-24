@@ -14,6 +14,10 @@ var ErrorClassStatusInvalid = ape.DeclareError("CLASS_STATUS_INVALID")
 // Its 409 - Conflict
 var ErrorClassCodeAlreadyTaken = ape.DeclareError("CLASS_CODE_ALREADY_TAKEN")
 
+// ErrorClassNameAlreadyTaken is used when we try to create/update class with name that already exists for specific locale
+// Its 409 - Conflict
+var ErrorClassNameAlreadyTaken = ape.DeclareError("CLASS_NAME_ALREADY_TAKEN")
+
 // ErrorCannotDeleteDefaultLocaleForClass use only when we try to delete default locale for specific class, but it is default
 var ErrorCannotDeleteDefaultLocaleForClass = ape.DeclareError("CANNOT_DELETE_DEFAULT_LOCALE_FOR_CLASS")
 

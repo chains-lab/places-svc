@@ -2,6 +2,8 @@ package class
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/chains-lab/enum"
@@ -14,52 +16,39 @@ import (
 func (m Service) LocalesList(
 	ctx context.Context,
 	class string,
-	pag pagi.Request,
-) ([]models.ClassLocale, pagi.Response, error) {
-	if pag.Page == 0 {
-		pag.Page = 1
-	}
-	if pag.Size == 0 {
-		pag.Size = 20
-	}
-	if pag.Size > 100 {
-		pag.Size = 100
-	}
-
-	limit := pag.Size + 1
-	offset := (pag.Page - 1) * pag.Size
+	page uint,
+	size uint,
+) (models.ClassLocaleCollection, error) {
+	limit, offset := pagi.PagConvert(page, size)
 
 	_, err := m.Get(ctx, class, enum.LocaleEN)
 	if err != nil {
-		return nil, pagi.Response{}, err
+		return models.ClassLocaleCollection{}, err
 	}
 
 	rows, err := m.db.ClassLocales().FilterClass(class).Page(limit, offset).OrderByLocale(true).Select(ctx)
 	if err != nil {
-		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+		return models.ClassLocaleCollection{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to list locales for class %s, cause: %w", class, err),
 		)
 	}
 
 	count, err := m.db.ClassLocales().FilterClass(class).Count(ctx)
 	if err != nil {
-		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+		return models.ClassLocaleCollection{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to count locales for class %s, cause: %w", class, err),
 		)
 	}
 
-	if len(rows) == int(limit) {
-		rows = rows[:pag.Size]
-	}
-
 	result := make([]models.ClassLocale, 0, len(rows))
 	for _, loc := range rows {
-		result = append(result, classLocaleModelFromDB(loc))
+		result = append(result, localeFromDB(loc))
 	}
 
-	return result, pagi.Response{
-		Page:  pag.Page,
-		Size:  pag.Size,
+	return models.ClassLocaleCollection{
+		Data:  result,
+		Page:  page,
+		Size:  size,
 		Total: count,
 	}, nil
 }
@@ -69,43 +58,47 @@ type SetLocaleParams struct {
 	Name   string
 }
 
-func (m Service) SetLocales(
+func (m Service) SetLocale(
 	ctx context.Context,
 	code string,
-	locales ...SetLocaleParams,
+	loc SetLocaleParams,
 ) error {
-
-	for _, param := range locales {
-		err := enum.IsValidLocaleSupported(param.Locale)
-		if err != nil {
-			return errx.ErrorInvalidLocale.Raise(
-				fmt.Errorf("invalid locale provided: %s, cause %w", param.Locale, err),
-			)
-		}
+	err := enum.IsValidLocaleSupported(loc.Locale)
+	if err != nil {
+		return errx.ErrorInvalidLocale.Raise(
+			fmt.Errorf("invalid locale provided: %s, cause %w", loc.Locale, err),
+		)
 	}
 
-	_, err := m.Get(ctx, code, enum.DefaultLocale)
+	_, err = m.Get(ctx, code, enum.DefaultLocale)
 	if err != nil {
 		return err
 	}
 
-	stmts := make([]schemas.ClassLocale, 0, len(locales))
-	for _, locale := range locales {
-		stmts = append(stmts, schemas.ClassLocale{
-			Class:  code,
-			Locale: locale.Locale,
-			Name:   locale.Name,
-		})
+	_, err = m.db.ClassLocales().FilterLocale(loc.Locale).FilterName(loc.Name).Count(ctx)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) && err != nil {
+			return errx.ErrorInternal.Raise(
+				fmt.Errorf("failed to check locale name uniqueness for class %s, cause: %w", code, err),
+			)
+		}
+		if err == nil {
+			return errx.ErrorClassNameAlreadyTaken.Raise(
+				fmt.Errorf("locale name %s already taken for locale %s", loc.Name, loc.Locale),
+			)
+		}
 	}
 
-	if len(stmts) == 0 {
-		return nil
+	stmts := schemas.ClassLocale{
+		Class:  code,
+		Locale: loc.Locale,
+		Name:   loc.Name,
 	}
 
-	err = m.db.ClassLocales().Upsert(ctx, stmts...)
+	err = m.db.ClassLocales().Upsert(ctx, stmts)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
-			fmt.Errorf("failed to upsert locales for class %s, cause: %w", code, err),
+			fmt.Errorf("failed to upsert loc for class %s, cause: %w", code, err),
 		)
 	}
 

@@ -2,6 +2,7 @@ type: object
 required:
   - data
   - included
+  - links
 properties:
   data:
     type: array
@@ -11,3 +12,5 @@ properties:
     type: array
     items:
       $ref: './ClassLocaleData.yaml'
+  links:
+    $ref: './common/PaginationData.yaml'

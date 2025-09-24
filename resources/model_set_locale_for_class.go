@@ -16,38 +16,38 @@ import (
 	"fmt"
 )
 
-// checks if the SetLocalesForClass type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &SetLocalesForClass{}
+// checks if the SetLocaleForClass type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &SetLocaleForClass{}
 
-// SetLocalesForClass struct for SetLocalesForClass
-type SetLocalesForClass struct {
-	Data SetLocalesForClassData `json:"data"`
+// SetLocaleForClass struct for SetLocaleForClass
+type SetLocaleForClass struct {
+	Data SetLocaleForClassData `json:"data"`
 }
 
-type _SetLocalesForClass SetLocalesForClass
+type _SetLocaleForClass SetLocaleForClass
 
-// NewSetLocalesForClass instantiates a new SetLocalesForClass object
+// NewSetLocaleForClass instantiates a new SetLocaleForClass object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewSetLocalesForClass(data SetLocalesForClassData) *SetLocalesForClass {
-	this := SetLocalesForClass{}
+func NewSetLocaleForClass(data SetLocaleForClassData) *SetLocaleForClass {
+	this := SetLocaleForClass{}
 	this.Data = data
 	return &this
 }
 
-// NewSetLocalesForClassWithDefaults instantiates a new SetLocalesForClass object
+// NewSetLocaleForClassWithDefaults instantiates a new SetLocaleForClass object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewSetLocalesForClassWithDefaults() *SetLocalesForClass {
-	this := SetLocalesForClass{}
+func NewSetLocaleForClassWithDefaults() *SetLocaleForClass {
+	this := SetLocaleForClass{}
 	return &this
 }
 
 // GetData returns the Data field value
-func (o *SetLocalesForClass) GetData() SetLocalesForClassData {
+func (o *SetLocaleForClass) GetData() SetLocaleForClassData {
 	if o == nil {
-		var ret SetLocalesForClassData
+		var ret SetLocaleForClassData
 		return ret
 	}
 
@@ -56,7 +56,7 @@ func (o *SetLocalesForClass) GetData() SetLocalesForClassData {
 
 // GetDataOk returns a tuple with the Data field value
 // and a boolean to check if the value has been set.
-func (o *SetLocalesForClass) GetDataOk() (*SetLocalesForClassData, bool) {
+func (o *SetLocaleForClass) GetDataOk() (*SetLocaleForClassData, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -64,11 +64,11 @@ func (o *SetLocalesForClass) GetDataOk() (*SetLocalesForClassData, bool) {
 }
 
 // SetData sets field value
-func (o *SetLocalesForClass) SetData(v SetLocalesForClassData) {
+func (o *SetLocaleForClass) SetData(v SetLocaleForClassData) {
 	o.Data = v
 }
 
-func (o SetLocalesForClass) MarshalJSON() ([]byte, error) {
+func (o SetLocaleForClass) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -76,13 +76,13 @@ func (o SetLocalesForClass) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o SetLocalesForClass) ToMap() (map[string]interface{}, error) {
+func (o SetLocaleForClass) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["data"] = o.Data
 	return toSerialize, nil
 }
 
-func (o *SetLocalesForClass) UnmarshalJSON(data []byte) (err error) {
+func (o *SetLocaleForClass) UnmarshalJSON(data []byte) (err error) {
 	// This validates that all required properties are included in the JSON object
 	// by unmarshalling the object into a generic map with string keys and checking
 	// that every required field exists as a key in the generic map.
@@ -104,53 +104,53 @@ func (o *SetLocalesForClass) UnmarshalJSON(data []byte) (err error) {
 		}
 	}
 
-	varSetLocalesForClass := _SetLocalesForClass{}
+	varSetLocaleForClass := _SetLocaleForClass{}
 
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	err = decoder.Decode(&varSetLocalesForClass)
+	err = decoder.Decode(&varSetLocaleForClass)
 
 	if err != nil {
 		return err
 	}
 
-	*o = SetLocalesForClass(varSetLocalesForClass)
+	*o = SetLocaleForClass(varSetLocaleForClass)
 
 	return err
 }
 
-type NullableSetLocalesForClass struct {
-	value *SetLocalesForClass
+type NullableSetLocaleForClass struct {
+	value *SetLocaleForClass
 	isSet bool
 }
 
-func (v NullableSetLocalesForClass) Get() *SetLocalesForClass {
+func (v NullableSetLocaleForClass) Get() *SetLocaleForClass {
 	return v.value
 }
 
-func (v *NullableSetLocalesForClass) Set(val *SetLocalesForClass) {
+func (v *NullableSetLocaleForClass) Set(val *SetLocaleForClass) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableSetLocalesForClass) IsSet() bool {
+func (v NullableSetLocaleForClass) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableSetLocalesForClass) Unset() {
+func (v *NullableSetLocaleForClass) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableSetLocalesForClass(val *SetLocalesForClass) *NullableSetLocalesForClass {
-	return &NullableSetLocalesForClass{value: val, isSet: true}
+func NewNullableSetLocaleForClass(val *SetLocaleForClass) *NullableSetLocaleForClass {
+	return &NullableSetLocaleForClass{value: val, isSet: true}
 }
 
-func (v NullableSetLocalesForClass) MarshalJSON() ([]byte, error) {
+func (v NullableSetLocaleForClass) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableSetLocalesForClass) UnmarshalJSON(src []byte) error {
+func (v *NullableSetLocaleForClass) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

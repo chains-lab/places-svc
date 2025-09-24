@@ -40,7 +40,7 @@ func TestCreatingPlace(t *testing.T) {
 		t.Fatalf("CreateClass: %v", err)
 	}
 
-	classFirst, err = s.domain.class.Activate(ctx, classFirst.Data.Code, enum.LocaleUK)
+	classFirst, err = s.domain.class.Activate(ctx, classFirst.Code, enum.LocaleUK)
 	if err != nil {
 		t.Fatalf("ActivateClass: %v", err)
 	}
@@ -51,7 +51,7 @@ func TestCreatingPlace(t *testing.T) {
 	p, err := s.domain.place.Create(ctx, place.CreateParams{
 		CityID:        cityID,
 		DistributorID: &distributorID,
-		Class:         classFirst.Data.Code,
+		Class:         classFirst.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        "en",
 		Name:          "Place Name",
@@ -62,8 +62,8 @@ func TestCreatingPlace(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreatePlace: %v", err)
 	}
-	if p.Class != classFirst.Data.Code {
-		t.Fatalf("CreatePlace: expected classFirst %s, got %s", classFirst.Data.Code, p.Class)
+	if p.Class != classFirst.Code {
+		t.Fatalf("CreatePlace: expected classFirst %s, got %s", classFirst.Code, p.Class)
 	}
 	if p.CityID != cityID {
 		t.Fatalf("CreatePlace: expected city ID %s, got %s", cityID, p.CityID)
@@ -75,8 +75,8 @@ func TestCreatingPlace(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Update: %v", err)
 	}
-	if p.Class != classFirst.Data.Code {
-		t.Fatalf("Update: expected classFirst %s, got %s", classFirst.Data.Code, p.Class)
+	if p.Class != classFirst.Code {
+		t.Fatalf("Update: expected classFirst %s, got %s", classFirst.Code, p.Class)
 	}
 	if p.CityID != cityID {
 		t.Fatalf("Update: expected city ID %s, got \n %+v", cityID, p)
@@ -93,15 +93,15 @@ func TestCreatingPlace(t *testing.T) {
 	ws := "website"
 	ph := "+1234567890"
 	p, err = s.domain.place.Update(ctx, placeID, p.Locale, place.UpdateParams{
-		Class:   &classSecond.Data.Code,
+		Class:   &classSecond.Code,
 		Website: &ws,
 		Phone:   &ph,
 	})
 	if err != nil {
 		t.Fatalf("Update with classSecond: %v", err)
 	}
-	if p.Class != classSecond.Data.Code {
-		t.Fatalf("Update with classSecond: expected classSecond %s, got %s", classSecond.Data.Code, p.Class)
+	if p.Class != classSecond.Code {
+		t.Fatalf("Update with classSecond: expected classSecond %s, got %s", classSecond.Code, p.Class)
 	}
 	if p.Website == nil || *p.Website != ws {
 		t.Fatalf("Update with classSecond: expected website %s, got %v", ws, p.Website)
@@ -112,7 +112,7 @@ func TestCreatingPlace(t *testing.T) {
 
 	emtp := ""
 	p, err = s.domain.place.Update(ctx, placeID, p.Locale, place.UpdateParams{
-		Class:   &classSecond.Data.Code,
+		Class:   &classSecond.Code,
 		Website: &emtp,
 		Phone:   &emtp,
 	})

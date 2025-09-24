@@ -11,12 +11,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (h Service) GetClass(w http.ResponseWriter, r *http.Request) {
+func (s Service) GetClass(w http.ResponseWriter, r *http.Request) {
 	locale := DetectLocale(w, r)
 
-	res, err := h.domain.Class.Get(r.Context(), chi.URLParam(r, "class"), locale)
+	res, err := s.domain.Class.Get(r.Context(), chi.URLParam(r, "class"), locale)
 	if err != nil {
-		h.log.WithError(err).WithField("class", chi.URLParam(r, "class")).Error("error getting class")
+		s.log.WithError(err).WithField("class", chi.URLParam(r, "class")).Error("error getting class")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound("class not found"))

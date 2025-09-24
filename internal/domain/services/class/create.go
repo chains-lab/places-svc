@@ -23,13 +23,13 @@ type CreateParams struct {
 func (m Service) Create(
 	ctx context.Context,
 	params CreateParams,
-) (models.ClassWithLocale, error) {
+) (models.Class, error) {
 	_, err := m.db.Classes().FilterCode(params.Code).Get(ctx)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return models.ClassWithLocale{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class existence, cause: %w", err))
+		return models.Class{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class existence, cause: %w", err))
 	}
 	if err == nil {
-		return models.ClassWithLocale{}, errx.ErrorClassCodeAlreadyTaken.Raise(
+		return models.Class{}, errx.ErrorClassCodeAlreadyTaken.Raise(
 			fmt.Errorf("class with code %s already exists", params.Code),
 		)
 	}
@@ -37,6 +37,16 @@ func (m Service) Create(
 	parentValue := sql.NullString{}
 	if params.Parent != nil {
 		parentValue = sql.NullString{String: *params.Parent, Valid: true}
+	}
+
+	_, err = m.db.ClassLocales().FilterName(params.Name).FilterLocale(enum.DefaultLocale).Get(ctx)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return models.Class{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class locale existence, cause: %w", err))
+	}
+	if err == nil {
+		return models.Class{}, errx.ErrorClassNameAlreadyTaken.Raise(
+			fmt.Errorf("class locale with name %s already exists", params.Name),
+		)
 	}
 
 	now := time.Now().UTC()
@@ -70,7 +80,7 @@ func (m Service) Create(
 		return nil
 	})
 	if trxErr != nil {
-		return models.ClassWithLocale{}, trxErr
+		return models.Class{}, trxErr
 	}
 
 	return m.Get(ctx, params.Code, enum.DefaultLocale)

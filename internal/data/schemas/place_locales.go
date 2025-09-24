@@ -21,8 +21,8 @@ type PlaceLocalesQ interface {
 	FilterByName(name string) PlaceLocalesQ
 
 	OrderByLocale(asc bool) PlaceLocalesQ
-	Page(limit, offset uint64) PlaceLocalesQ
-	Count(ctx context.Context) (uint64, error)
+	Page(limit, offset uint) PlaceLocalesQ
+	Count(ctx context.Context) (uint, error)
 }
 
 type PlaceLocale struct {

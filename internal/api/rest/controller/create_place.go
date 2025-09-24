@@ -15,10 +15,10 @@ import (
 	"github.com/paulmach/orb"
 )
 
-func (h Service) CreatePlace(w http.ResponseWriter, r *http.Request) {
+func (s Service) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	initiator, err := meta.User(r.Context())
 	if err != nil {
-		h.log.WithError(err).Error("failed to get user from context")
+		s.log.WithError(err).Error("failed to get user from context")
 		ape.RenderErr(w, problems.Unauthorized("failed to get user from context"))
 
 		return
@@ -26,7 +26,7 @@ func (h Service) CreatePlace(w http.ResponseWriter, r *http.Request) {
 
 	req, err := requests.CreatePlace(r)
 	if err != nil {
-		h.log.WithError(err).Error("error creating place")
+		s.log.WithError(err).Error("error creating place")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -53,9 +53,9 @@ func (h Service) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		params.Website = req.Data.Attributes.Website
 	}
 
-	res, err := h.domain.Place.Create(r.Context(), params)
+	res, err := s.domain.Place.Create(r.Context(), params)
 	if err != nil {
-		h.log.WithError(err).Error("error creating place")
+		s.log.WithError(err).Error("error creating place")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class with code %s not found", params.Class)))
@@ -66,7 +66,7 @@ func (h Service) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.log.Infof("created place with id %s by user %s", res.ID, initiator.ID)
+	s.log.Infof("created place with id %s by user %s", res.ID, initiator.ID)
 
 	ape.Render(w, http.StatusCreated, responses.Place(res))
 }

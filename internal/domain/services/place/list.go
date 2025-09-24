@@ -23,6 +23,9 @@ type FilterListParams struct {
 
 	Time     *models.TimeInterval
 	Location *FilterListDistance
+
+	Page uint
+	Size uint
 }
 
 type FilterListDistance struct {
@@ -30,25 +33,18 @@ type FilterListDistance struct {
 	RadiusM uint64
 }
 
+type SortListField struct {
+	ByCreatedAt *bool
+	ByDistance  *bool
+}
+
 func (m Service) List(
 	ctx context.Context,
 	locale string,
 	filter FilterListParams,
-	pag pagi.Request,
-	sort []pagi.SortField,
-) ([]models.PlaceWithDetails, pagi.Response, error) {
-	if pag.Page == 0 {
-		pag.Page = 1
-	}
-	if pag.Size == 0 {
-		pag.Size = 20
-	}
-	if pag.Size > 100 {
-		pag.Size = 100
-	}
-
-	limit := pag.Size + 1 // +1 чтобы определить наличие next
-	offset := (pag.Page - 1) * pag.Size
+	sort SortListField,
+) (models.PlacesCollection, error) {
+	limit, offset := pagi.PagConvert(filter.Page, filter.Size)
 
 	query := m.db.Places()
 
@@ -81,15 +77,11 @@ func (m Service) List(
 	}
 	count, err := query.Count(ctx)
 
-	for _, s := range sort {
-		switch s.Field {
-		case "created_at":
-			query = query.OrderByCreatedAt(s.Ascend)
-		case "distance":
-			if filter.Location != nil {
-				query = query.OrderByDistance(filter.Location.Point, s.Ascend)
-			}
-		}
+	if sort.ByCreatedAt != nil {
+		query = query.OrderByCreatedAt(*sort.ByCreatedAt)
+	}
+	if sort.ByDistance != nil && filter.Location != nil {
+		query = query.OrderByDistance(filter.Location.Point, *sort.ByDistance)
 	}
 
 	err = enum.IsValidLocaleSupported(locale)
@@ -99,23 +91,20 @@ func (m Service) List(
 
 	rows, err := query.Page(limit, offset).SelectWithDetails(ctx, locale)
 	if err != nil {
-		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+		return models.PlacesCollection{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to search locos, cause: %w", err),
 		)
 	}
 
-	if len(rows) == int(limit) {
-		rows = rows[:pag.Size]
-	}
-
-	places := make([]models.PlaceWithDetails, 0, len(rows))
+	places := make([]models.Place, 0, len(rows))
 	for _, row := range rows {
-		places = append(places, placeWithDetailsModelFromDB(row))
+		places = append(places, modelFromDB(row))
 	}
 
-	return places, pagi.Response{
-		Page:  pag.Page,
-		Size:  pag.Size,
+	return models.PlacesCollection{
+		Data:  places,
+		Page:  filter.Page,
+		Size:  filter.Size,
 		Total: count,
 	}, nil
 }

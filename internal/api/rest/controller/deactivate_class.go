@@ -12,7 +12,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 )
 
-func (h Service) DeactivateClass(w http.ResponseWriter, r *http.Request) {
+func (s Service) DeactivateClass(w http.ResponseWriter, r *http.Request) {
 	locale := DetectLocale(w, r)
 
 	req, err := requests.DeactivateClass(r)
@@ -22,16 +22,16 @@ func (h Service) DeactivateClass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.domain.Class.Deactivate(r.Context(), req.Data.Id, locale, req.Data.Attributes.ReplacedClassCode)
+	res, err := s.domain.Class.Deactivate(r.Context(), req.Data.Id, locale, req.Data.Attributes.ReplacedClassCode)
 	if err != nil {
-		h.log.WithError(err).Errorf("error deactivating place")
+		s.log.WithError(err).Errorf("error deactivating place")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class with code %s not found", req.Data.Id)))
 		case errors.Is(err, errx.ErrorClassDeactivateReplaceSame):
-			ape.RenderErr(w, problems.InvalidParameter("data/attributes/replaced_class_code", err))
+			ape.RenderErr(w, problems.Conflict(fmt.Sprintf("class cannot replace itself")))
 		case errors.Is(err, errx.ErrorClassDeactivateReplaceInactive):
-			ape.RenderErr(w, problems.InvalidParameter("data/attributes/replaced_class_code", err))
+			ape.RenderErr(w, problems.Conflict(fmt.Sprintf("class cannot replace an inactive class")))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

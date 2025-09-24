@@ -21,8 +21,8 @@ func TestPlaceTimetable(t *testing.T) {
 	ctx := context.Background()
 
 	FoodClass := CreateClass(s, t, "Food", "food", nil)
-	SuperMarketClass := CreateClass(s, t, "SuperMarket", "supermarket", &FoodClass.Data.Code)
-	RestaurantClass := CreateClass(s, t, "Restaurant", "restaurant", &FoodClass.Data.Code)
+	SuperMarketClass := CreateClass(s, t, "SuperMarket", "supermarket", &FoodClass.Code)
+	RestaurantClass := CreateClass(s, t, "Restaurant", "restaurant", &FoodClass.Code)
 
 	distributorID := uuid.New()
 	city1 := uuid.New()
@@ -31,30 +31,30 @@ func TestPlaceTimetable(t *testing.T) {
 	food := CreatePlace(s, t, place.CreateParams{
 		CityID:        city1,
 		DistributorID: &distributorID,
-		Class:         FoodClass.Data.Code,
+		Class:         FoodClass.Code,
 		Point:         [2]float64{30.1, 50.1},
 		Locale:        enum.LocaleEN,
-		Name:          "Food Place",
+		Name:          "Food PlaceDetails",
 		Address:       "456 Market St",
 		Description:   "A big Food place",
 	})
 	restaurant := CreatePlace(s, t, place.CreateParams{
 		CityID:        city1,
 		DistributorID: &distributorID,
-		Class:         RestaurantClass.Data.Code,
+		Class:         RestaurantClass.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        enum.LocaleEN,
-		Name:          "Restaurant Place",
+		Name:          "Restaurant PlaceDetails",
 		Address:       "123 Main St",
 		Description:   "A nice restaurant place",
 	})
 	clothes := CreatePlace(s, t, place.CreateParams{
 		CityID:        city2,
 		DistributorID: &distributorID,
-		Class:         SuperMarketClass.Data.Code,
+		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{31.1, 51.1},
 		Locale:        enum.LocaleEN,
-		Name:          "SuperMarket Place Second City",
+		Name:          "SuperMarket PlaceDetails Second City",
 		Address:       "789 Market St",
 		Description:   "A big supermarket place in second city",
 	})

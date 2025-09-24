@@ -10,10 +10,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (m Service) Verify(ctx context.Context, placeID uuid.UUID) (models.PlaceWithDetails, error) {
+func (m Service) Verify(ctx context.Context, placeID uuid.UUID) (models.Place, error) {
 	place, err := m.Get(ctx, placeID, enum.LocaleEN)
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	if place.Verified {
@@ -27,7 +27,7 @@ func (m Service) Verify(ctx context.Context, placeID uuid.UUID) (models.PlaceWit
 		UpdatedAt: now,
 	})
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	place.Verified = verified
@@ -36,10 +36,10 @@ func (m Service) Verify(ctx context.Context, placeID uuid.UUID) (models.PlaceWit
 	return place, nil
 }
 
-func (m Service) Unverify(ctx context.Context, placeID uuid.UUID) (models.PlaceWithDetails, error) {
+func (m Service) Unverify(ctx context.Context, placeID uuid.UUID) (models.Place, error) {
 	place, err := m.Get(ctx, placeID, enum.LocaleEN)
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	if !place.Verified {
@@ -53,7 +53,7 @@ func (m Service) Unverify(ctx context.Context, placeID uuid.UUID) (models.PlaceW
 		UpdatedAt: now,
 	})
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	place.Verified = verified

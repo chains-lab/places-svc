@@ -38,8 +38,8 @@ type PlacesQ interface {
 	OrderByCreatedAt(ascend bool) PlacesQ
 	OrderByDistance(point orb.Point, ascend bool) PlacesQ
 
-	Page(limit, offset uint64) PlacesQ
-	Count(ctx context.Context) (uint64, error)
+	Page(limit, offset uint) PlacesQ
+	Count(ctx context.Context) (uint, error)
 }
 
 type Place struct {

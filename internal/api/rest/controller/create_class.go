@@ -13,10 +13,10 @@ import (
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
 )
 
-func (h Service) CreateClass(w http.ResponseWriter, r *http.Request) {
+func (s Service) CreateClass(w http.ResponseWriter, r *http.Request) {
 	req, err := requests.CreateClass(r)
 	if err != nil {
-		h.log.WithError(err).Error("error creating class")
+		s.log.WithError(err).Error("error creating class")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -31,13 +31,17 @@ func (h Service) CreateClass(w http.ResponseWriter, r *http.Request) {
 		params.Parent = req.Data.Attributes.Parent
 	}
 
-	res, err := h.domain.Class.Create(r.Context(), params)
+	res, err := s.domain.Class.Create(r.Context(), params)
 	if err != nil {
-		h.log.WithError(err).Error("error creating class")
+		s.log.WithError(err).Error("error creating class")
 		switch {
 		case errors.Is(err, errx.ErrorClassCodeAlreadyTaken):
 			ape.RenderErr(w, problems.Conflict(
-				fmt.Sprintf("class %s already exists", req.Data.Attributes.Name)),
+				fmt.Sprintf("class %s already exists", req.Data.Id)),
+			)
+		case errors.Is(err, errx.ErrorParentClassNotFound):
+			ape.RenderErr(w, problems.NotFound(
+				fmt.Sprintf("parent class %s not found", *req.Data.Attributes.Parent)),
 			)
 		default:
 			ape.RenderErr(w, problems.InternalError())

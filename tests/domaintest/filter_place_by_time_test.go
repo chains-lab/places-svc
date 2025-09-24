@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/chains-lab/enum"
-	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/google/uuid"
@@ -23,8 +22,8 @@ func TestFilterPlaceByTime(t *testing.T) {
 
 	// классы
 	Food := CreateClass(s, t, "Food", "food", nil)
-	Restaurant := CreateClass(s, t, "Restaurant", "restaurant", &Food.Data.Code)
-	SuperMarket := CreateClass(s, t, "SuperMarket", "supermarket", &Food.Data.Code)
+	Restaurant := CreateClass(s, t, "Restaurant", "restaurant", &Food.Code)
+	SuperMarket := CreateClass(s, t, "SuperMarket", "supermarket", &Food.Code)
 
 	// базовые сущности
 	city1 := uuid.New()
@@ -35,7 +34,7 @@ func TestFilterPlaceByTime(t *testing.T) {
 	p1 := CreatePlace(s, t, place.CreateParams{
 		CityID:        city1,
 		DistributorID: &dist,
-		Class:         Restaurant.Data.Code,
+		Class:         Restaurant.Code,
 		Point:         orb.Point{30.0, 50.0},
 		Locale:        enum.LocaleEN,
 		Name:          "P1 Restaurant",
@@ -45,7 +44,7 @@ func TestFilterPlaceByTime(t *testing.T) {
 	p2 := CreatePlace(s, t, place.CreateParams{
 		CityID:        city1,
 		DistributorID: &dist,
-		Class:         SuperMarket.Data.Code,
+		Class:         SuperMarket.Code,
 		Point:         orb.Point{30.1, 50.1},
 		Locale:        enum.LocaleEN,
 		Name:          "P2 Market",
@@ -55,7 +54,7 @@ func TestFilterPlaceByTime(t *testing.T) {
 	p3 := CreatePlace(s, t, place.CreateParams{
 		CityID:        city2,
 		DistributorID: &dist,
-		Class:         Restaurant.Data.Code,
+		Class:         Restaurant.Code,
 		Point:         orb.Point{31.1, 51.1},
 		Locale:        enum.LocaleEN,
 		Name:          "P3 Restaurant Tue",
@@ -66,7 +65,7 @@ func TestFilterPlaceByTime(t *testing.T) {
 	p4 := CreatePlace(s, t, place.CreateParams{
 		CityID:        city1,
 		DistributorID: &dist,
-		Class:         Restaurant.Data.Code,
+		Class:         Restaurant.Code,
 		Point:         orb.Point{30.05, 50.05},
 		Locale:        enum.LocaleEN,
 		Name:          "P4 Late Night",
@@ -120,16 +119,16 @@ func TestFilterPlaceByTime(t *testing.T) {
 	}
 
 	// helper
-	call := func(win models.TimeInterval) ([]models.PlaceWithDetails, int) {
-		res, pag, err := s.domain.place.List(
+	call := func(win models.TimeInterval) (models.PlacesCollection, int) {
+		res, err := s.domain.place.List(
 			ctx, enum.LocaleEN,
 			place.FilterListParams{Time: &win},
-			pagi.Request{}, nil,
+			place.SortListField{},
 		)
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
-		return res, int(pag.Total)
+		return res, int(res.Total)
 	}
 
 	// 1) Понедельник 10:30–10:31 → только p1
@@ -139,8 +138,8 @@ func TestFilterPlaceByTime(t *testing.T) {
 			To:   models.Moment{Weekday: time.Monday, Time: 10*time.Hour + 31*time.Minute},
 		}
 		res, total := call(win)
-		if total != 1 || len(res) != 1 || res[0].ID != p1.ID {
-			t.Fatalf("Mon 10:30: want only p1; got total=%d len=%d ids=%v", total, len(res), idsOf(res))
+		if total != 1 || len(res.Data) != 1 || res.Data[0].ID != p1.ID {
+			t.Fatalf("Mon 10:30: want only p1; got total=%d len=%d ids=%v", total, len(res.Data), idsOf(res.Data))
 		}
 	}
 
@@ -151,8 +150,8 @@ func TestFilterPlaceByTime(t *testing.T) {
 			To:   models.Moment{Weekday: time.Monday, Time: 16*time.Hour + 1*time.Minute},
 		}
 		res, total := call(win)
-		if total != 1 || len(res) != 1 || res[0].ID != p2.ID {
-			t.Fatalf("Mon 16:00: want only p2; got total=%d len=%d ids=%v", total, len(res), idsOf(res))
+		if total != 1 || len(res.Data) != 1 || res.Data[0].ID != p2.ID {
+			t.Fatalf("Mon 16:00: want only p2; got total=%d len=%d ids=%v", total, len(res.Data), idsOf(res.Data))
 		}
 	}
 
@@ -163,8 +162,8 @@ func TestFilterPlaceByTime(t *testing.T) {
 			To:   models.Moment{Weekday: time.Tuesday, Time: 9*time.Hour + 31*time.Minute},
 		}
 		res, total := call(win)
-		if total != 1 || len(res) != 1 || res[0].ID != p3.ID {
-			t.Fatalf("Tue 09:30: want only p3; got total=%d len=%d ids=%v", total, len(res), idsOf(res))
+		if total != 1 || len(res.Data) != 1 || res.Data[0].ID != p3.ID {
+			t.Fatalf("Tue 09:30: want only p3; got total=%d len=%d ids=%v", total, len(res.Data), idsOf(res.Data))
 		}
 	}
 
@@ -175,13 +174,13 @@ func TestFilterPlaceByTime(t *testing.T) {
 			To:   models.Moment{Weekday: time.Monday, Time: 30 * time.Minute},
 		}
 		res, total := call(win)
-		if total != 1 || len(res) != 1 || res[0].ID != p4.ID {
-			t.Fatalf("Sun->Mon wrap: want only p4; got total=%d len=%d ids=%v", total, len(res), idsOf(res))
+		if total != 1 || len(res.Data) != 1 || res.Data[0].ID != p4.ID {
+			t.Fatalf("Sun->Mon wrap: want only p4; got total=%d len=%d ids=%v", total, len(res.Data), idsOf(res.Data))
 		}
 	}
 }
 
-func idsOf(xs []models.PlaceWithDetails) []uuid.UUID {
+func idsOf(xs []models.Place) []uuid.UUID {
 	out := make([]uuid.UUID, 0, len(xs))
 	for _, x := range xs {
 		out = append(out, x.ID)

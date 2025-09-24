@@ -1,8 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
-type Class struct {
+type ClassDetails struct {
 	Code      string    `json:"code"`
 	Parent    *string   `json:"parent,omitempty"`
 	Status    string    `json:"status"`
@@ -17,7 +19,27 @@ type ClassLocale struct {
 	Name   string `json:"name"`
 }
 
-type ClassWithLocale struct {
-	Data   Class
-	Locale ClassLocale
+type Class struct {
+	Code      string    `json:"code"`
+	Parent    *string   `json:"parent,omitempty"`
+	Status    string    `json:"status"`
+	Icon      string    `json:"icon"`
+	Locale    string    `json:"locale"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type ClassesCollection struct {
+	Data  []Class `json:"data"`
+	Page  uint    `json:"page"`
+	Size  uint    `json:"size"`
+	Total uint    `json:"total"`
+}
+
+type ClassLocaleCollection struct {
+	Data  []ClassLocale `json:"data"`
+	Page  uint          `json:"page"`
+	Size  uint          `json:"size"`
+	Total uint          `json:"total"`
 }

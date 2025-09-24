@@ -23,6 +23,7 @@ var _ MappedNullable = &ClassLocalesCollection{}
 type ClassLocalesCollection struct {
 	Data []RelationshipDataObject `json:"data"`
 	Included []ClassLocaleData `json:"included"`
+	Links PaginationData `json:"links"`
 }
 
 type _ClassLocalesCollection ClassLocalesCollection
@@ -31,10 +32,11 @@ type _ClassLocalesCollection ClassLocalesCollection
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewClassLocalesCollection(data []RelationshipDataObject, included []ClassLocaleData) *ClassLocalesCollection {
+func NewClassLocalesCollection(data []RelationshipDataObject, included []ClassLocaleData, links PaginationData) *ClassLocalesCollection {
 	this := ClassLocalesCollection{}
 	this.Data = data
 	this.Included = included
+	this.Links = links
 	return &this
 }
 
@@ -94,6 +96,30 @@ func (o *ClassLocalesCollection) SetIncluded(v []ClassLocaleData) {
 	o.Included = v
 }
 
+// GetLinks returns the Links field value
+func (o *ClassLocalesCollection) GetLinks() PaginationData {
+	if o == nil {
+		var ret PaginationData
+		return ret
+	}
+
+	return o.Links
+}
+
+// GetLinksOk returns a tuple with the Links field value
+// and a boolean to check if the value has been set.
+func (o *ClassLocalesCollection) GetLinksOk() (*PaginationData, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Links, true
+}
+
+// SetLinks sets field value
+func (o *ClassLocalesCollection) SetLinks(v PaginationData) {
+	o.Links = v
+}
+
 func (o ClassLocalesCollection) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -106,6 +132,7 @@ func (o ClassLocalesCollection) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["data"] = o.Data
 	toSerialize["included"] = o.Included
+	toSerialize["links"] = o.Links
 	return toSerialize, nil
 }
 
@@ -116,6 +143,7 @@ func (o *ClassLocalesCollection) UnmarshalJSON(data []byte) (err error) {
 	requiredProperties := []string{
 		"data",
 		"included",
+		"links",
 	}
 
 	allProperties := make(map[string]interface{})

@@ -13,41 +13,31 @@ import (
 )
 
 type FilterListParams struct {
+	Status      *string
 	Parent      *string
 	ParentCycle bool
-	Status      *string
+	Page        uint
+	Size        uint
 }
 
 func (m Service) List(
 	ctx context.Context,
 	locale string,
 	filter FilterListParams,
-	pag pagi.Request,
-) ([]models.ClassWithLocale, pagi.Response, error) {
-	if pag.Page == 0 {
-		pag.Page = 1
-	}
-	if pag.Size == 0 {
-		pag.Size = 20
-	}
-	if pag.Size > 100 {
-		pag.Size = 100
-	}
-
-	limit := pag.Size + 1
-	offset := (pag.Page - 1) * pag.Size
+) (models.ClassesCollection, error) {
+	limit, offset := pagi.PagConvert(filter.Page, filter.Size)
 
 	query := m.db.Classes()
 
 	if filter.Parent != nil {
 		_, err := m.Get(ctx, *filter.Parent, locale)
 		if errors.Is(err, errx.ErrorClassNotFound) {
-			return nil, pagi.Response{}, errx.ErrorParentClassNotFound.Raise(
+			return models.ClassesCollection{}, errx.ErrorParentClassNotFound.Raise(
 				fmt.Errorf("parent class not found: %s", *filter.Parent),
 			)
 		}
 		if err != nil {
-			return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+			return models.ClassesCollection{}, errx.ErrorInternal.Raise(
 				fmt.Errorf("failed to get parent class: %w", err),
 			)
 		}
@@ -62,10 +52,11 @@ func (m Service) List(
 		}
 
 	}
+
 	if filter.Status != nil {
 		err := enum.IsValidPlaceStatus(*filter.Status)
 		if err != nil {
-			return nil, pagi.Response{}, errx.ErrorClassStatusInvalid.Raise(
+			return models.ClassesCollection{}, errx.ErrorClassStatusInvalid.Raise(
 				fmt.Errorf("invalid status filter: %s", *filter.Status),
 			)
 		}
@@ -82,30 +73,27 @@ func (m Service) List(
 
 	rows, err := query.SelectWithLocale(ctx, l)
 	if err != nil {
-		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+		return models.ClassesCollection{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to select classes, cause: %w", err),
 		)
 	}
 
 	count, err := query.Count(ctx)
 	if err != nil {
-		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+		return models.ClassesCollection{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("internal error, cause: %w", err),
 		)
 	}
 
-	if len(rows) == int(limit) {
-		rows = rows[:pag.Size]
-	}
-
-	classes := make([]models.ClassWithLocale, 0, len(rows))
+	classes := make([]models.Class, 0, len(rows))
 	for _, r := range rows {
-		classes = append(classes, classWithLocaleModelFromDB(r))
+		classes = append(classes, modelFromDB(r))
 	}
 
-	return classes, pagi.Response{
-		Page:  pag.Page,
-		Size:  pag.Size,
+	return models.ClassesCollection{
+		Data:  classes,
+		Page:  filter.Page,
+		Size:  filter.Size,
 		Total: count,
 	}, nil
 }

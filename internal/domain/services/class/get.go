@@ -14,7 +14,7 @@ import (
 func (m Service) Get(
 	ctx context.Context,
 	code, locale string,
-) (models.ClassWithLocale, error) {
+) (models.Class, error) {
 	err := enum.IsValidLocaleSupported(locale)
 	if err != nil {
 		locale = enum.LocaleEN
@@ -24,15 +24,15 @@ func (m Service) Get(
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return models.ClassWithLocale{}, errx.ErrorClassNotFound.Raise(
+			return models.Class{}, errx.ErrorClassNotFound.Raise(
 				fmt.Errorf("class with code %s not found, cause: %w", code, err),
 			)
 		default:
-			return models.ClassWithLocale{}, errx.ErrorInternal.Raise(
+			return models.Class{}, errx.ErrorInternal.Raise(
 				fmt.Errorf("failed to get class with code %s, cause: %w", code, err),
 			)
 		}
 	}
 
-	return classWithLocaleModelFromDB(class), nil
+	return modelFromDB(class), nil
 }

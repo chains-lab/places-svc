@@ -68,52 +68,39 @@ func (m Service) SetLocales(
 func (m Service) ListLocales(
 	ctx context.Context,
 	placeID uuid.UUID,
-	pag pagi.Request,
-) ([]models.PlaceLocale, pagi.Response, error) {
-	if pag.Page == 0 {
-		pag.Page = 1
-	}
-	if pag.Size == 0 {
-		pag.Size = 20
-	}
-	if pag.Size > 100 {
-		pag.Size = 100
-	}
-
-	limit := pag.Size + 1
-	offset := (pag.Page - 1) * pag.Size
+	page uint,
+	size uint,
+) (models.PlaceLocaleCollection, error) {
+	limit, offset := pagi.PagConvert(page, size)
 
 	_, err := m.Get(ctx, placeID, enum.LocaleEN)
 	if err != nil {
-		return nil, pagi.Response{}, err
+		return models.PlaceLocaleCollection{}, err
 	}
 
 	rows, err := m.db.PlaceLocales().FilterPlaceID(placeID).Page(limit, offset).OrderByLocale(true).Select(ctx)
 	if err != nil {
-		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+		return models.PlaceLocaleCollection{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to list locales for place %s, cause: %w", placeID, err),
 		)
 	}
 
 	count, err := m.db.PlaceLocales().FilterPlaceID(placeID).Count(ctx)
 	if err != nil {
-		return nil, pagi.Response{}, errx.ErrorInternal.Raise(
+		return models.PlaceLocaleCollection{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to count locales for place %s, cause: %w", placeID, err),
 		)
 	}
 
-	if len(rows) == int(limit) {
-		rows = rows[:pag.Size]
-	}
-
 	result := make([]models.PlaceLocale, 0, len(rows))
 	for _, loc := range rows {
-		result = append(result, placeLocaleModelFromDB(loc))
+		result = append(result, localeFromDB(loc))
 	}
 
-	return result, pagi.Response{
-		Page:  pag.Page,
-		Size:  pag.Size,
+	return models.PlaceLocaleCollection{
+		Data:  result,
+		Page:  page,
+		Size:  size,
 		Total: count,
 	}, nil
 }

@@ -11,13 +11,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (h Service) ActivateClass(w http.ResponseWriter, r *http.Request) {
+func (s Service) ActivateClass(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 	locale := DetectLocale(w, r)
 
-	res, err := h.domain.Class.Activate(r.Context(), code, locale)
+	res, err := s.domain.Class.Activate(r.Context(), code, locale)
 	if err != nil {
-		h.log.WithError(err).Error("failed to activate class")
+		s.log.WithError(err).Error("failed to activate class")
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound("class not found"))

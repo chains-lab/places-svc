@@ -26,9 +26,8 @@ func CreatePlace(r *http.Request) (req resources.CreatePlace, err error) {
 		"data/type":       validation.Validate(req.Data.Type, validation.Required, validation.In(resources.PlaceType)),
 		"data/attributes": validation.Validate(req.Data.Attributes, validation.Required),
 
-		"data/attributes/locale": validation.Validate(req.Data.Attributes.Locale, validation.Required,
-			validation.In(enum.GetAllLocales()),
-		),
+		"data/attributes/locale": validation.Validate(
+			req.Data.Attributes.Locale, validation.Required, validation.In(enum.GetAllLocales())),
 		"data/attributes/name": validation.Validate(
 			req.Data.Attributes.Name, validation.Required, validation.Length(1, 255)),
 		"data/attributes/description": validation.Validate(

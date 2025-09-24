@@ -20,13 +20,13 @@ func TestPlaceUpdate(t *testing.T) {
 	ctx := context.Background()
 
 	FoodClass := CreateClass(s, t, "Food", "food", nil)
-	SuperMarketClass := CreateClass(s, t, "SuperMarket", "supermarket", &FoodClass.Data.Code)
-	RestaurantClass := CreateClass(s, t, "Restaurant", "restaurant", &FoodClass.Data.Code)
+	SuperMarketClass := CreateClass(s, t, "SuperMarket", "supermarket", &FoodClass.Code)
+	RestaurantClass := CreateClass(s, t, "Restaurant", "restaurant", &FoodClass.Code)
 
 	ShopsClass := CreateClass(s, t, "Shops", "shops", nil)
-	_ = CreateClass(s, t, "Electronics", "electronics", &ShopsClass.Data.Code)
-	ClothesClass := CreateClass(s, t, "Clothes", "clothes", &ShopsClass.Data.Code)
-	ShoesShopClass := CreateClass(s, t, "Shoes", "shoes", &ClothesClass.Data.Code)
+	_ = CreateClass(s, t, "Electronics", "electronics", &ShopsClass.Code)
+	ClothesClass := CreateClass(s, t, "Clothes", "clothes", &ShopsClass.Code)
+	ShoesShopClass := CreateClass(s, t, "Shoes", "shoes", &ClothesClass.Code)
 
 	distributorFirstID := uuid.New()
 	distributorSecondID := uuid.New()
@@ -37,7 +37,7 @@ func TestPlaceUpdate(t *testing.T) {
 	restaurant := CreatePlace(s, t, place.CreateParams{
 		CityID:        cityFirstID,
 		DistributorID: &distributorFirstID,
-		Class:         RestaurantClass.Data.Code,
+		Class:         RestaurantClass.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        "en",
 		Name:          "Restaurant Place",
@@ -48,7 +48,7 @@ func TestPlaceUpdate(t *testing.T) {
 	_ = CreatePlace(s, t, place.CreateParams{
 		CityID:        cityFirstID,
 		DistributorID: &distributorSecondID,
-		Class:         SuperMarketClass.Data.Code,
+		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{30.1, 50.1},
 		Locale:        "en",
 		Name:          "SuperMarket Place",
@@ -59,7 +59,7 @@ func TestPlaceUpdate(t *testing.T) {
 	clothes := CreatePlace(s, t, place.CreateParams{
 		CityID:        citySecondID,
 		DistributorID: &distributorFirstID,
-		Class:         SuperMarketClass.Data.Code,
+		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{31.1, 51.1},
 		Locale:        enum.LocaleUK,
 		Name:          "SuperMarket Place Second City",
@@ -68,7 +68,7 @@ func TestPlaceUpdate(t *testing.T) {
 	})
 
 	clothesNew, err := s.domain.place.Update(ctx, clothes.ID, clothes.Locale, place.UpdateParams{
-		Class:   &ShoesShopClass.Data.Code,
+		Class:   &ShoesShopClass.Code,
 		Website: func(s string) *string { return &s }("https://new-website.com"),
 		Phone:   func(s string) *string { return &s }("+1234567890"),
 	})
@@ -76,8 +76,8 @@ func TestPlaceUpdate(t *testing.T) {
 		t.Fatalf("Update: %v", err)
 	}
 
-	if clothesNew.Class != ShoesShopClass.Data.Code {
-		t.Errorf("expected updated place class to be %s, got %s", ShoesShopClass.Data.Code, clothesNew.Class)
+	if clothesNew.Class != ShoesShopClass.Code {
+		t.Errorf("expected updated place class to be %s, got %s", ShoesShopClass.Code, clothesNew.Class)
 	}
 	if clothesNew.Website == nil || *clothesNew.Website != "https://new-website.com" {
 		t.Errorf("expected updated place website to be 'https://new-website.com', got %v", clothesNew.Website)

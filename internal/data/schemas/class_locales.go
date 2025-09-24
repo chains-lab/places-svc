@@ -16,11 +16,12 @@ type ClassLocalesQ interface {
 	FilterClass(class string) ClassLocalesQ
 	FilterLocale(locale string) ClassLocalesQ
 	FilterNameLike(name string) ClassLocalesQ
+	FilterName(name string) ClassLocalesQ
 
 	OrderByLocale(asc bool) ClassLocalesQ
 
-	Page(limit, offset uint64) ClassLocalesQ
-	Count(ctx context.Context) (uint64, error)
+	Page(limit, offset uint) ClassLocalesQ
+	Count(ctx context.Context) (uint, error)
 }
 
 type ClassLocale struct {

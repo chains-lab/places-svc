@@ -23,8 +23,8 @@ type ClassesQ interface {
 	SelectWithLocale(ctx context.Context, locale string) ([]PlaceClassWithLocale, error)
 
 	OrderBy(orderBy string) ClassesQ
-	Page(limit, offset uint64) ClassesQ
-	Count(ctx context.Context) (uint64, error)
+	Page(limit, offset uint) ClassesQ
+	Count(ctx context.Context) (uint, error)
 }
 
 type PlaceClass struct {

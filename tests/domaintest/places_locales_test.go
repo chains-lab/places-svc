@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/chains-lab/enum"
-	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/google/uuid"
 )
@@ -21,8 +20,8 @@ func TestPlaceLocales(t *testing.T) {
 	ctx := context.Background()
 
 	FoodClass := CreateClass(s, t, "Food", "food", nil)
-	SuperMarketClass := CreateClass(s, t, "SuperMarket", "supermarket", &FoodClass.Data.Code)
-	RestaurantClass := CreateClass(s, t, "Restaurant", "restaurant", &FoodClass.Data.Code)
+	SuperMarketClass := CreateClass(s, t, "SuperMarket", "supermarket", &FoodClass.Code)
+	RestaurantClass := CreateClass(s, t, "Restaurant", "restaurant", &FoodClass.Code)
 
 	distributorFirstID := uuid.New()
 
@@ -32,7 +31,7 @@ func TestPlaceLocales(t *testing.T) {
 	food := CreatePlace(s, t, place.CreateParams{
 		CityID:        cityFirstID,
 		DistributorID: &distributorFirstID,
-		Class:         FoodClass.Data.Code,
+		Class:         FoodClass.Code,
 		Point:         [2]float64{30.1, 50.1},
 		Locale:        "en",
 		Name:          "Food Place",
@@ -43,7 +42,7 @@ func TestPlaceLocales(t *testing.T) {
 	restaurant := CreatePlace(s, t, place.CreateParams{
 		CityID:        cityFirstID,
 		DistributorID: &distributorFirstID,
-		Class:         RestaurantClass.Data.Code,
+		Class:         RestaurantClass.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        "en",
 		Name:          "Restaurant Place",
@@ -54,7 +53,7 @@ func TestPlaceLocales(t *testing.T) {
 	clothes := CreatePlace(s, t, place.CreateParams{
 		CityID:        citySecondID,
 		DistributorID: &distributorFirstID,
-		Class:         SuperMarketClass.Data.Code,
+		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{31.1, 51.1},
 		Locale:        enum.LocaleEN,
 		Name:          "SuperMarket Place Second City",
@@ -92,33 +91,33 @@ func TestPlaceLocales(t *testing.T) {
 		t.Fatalf("expected locale %s, got %s", enum.LocaleEN, clothesEn.Locale)
 	}
 
-	shops, pag, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{}, pagi.Request{}, []pagi.SortField{})
+	shops, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{}, place.SortListField{})
 	if err != nil {
 		t.Fatalf("ListPlaces: %v", err)
 	}
-	if len(shops) != 3 {
-		t.Fatalf("expected 3 places, got %d", len(shops))
+	if len(shops.Data) != 3 {
+		t.Fatalf("expected 3 places, got %d", len(shops.Data))
 	}
-	if pag.Total != 3 {
-		t.Fatalf("expected pag.Total 3, got %d", pag.Total)
+	if shops.Total != 3 {
+		t.Fatalf("expected pag.Total 3, got %d", shops.Total)
 	}
 
-	t.Logf("ListPlaces: got %d places", len(shops))
+	t.Logf("ListPlaces: got %d places", len(shops.Data))
 
-	for i, _ := range shops {
-		t.Logf("Place: %+v", shops[i])
-		switch shops[i].ID {
+	for i, _ := range shops.Data {
+		t.Logf("Place: %+v", shops.Data[i])
+		switch shops.Data[i].ID {
 		case food.ID:
-			if shops[i].Locale != enum.LocaleUK {
-				t.Fatalf("expected locale %s, got %s", enum.LocaleUK, shops[i].Locale)
+			if shops.Data[i].Locale != enum.LocaleUK {
+				t.Fatalf("expected locale %s, got %s", enum.LocaleUK, shops.Data[i].Locale)
 			}
 		case restaurant.ID:
-			if shops[i].Locale != enum.LocaleUK {
-				t.Fatalf("expected locale %s, got %s", enum.LocaleUK, shops[i].Locale)
+			if shops.Data[i].Locale != enum.LocaleUK {
+				t.Fatalf("expected locale %s, got %s", enum.LocaleUK, shops.Data[i].Locale)
 			}
 		case clothes.ID:
-			if shops[i].Locale != enum.LocaleEN {
-				t.Fatalf("expected locale %s, got %s", enum.LocaleEN, shops[i].Locale)
+			if shops.Data[i].Locale != enum.LocaleEN {
+				t.Fatalf("expected locale %s, got %s", enum.LocaleEN, shops.Data[i].Locale)
 			}
 		}
 	}

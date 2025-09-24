@@ -1,32 +1,31 @@
 package responses
 
 import (
-	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/resources"
 )
 
-func Class(m models.ClassWithLocale) resources.Class {
+func Class(m models.Class) resources.Class {
 	resp := resources.Class{
 		Data: resources.ClassData{
-			Id:   m.Data.Code,
+			Id:   m.Code,
 			Type: resources.ClassType,
 			Attributes: resources.ClassDataAttributes{
-				Name:      m.Locale.Name,
-				Status:    m.Data.Status,
-				Icon:      m.Data.Icon,
-				CreatedAt: m.Data.CreatedAt,
-				UpdatedAt: m.Data.UpdatedAt,
+				Name:      m.Name,
+				Status:    m.Status,
+				Icon:      m.Icon,
+				CreatedAt: m.CreatedAt,
+				UpdatedAt: m.UpdatedAt,
 			},
 		},
 	}
 
-	if m.Data.Parent != nil {
+	if m.Parent != nil {
 		resp.Data.Relationships = &resources.ClassRelationships{
 			Parent: resources.ClassRelationshipsParent{
 				Data: &resources.RelationshipDataObject{
 					Type: resources.ClassType,
-					Id:   *m.Data.Parent,
+					Id:   *m.Parent,
 				},
 			},
 		}
@@ -34,17 +33,17 @@ func Class(m models.ClassWithLocale) resources.Class {
 	return resp
 }
 
-func ClassesCollection(ms []models.ClassWithLocale, pag pagi.Response) resources.ClassesCollection {
+func ClassesCollection(ms models.ClassesCollection) resources.ClassesCollection {
 	resp := resources.ClassesCollection{
-		Data: make([]resources.ClassData, 0, len(ms)),
+		Data: make([]resources.ClassData, 0, len(ms.Data)),
 		Links: resources.PaginationData{
-			PageNumber: int64(pag.Page),
-			PageSize:   int64(pag.Size),
-			TotalItems: int64(pag.Total),
+			PageNumber: int64(ms.Page),
+			PageSize:   int64(ms.Size),
+			TotalItems: int64(ms.Total),
 		},
 	}
 
-	for _, m := range ms {
+	for _, m := range ms.Data {
 		class := Class(m).Data
 
 		resp.Data = append(resp.Data, class)
@@ -65,13 +64,18 @@ func ClassLocale(m models.ClassLocale) resources.ClassLocale {
 	}
 }
 
-func ClassLocalesCollection(ms []models.ClassLocale, pag pagi.Response) resources.ClassLocalesCollection {
+func ClassLocalesCollection(ms models.ClassLocaleCollection) resources.ClassLocalesCollection {
 	resp := resources.ClassLocalesCollection{
-		Data:     make([]resources.RelationshipDataObject, 0, len(ms)),
-		Included: make([]resources.ClassLocaleData, 0, len(ms)),
+		Data:     make([]resources.RelationshipDataObject, 0, len(ms.Data)),
+		Included: make([]resources.ClassLocaleData, 0, len(ms.Data)),
+		Links: resources.PaginationData{
+			PageNumber: int64(ms.Page),
+			PageSize:   int64(ms.Size),
+			TotalItems: int64(ms.Total),
+		},
 	}
 
-	for _, m := range ms {
+	for _, m := range ms.Data {
 		classLocale := ClassLocale(m).Data
 
 		resp.Data = append(resp.Data, resources.RelationshipDataObject{

@@ -23,6 +23,7 @@ var _ MappedNullable = &PlaceLocalesCollection{}
 type PlaceLocalesCollection struct {
 	Data []RelationshipDataObject `json:"data"`
 	Included []PlaceLocaleData `json:"included"`
+	Links PaginationData `json:"links"`
 }
 
 type _PlaceLocalesCollection PlaceLocalesCollection
@@ -31,10 +32,11 @@ type _PlaceLocalesCollection PlaceLocalesCollection
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPlaceLocalesCollection(data []RelationshipDataObject, included []PlaceLocaleData) *PlaceLocalesCollection {
+func NewPlaceLocalesCollection(data []RelationshipDataObject, included []PlaceLocaleData, links PaginationData) *PlaceLocalesCollection {
 	this := PlaceLocalesCollection{}
 	this.Data = data
 	this.Included = included
+	this.Links = links
 	return &this
 }
 
@@ -94,6 +96,30 @@ func (o *PlaceLocalesCollection) SetIncluded(v []PlaceLocaleData) {
 	o.Included = v
 }
 
+// GetLinks returns the Links field value
+func (o *PlaceLocalesCollection) GetLinks() PaginationData {
+	if o == nil {
+		var ret PaginationData
+		return ret
+	}
+
+	return o.Links
+}
+
+// GetLinksOk returns a tuple with the Links field value
+// and a boolean to check if the value has been set.
+func (o *PlaceLocalesCollection) GetLinksOk() (*PaginationData, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Links, true
+}
+
+// SetLinks sets field value
+func (o *PlaceLocalesCollection) SetLinks(v PaginationData) {
+	o.Links = v
+}
+
 func (o PlaceLocalesCollection) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -106,6 +132,7 @@ func (o PlaceLocalesCollection) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["data"] = o.Data
 	toSerialize["included"] = o.Included
+	toSerialize["links"] = o.Links
 	return toSerialize, nil
 }
 
@@ -116,6 +143,7 @@ func (o *PlaceLocalesCollection) UnmarshalJSON(data []byte) (err error) {
 	requiredProperties := []string{
 		"data",
 		"included",
+		"links",
 	}
 
 	allProperties := make(map[string]interface{})

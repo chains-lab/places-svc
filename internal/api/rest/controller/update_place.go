@@ -13,10 +13,10 @@ import (
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
 )
 
-func (h Service) UpdatePlace(w http.ResponseWriter, r *http.Request) {
+func (s Service) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 	req, err := requests.UpdatePlace(r)
 	if err != nil {
-		h.log.WithError(err).Error("error updating place")
+		s.log.WithError(err).Error("error updating place")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -34,15 +34,17 @@ func (h Service) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 		params.Class = req.Data.Attributes.Class
 	}
 
-	res, err := h.domain.Place.Update(
+	res, err := s.domain.Place.Update(
 		r.Context(),
 		req.Data.Id,
 		DetectLocale(w, r),
 		params,
 	)
 	if err != nil {
-		h.log.WithError(err).Error("error updating place")
+		s.log.WithError(err).Error("error updating place")
 		switch {
+		case errors.Is(err, errx.ErrorPlaceNotFound):
+			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("place %s not found", req.Data.Id)))
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class %s not found", *params.Class)))
 		default:

@@ -32,7 +32,7 @@ type CreateParams struct {
 func (m Service) Create(
 	ctx context.Context,
 	params CreateParams,
-) (models.PlaceWithDetails, error) {
+) (models.Place, error) {
 	now := time.Now().UTC()
 
 	placeID := uuid.New()
@@ -91,10 +91,10 @@ func (m Service) Create(
 		return nil
 	})
 	if trxErr != nil {
-		return models.PlaceWithDetails{}, trxErr
+		return models.Place{}, trxErr
 	}
 
-	res := models.PlaceWithDetails{
+	res := models.Place{
 		ID:          placeID,
 		CityID:      params.CityID,
 		Class:       params.Class,

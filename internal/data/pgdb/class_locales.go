@@ -221,6 +221,15 @@ func (q *classLocalesQ) FilterNameLike(name string) schemas.ClassLocalesQ {
 	return q
 }
 
+func (q *classLocalesQ) FilterName(name string) schemas.ClassLocalesQ {
+	q.selector = q.selector.Where(sq.Eq{"name": name})
+	q.counter = q.counter.Where(sq.Eq{"name": name})
+	q.updater = q.updater.Where(sq.Eq{"name": name})
+	q.deleter = q.deleter.Where(sq.Eq{"name": name})
+
+	return q
+}
+
 func (q *classLocalesQ) OrderByLocale(asc bool) schemas.ClassLocalesQ {
 	dir := "DESC"
 	if asc {
@@ -232,19 +241,19 @@ func (q *classLocalesQ) OrderByLocale(asc bool) schemas.ClassLocalesQ {
 	return q
 }
 
-func (q *classLocalesQ) Page(limit, offset uint64) schemas.ClassLocalesQ {
-	q.selector = q.selector.Limit(limit).Offset(offset)
+func (q *classLocalesQ) Page(limit, offset uint) schemas.ClassLocalesQ {
+	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
 
 	return q
 }
 
-func (q *classLocalesQ) Count(ctx context.Context) (uint64, error) {
+func (q *classLocalesQ) Count(ctx context.Context) (uint, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("building count query for %s: %w", classLocalesTable, err)
 	}
 
-	var count uint64
+	var count uint
 	var row *sql.Row
 	if tx, ok := TxFromCtx(ctx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)

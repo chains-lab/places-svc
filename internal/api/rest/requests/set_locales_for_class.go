@@ -12,7 +12,7 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
-func SetLocalesForClass(r *http.Request) (req resources.SetLocalesForClass, err error) {
+func SetLocaleForClass(r *http.Request) (req resources.SetLocaleForClass, err error) {
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		err = newDecodeError("body", err)
 		return
@@ -22,18 +22,13 @@ func SetLocalesForClass(r *http.Request) (req resources.SetLocalesForClass, err 
 		"data/id":         validation.Validate(req.Data.Id, validation.Required, is.UUID),
 		"data/type":       validation.Validate(req.Data.Type, validation.Required, validation.In(resources.PlaceLocaleType)),
 		"data/attributes": validation.Validate(req.Data.Attributes, validation.Required),
-	}
 
-	for i, loc := range req.Data.Attributes.Locales {
-		key := fmt.Sprintf("data/attributes/locales/%d/locale", i)
-		errs[key] = validation.Validate(
-			loc.Locale,
-			validation.Required,
-			validation.In(enum.GetAllLocales()),
-		)
-
-		nameKey := fmt.Sprintf("data/attributes/locales/%d/name", i)
-		errs[nameKey] = validation.Validate(loc.Name, validation.RuneLength(0, 32))
+		"data/attributes/locale": validation.Validate(
+			req.Data.Attributes.Locale, validation.Required, validation.In(enum.GetAllLocales()),
+		),
+		"data/attributes/name": validation.Validate(
+			req.Data.Attributes.Name, validation.Min(1), validation.Max(32),
+		),
 	}
 
 	if chi.URLParam(r, "class_code") != req.Data.Id {

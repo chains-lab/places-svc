@@ -9,7 +9,6 @@ import (
 
 	"github.com/chains-lab/enum"
 	"github.com/chains-lab/logium"
-	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
@@ -21,18 +20,18 @@ type Class interface {
 	Activate(
 		ctx context.Context,
 		code, locale string,
-	) (models.ClassWithLocale, error)
+	) (models.Class, error)
 
 	Deactivate(
 		ctx context.Context,
 		code, locale string,
 		replaceClasses string,
-	) (models.ClassWithLocale, error)
+	) (models.Class, error)
 
 	Create(
 		ctx context.Context,
 		params class.CreateParams,
-	) (models.ClassWithLocale, error)
+	) (models.Class, error)
 
 	Delete(
 		ctx context.Context,
@@ -42,25 +41,25 @@ type Class interface {
 	Get(
 		ctx context.Context,
 		code, locale string,
-	) (models.ClassWithLocale, error)
+	) (models.Class, error)
 
 	List(
 		ctx context.Context,
 		locale string,
 		filter class.FilterListParams,
-		pag pagi.Request,
-	) ([]models.ClassWithLocale, pagi.Response, error)
+	) (models.ClassesCollection, error)
 
 	LocalesList(
 		ctx context.Context,
 		class string,
-		pag pagi.Request,
-	) ([]models.ClassLocale, pagi.Response, error)
+		page uint,
+		size uint,
+	) (models.ClassLocaleCollection, error)
 
-	SetLocales(
+	SetLocale(
 		ctx context.Context,
 		code string,
-		locales ...class.SetLocaleParams,
+		locales class.SetLocaleParams,
 	) error
 
 	DeleteLocale(
@@ -73,7 +72,7 @@ type Class interface {
 		code string,
 		locale string,
 		params class.UpdateParams,
-	) (models.ClassWithLocale, error)
+	) (models.Class, error)
 }
 
 type Place interface {
@@ -81,18 +80,18 @@ type Place interface {
 		ctx context.Context,
 		placeID uuid.UUID,
 		locale string,
-	) (models.PlaceWithDetails, error)
+	) (models.Place, error)
 
 	Activate(
 		ctx context.Context,
 		placeID uuid.UUID,
 		locale string,
-	) (models.PlaceWithDetails, error)
+	) (models.Place, error)
 
 	Create(
 		ctx context.Context,
 		params place.CreateParams,
-	) (models.PlaceWithDetails, error)
+	) (models.Place, error)
 
 	DeleteOne(ctx context.Context, placeID uuid.UUID) error
 
@@ -102,15 +101,14 @@ type Place interface {
 		ctx context.Context,
 		placeID uuid.UUID,
 		locale string,
-	) (models.PlaceWithDetails, error)
+	) (models.Place, error)
 
 	List(
 		ctx context.Context,
 		locale string,
 		filter place.FilterListParams,
-		pag pagi.Request,
-		sort []pagi.SortField,
-	) ([]models.PlaceWithDetails, pagi.Response, error)
+		sort place.SortListField,
+	) (models.PlacesCollection, error)
 
 	SetLocales(
 		ctx context.Context,
@@ -121,8 +119,9 @@ type Place interface {
 	ListLocales(
 		ctx context.Context,
 		placeID uuid.UUID,
-		pag pagi.Request,
-	) ([]models.PlaceLocale, pagi.Response, error)
+		page uint,
+		size uint,
+	) (models.PlaceLocaleCollection, error)
 
 	DeleteLocale(
 		ctx context.Context,
@@ -134,7 +133,7 @@ type Place interface {
 		ctx context.Context,
 		placeID uuid.UUID,
 		intervals models.Timetable,
-	) (models.PlaceWithDetails, error)
+	) (models.Place, error)
 
 	GetTimetable(ctx context.Context, placeID uuid.UUID) (models.Timetable, error)
 
@@ -145,11 +144,11 @@ type Place interface {
 		placeID uuid.UUID,
 		locale string,
 		params place.UpdateParams,
-	) (models.PlaceWithDetails, error)
+	) (models.Place, error)
 
-	Verify(ctx context.Context, placeID uuid.UUID) (models.PlaceWithDetails, error)
+	Verify(ctx context.Context, placeID uuid.UUID) (models.Place, error)
 
-	Unverify(ctx context.Context, placeID uuid.UUID) (models.PlaceWithDetails, error)
+	Unverify(ctx context.Context, placeID uuid.UUID) (models.Place, error)
 }
 
 type domain struct {

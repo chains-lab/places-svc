@@ -306,12 +306,12 @@ func (q *classesQ) OrderBy(orderBy string) schemas.ClassesQ {
 	return q
 }
 
-func (q *classesQ) Page(limit, offset uint64) schemas.ClassesQ {
-	q.selector = q.selector.Limit(limit).Offset(offset)
+func (q *classesQ) Page(limit, offset uint) schemas.ClassesQ {
+	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
 	return q
 }
 
-func (q *classesQ) Count(ctx context.Context) (uint64, error) {
+func (q *classesQ) Count(ctx context.Context) (uint, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("build count %s: %w", placeClassesTable, err)
@@ -322,7 +322,7 @@ func (q *classesQ) Count(ctx context.Context) (uint64, error) {
 	} else {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
-	var cnt uint64
+	var cnt uint
 	if err := row.Scan(&cnt); err != nil {
 		return 0, err
 	}

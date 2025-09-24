@@ -15,15 +15,15 @@ func (m Service) SetTimetable(
 	ctx context.Context,
 	placeID uuid.UUID,
 	intervals models.Timetable,
-) (models.PlaceWithDetails, error) {
+) (models.Place, error) {
 	place, err := m.Get(ctx, placeID, enum.DefaultLocale)
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	err = m.db.PlaceTimetables().FilterPlaceID(placeID).Delete(ctx)
 	if err != nil {
-		return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
+		return models.Place{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("could not upsert timetable, cause: %w", err),
 		)
 	}
@@ -41,7 +41,7 @@ func (m Service) SetTimetable(
 
 	err = m.db.PlaceTimetables().Insert(ctx, stmt...)
 	if err != nil {
-		return models.PlaceWithDetails{}, errx.ErrorInternal.Raise(
+		return models.Place{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("could not upsert timetable, cause: %w", err),
 		)
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 var hhmmRe = regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
@@ -46,7 +47,7 @@ func parseHHMM(s string) (time.Duration, error) {
 	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute, nil
 }
 
-type daySpan struct{ start, end int } // минуты с начала суток [0..1440)
+type daySpan struct{ start, end int }
 
 func validateNoOverlaps(spans []daySpan) error {
 	if len(spans) <= 1 {
@@ -56,7 +57,7 @@ func validateNoOverlaps(spans []daySpan) error {
 	prev := spans[0]
 	for i := 1; i < len(spans); i++ {
 		cur := spans[i]
-		if cur.start < prev.end { // пересечение (стык в prev.end == cur.start допустим)
+		if cur.start < prev.end {
 			return fmt.Errorf("overlap: [%02d:%02d-%02d:%02d) with [%02d:%02d-%02d:%02d)",
 				prev.start/60, prev.start%60, prev.end/60, prev.end%60,
 				cur.start/60, cur.start%60, cur.end/60, cur.end%60)
@@ -66,10 +67,10 @@ func validateNoOverlaps(spans []daySpan) error {
 	return nil
 }
 
-func (h Service) SetTimetable(w http.ResponseWriter, r *http.Request) {
+func (s Service) SetTimetable(w http.ResponseWriter, r *http.Request) {
 	req, err := requests.SetTimetable(r)
 	if err != nil {
-		h.log.WithError(err).Error("invalid request")
+		s.log.WithError(err).Error("invalid request")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
@@ -80,37 +81,43 @@ func (h Service) SetTimetable(w http.ResponseWriter, r *http.Request) {
 	for i, interval := range req.Data.Attributes.Table {
 		fromWD, err := parseWeekday(interval.From.Weekday)
 		if err != nil {
-			ape.RenderErr(w, problems.InvalidPointer(fmt.Sprintf("data/attributes/table/%d/from/weekday", i), err))
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				fmt.Sprintf("data/attributes/table/%d/from/weekday", i): err,
+			})...)
 			return
 		}
 		toWD, err := parseWeekday(interval.To.Weekday)
 		if err != nil {
-			ape.RenderErr(w, problems.InvalidPointer(fmt.Sprintf("data/attributes/table/%d/to/weekday", i), err))
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				fmt.Sprintf("data/attributes/table/%d/to/weekday", i): err,
+			})...)
 			return
 		}
 		fromT, err := parseHHMM(interval.From.Time)
 		if err != nil {
-			ape.RenderErr(w, problems.InvalidPointer(fmt.Sprintf("data/attributes/table/%d/from/time", i), err))
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				fmt.Sprintf("data/attributes/table/%d/from/time", i): err,
+			})...)
 			return
 		}
 		toT, err := parseHHMM(interval.To.Time)
 		if err != nil {
-			ape.RenderErr(w, problems.InvalidPointer(fmt.Sprintf("data/attributes/table/%d/to/time", i), err))
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				fmt.Sprintf("data/attributes/table/%d/to/time", i): err,
+			})...)
 			return
 		}
 
 		if fromWD != toWD {
-			ape.RenderErr(w, problems.InvalidPointer(
-				fmt.Sprintf("data/attributes/table/%d", i),
-				fmt.Errorf("interval must be within one day (from.weekday == to.weekday)"),
-			))
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				fmt.Sprintf("data/attributes/table/%d", i): fmt.Errorf("from.weekday and to.weekday must be the same", i),
+			})...)
 			return
 		}
 		if !(fromT < toT) {
-			ape.RenderErr(w, problems.InvalidPointer(
-				fmt.Sprintf("data/attributes/table/%d", i),
-				fmt.Errorf("from must be earlier than to: %s >= %s", interval.From.Time, interval.To.Time),
-			))
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				fmt.Sprintf("data/attributes/table/%d", i): fmt.Errorf("from.time must be less than to.time", i),
+			})...)
 			return
 		}
 
@@ -126,14 +133,16 @@ func (h Service) SetTimetable(w http.ResponseWriter, r *http.Request) {
 
 	for wd, spans := range perDay {
 		if err := validateNoOverlaps(spans); err != nil {
-			ape.RenderErr(w, problems.InvalidParameter(strings.ToLower(wd.String()), err))
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				"data/attributes/table": fmt.Errorf("overlapping intervals for weekday %q: %w", wd.String(), err),
+			})...)
 			return
 		}
 	}
 
-	res, err := h.domain.Place.SetTimetable(r.Context(), req.Data.Id, params)
+	res, err := s.domain.Place.SetTimetable(r.Context(), req.Data.Id, params)
 	if err != nil {
-		h.log.WithError(err).Error("could not set timetable")
+		s.log.WithError(err).Error("could not set timetable")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("place %s not found", req.Data.Id)))

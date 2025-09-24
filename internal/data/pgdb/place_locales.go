@@ -212,18 +212,18 @@ func (q *placeLocalesQ) OrderByLocale(asc bool) schemas.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) Page(limit, offset uint64) schemas.PlaceLocalesQ {
-	q.selector = q.selector.Limit(limit).Offset(offset)
+func (q *placeLocalesQ) Page(limit, offset uint) schemas.PlaceLocalesQ {
+	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
 	return q
 }
 
-func (q *placeLocalesQ) Count(ctx context.Context) (uint64, error) {
+func (q *placeLocalesQ) Count(ctx context.Context) (uint, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("build count %s: %w", placeLocalizationTable, err)
 	}
 
-	var cnt uint64
+	var cnt uint
 	var row *sql.Row
 	if tx, ok := TxFromCtx(ctx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)

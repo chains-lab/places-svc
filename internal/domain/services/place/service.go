@@ -19,11 +19,11 @@ func NewService(db data.Database) Service {
 	}
 }
 
-func placeWithDetailsModelFromDB(in schemas.PlaceWithDetails) models.PlaceWithDetails {
-	p := placeModelFromDB(in.Place)
-	t := placeTimeTableModelFromDB(in.Timetable)
+func modelFromDB(in schemas.PlaceWithDetails) models.Place {
+	p := detailsFromDB(in.Place)
+	t := timetableFromDB(in.Timetable)
 
-	out := models.PlaceWithDetails{
+	out := models.Place{
 		ID:            p.ID,
 		CityID:        p.CityID,
 		DistributorID: p.DistributorID,
@@ -54,8 +54,8 @@ func placeWithDetailsModelFromDB(in schemas.PlaceWithDetails) models.PlaceWithDe
 	return out
 }
 
-func placeModelFromDB(dbPlace schemas.Place) models.Place {
-	place := models.Place{
+func detailsFromDB(dbPlace schemas.Place) models.PlaceDetails {
+	place := models.PlaceDetails{
 		ID:        dbPlace.ID,
 		CityID:    dbPlace.CityID,
 		Class:     dbPlace.Class,
@@ -79,7 +79,7 @@ func placeModelFromDB(dbPlace schemas.Place) models.Place {
 	return place
 }
 
-func placeLocaleModelFromDB(dbLoc schemas.PlaceLocale) models.PlaceLocale {
+func localeFromDB(dbLoc schemas.PlaceLocale) models.PlaceLocale {
 	return models.PlaceLocale{
 		PlaceID:     dbLoc.PlaceID,
 		Locale:      dbLoc.Locale,
@@ -89,7 +89,7 @@ func placeLocaleModelFromDB(dbLoc schemas.PlaceLocale) models.PlaceLocale {
 
 }
 
-func placeTimeTableModelFromDB(dbTI []schemas.PlaceTimetable) models.Timetable {
+func timetableFromDB(dbTI []schemas.PlaceTimetable) models.Timetable {
 	res := models.Timetable{
 		Table: make([]models.TimeInterval, 0, len(dbTI)),
 	}

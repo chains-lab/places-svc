@@ -12,10 +12,10 @@ func (m Service) Deactivate(
 	ctx context.Context,
 	placeID uuid.UUID,
 	locale string,
-) (models.PlaceWithDetails, error) {
+) (models.Place, error) {
 	place, err := m.Get(ctx, placeID, locale)
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	if place.Status == enum.PlaceStatusInactive {
@@ -27,7 +27,7 @@ func (m Service) Deactivate(
 		Status: &status,
 	})
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	return updated, nil
@@ -37,10 +37,10 @@ func (m Service) Activate(
 	ctx context.Context,
 	placeID uuid.UUID,
 	locale string,
-) (models.PlaceWithDetails, error) {
+) (models.Place, error) {
 	place, err := m.Get(ctx, placeID, locale)
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	if place.Status == enum.PlaceStatusActive {
@@ -52,7 +52,7 @@ func (m Service) Activate(
 		Status: &status,
 	})
 	if err != nil {
-		return models.PlaceWithDetails{}, err
+		return models.Place{}, err
 	}
 
 	return updated, nil

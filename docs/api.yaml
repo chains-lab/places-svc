@@ -41,8 +41,8 @@ components:
       $ref: './spec/components/schemas/UpdateClass.yaml'
     DeactivateClass:
       $ref: './spec/components/schemas/DeactivateClass.yaml'
-    SetLocalesForClass:
-      $ref: './spec/components/schemas/SetLocalesForClass.yaml'
+    SetLocaleForClass:
+      $ref: './spec/components/schemas/SetLocaleForClass.yaml'
 
     Place:
       $ref: './spec/components/schemas/Place.yaml'

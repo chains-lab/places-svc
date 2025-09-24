@@ -7,7 +7,7 @@ import (
 	"github.com/paulmach/orb"
 )
 
-type Place struct {
+type PlaceDetails struct {
 	ID            uuid.UUID  `json:"id"`
 	CityID        uuid.UUID  `json:"city_id"`
 	DistributorID *uuid.UUID `json:"distributor_id"`
@@ -33,7 +33,7 @@ type PlaceLocale struct {
 	Description string    `json:"description"`
 }
 
-type PlaceWithDetails struct {
+type Place struct {
 	ID            uuid.UUID  `json:"id"`
 	CityID        uuid.UUID  `json:"city_id"`
 	DistributorID *uuid.UUID `json:"distributor_id"`
@@ -56,4 +56,18 @@ type PlaceWithDetails struct {
 	UpdatedAt time.Time `json:"updated_at"`
 
 	Timetable Timetable
+}
+
+type PlacesCollection struct {
+	Data  []Place `json:"data"`
+	Page  uint    `json:"page"`
+	Size  uint    `json:"size"`
+	Total uint    `json:"total"`
+}
+
+type PlaceLocaleCollection struct {
+	Data  []PlaceLocale `json:"data"`
+	Page  uint          `json:"page"`
+	Size  uint          `json:"size"`
+	Total uint          `json:"total"`
 }

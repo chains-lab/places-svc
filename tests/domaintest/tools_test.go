@@ -9,7 +9,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
 )
 
-func CreateClass(s Setup, t *testing.T, name, code string, parent *string) models.ClassWithLocale {
+func CreateClass(s Setup, t *testing.T, name, code string, parent *string) models.Class {
 	t.Helper()
 	c, err := s.domain.class.Create(context.Background(), class.CreateParams{
 		Name:   name,
@@ -29,7 +29,7 @@ func CreateClass(s Setup, t *testing.T, name, code string, parent *string) model
 	return c
 }
 
-func CreatePlace(s Setup, t *testing.T, params place.CreateParams) models.PlaceWithDetails {
+func CreatePlace(s Setup, t *testing.T, params place.CreateParams) models.Place {
 	t.Helper()
 	p, err := s.domain.place.Create(context.Background(), params)
 	if err != nil {

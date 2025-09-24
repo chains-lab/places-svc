@@ -6,12 +6,13 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Data** | [**[]RelationshipDataObject**](RelationshipDataObject.md) |  | 
 **Included** | [**[]ClassLocaleData**](ClassLocaleData.md) |  | 
+**Links** | [**PaginationData**](PaginationData.md) |  | 
 
 ## Methods
 
 ### NewClassLocalesCollection
 
-`func NewClassLocalesCollection(data []RelationshipDataObject, included []ClassLocaleData, ) *ClassLocalesCollection`
+`func NewClassLocalesCollection(data []RelationshipDataObject, included []ClassLocaleData, links PaginationData, ) *ClassLocalesCollection`
 
 NewClassLocalesCollection instantiates a new ClassLocalesCollection object
 This constructor will assign default values to properties that have it defined,
@@ -64,6 +65,26 @@ and a boolean to check if the value has been set.
 `func (o *ClassLocalesCollection) SetIncluded(v []ClassLocaleData)`
 
 SetIncluded sets Included field to given value.
+
+
+### GetLinks
+
+`func (o *ClassLocalesCollection) GetLinks() PaginationData`
+
+GetLinks returns the Links field if non-nil, zero value otherwise.
+
+### GetLinksOk
+
+`func (o *ClassLocalesCollection) GetLinksOk() (*PaginationData, bool)`
+
+GetLinksOk returns a tuple with the Links field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLinks
+
+`func (o *ClassLocalesCollection) SetLinks(v PaginationData)`
+
+SetLinks sets Links field to given value.
 
 
 

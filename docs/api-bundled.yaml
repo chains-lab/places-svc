@@ -184,6 +184,7 @@ components:
       required:
         - data
         - included
+        - links
       properties:
         data:
           type: array
@@ -193,6 +194,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClassLocale/properties/data'
+        links:
+          $ref: '#/components/schemas/PaginationData'
     CreateClass:
       type: object
       required:
@@ -294,7 +297,7 @@ components:
                   type: string
                   description: The class code that has replaced the deactivated class
                   example: advanced-yoga
-    SetLocalesForClass:
+    SetLocaleForClass:
       type: object
       required:
         - data
@@ -317,22 +320,15 @@ components:
             attributes:
               type: object
               required:
-                - locales
+                - locale
+                - name
               properties:
-                locales:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - locale
-                      - name
-                    properties:
-                      locale:
-                        type: string
-                        description: Locale code
-                      name:
-                        type: string
-                        description: Locale name
+                locale:
+                  type: string
+                  description: Locale code
+                name:
+                  type: string
+                  description: Locale name
     Place:
       type: object
       required:
@@ -596,6 +592,7 @@ components:
       required:
         - data
         - included
+        - links
       properties:
         data:
           type: array
@@ -605,6 +602,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlaceLocale/properties/data'
+        links:
+          $ref: '#/components/schemas/PaginationData'
     SetLocalesForPlace:
       type: object
       required:

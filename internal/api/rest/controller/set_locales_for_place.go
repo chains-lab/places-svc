@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/chains-lab/ape"
@@ -9,12 +10,13 @@ import (
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-func (h Service) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
+func (s Service) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 	req, err := requests.SetLocalesForPlace(r)
 	if err != nil {
-		h.log.WithError(err).Error("invalid request body")
+		s.log.WithError(err).Error("invalid request body")
 		ape.RenderErr(w, problems.BadRequest(err)...)
 
 		return
@@ -29,16 +31,18 @@ func (h Service) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = h.domain.Place.SetLocales(r.Context(), req.Data.Id, locales...)
+	err = s.domain.Place.SetLocales(r.Context(), req.Data.Id, locales...)
 	if err != nil {
-		h.log.WithError(err).Error("failed to set place locales")
+		s.log.WithError(err).Error("failed to set place locales")
 		switch {
 		case errors.Is(err, errx.ErrorPlaceNotFound):
 			ape.RenderErr(w, problems.NotFound("place not found"))
 		case errors.Is(err, errx.ErrorNeedAtLeastOneLocaleForPlace):
-			ape.RenderErr(w, problems.InvalidParameter("locales", err))
+			ape.RenderErr(w, problems.Conflict("place must have at least one locale"))
 		case errors.Is(err, errx.ErrorInvalidLocale):
-			ape.RenderErr(w, problems.InvalidParameter("locales", err))
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				"locales": fmt.Errorf("invalid locale"),
+			})...)
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

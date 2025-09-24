@@ -24,7 +24,7 @@ func (m Service) Update(
 	code string,
 	locale string,
 	params UpdateParams,
-) (models.ClassWithLocale, error) {
+) (models.Class, error) {
 	err := enum.IsValidLocaleSupported(locale)
 	if err != nil {
 		locale = enum.LocaleEN
@@ -32,45 +32,54 @@ func (m Service) Update(
 
 	class, err := m.Get(ctx, code, locale)
 	if err != nil {
-		return models.ClassWithLocale{}, err
+		return models.Class{}, err
 	}
 
 	stmt := schemas.UpdateClassParams{
 		UpdatedAt: time.Now().UTC(),
 	}
-	class.Data.UpdatedAt = stmt.UpdatedAt
+	class.UpdatedAt = stmt.UpdatedAt
 
 	if params.Parent != nil {
 		if *params.Parent == code {
-			return models.ClassWithLocale{}, errx.ErrorClassParentEqualCode.Raise(
+			return models.Class{}, errx.ErrorClassParentEqualCode.Raise(
 				fmt.Errorf("parent cycle detected for class with code %s", code),
 			)
 		}
-		_, err = m.db.Classes().FilterParentCycle(class.Data.Code).FilterCode(*params.Parent).Get(ctx)
+
+		_, err = m.db.Classes().FilterCode(*params.Parent).Get(ctx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return models.Class{}, errx.ErrorParentClassNotFound.Raise(
+					fmt.Errorf("parent class with code %s not found", *params.Parent),
+				)
+			}
+		}
+
+		_, err = m.db.Classes().FilterParentCycle(class.Code).FilterCode(*params.Parent).Get(ctx)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return models.ClassWithLocale{}, errx.ErrorInternal.Raise(
+			return models.Class{}, errx.ErrorInternal.Raise(
 				fmt.Errorf("failed to check parent cycle for class with code %s, cause: %w", code, err),
 			)
 		}
-
 		if err == nil {
-			return models.ClassWithLocale{}, errx.ErrorClassParentCycle.Raise(
+			return models.Class{}, errx.ErrorClassParentCycle.Raise(
 				fmt.Errorf("parent cycle detected for class with code %s", code),
 			)
 		}
 
 		stmt.Parent = &sql.NullString{String: *params.Parent, Valid: true}
-		class.Data.Parent = params.Parent
+		class.Parent = params.Parent
 	}
 
 	if params.Icon != nil {
 		stmt.Icon = params.Icon
-		class.Data.Icon = *params.Icon
+		class.Icon = *params.Icon
 	}
 
 	err = m.db.Classes().FilterCode(code).Update(ctx, stmt)
 	if err != nil {
-		return models.ClassWithLocale{}, errx.ErrorInternal.Raise(
+		return models.Class{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to update class with code %s, cause: %w", code, err),
 		)
 	}

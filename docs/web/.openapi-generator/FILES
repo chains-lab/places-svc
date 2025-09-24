@@ -38,10 +38,9 @@ docs/PlacesCollection.md
 docs/Point.md
 docs/RelationshipDataObject.md
 docs/RelationshipLinks.md
-docs/SetLocalesForClass.md
-docs/SetLocalesForClassData.md
-docs/SetLocalesForClassDataAttributes.md
-docs/SetLocalesForClassDataAttributesLocalesInner.md
+docs/SetLocaleForClass.md
+docs/SetLocaleForClassData.md
+docs/SetLocaleForClassDataAttributes.md
 docs/SetLocalesForPlace.md
 docs/SetLocalesForPlaceData.md
 docs/SetLocalesForPlaceDataAttributes.md
@@ -95,10 +94,9 @@ model_places_collection.go
 model_point.go
 model_relationship_data_object.go
 model_relationship_links.go
-model_set_locales_for_class.go
-model_set_locales_for_class_data.go
-model_set_locales_for_class_data_attributes.go
-model_set_locales_for_class_data_attributes_locales_inner.go
+model_set_locale_for_class.go
+model_set_locale_for_class_data.go
+model_set_locale_for_class_data_attributes.go
 model_set_locales_for_place.go
 model_set_locales_for_place_data.go
 model_set_locales_for_place_data_attributes.go

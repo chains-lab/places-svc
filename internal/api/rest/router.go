@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/chains-lab/enum"
 	"github.com/chains-lab/gatekit/mdlv"
 	"github.com/chains-lab/gatekit/roles"
 	"github.com/chains-lab/places-svc/internal/api/rest/meta"
@@ -37,11 +36,11 @@ type Handlers interface {
 	ActivateClass(w http.ResponseWriter, r *http.Request)
 	DeactivateClass(w http.ResponseWriter, r *http.Request)
 	DeleteClass(w http.ResponseWriter, r *http.Request)
-	SetLocalesForClass(w http.ResponseWriter, r *http.Request)
+	SetLocaleForClass(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *Service) Run(ctx context.Context, h Handlers) {
-	svc := mdlv.ServiceGrant(enum.CitiesSVC, s.cfg.JWT.Service.SecretKey)
+	//svc := mdlv.ServiceGrant(enum.CitiesSVC, s.cfg.JWT.Service.SecretKey)
 	auth := mdlv.Auth(meta.UserCtxKey, s.cfg.JWT.User.AccessToken.SecretKey)
 	sysadmin := mdlv.RoleGrant(meta.UserCtxKey, map[string]bool{
 		roles.Admin:     true,
@@ -49,7 +48,7 @@ func (s *Service) Run(ctx context.Context, h Handlers) {
 	})
 
 	s.router.Route("/places-svc/", func(r chi.Router) {
-		r.Use(svc)
+		//r.Use(svc)
 		r.Route("/v1", func(r chi.Router) {
 			r.Route("/classes", func(r chi.Router) {
 				r.Get("/", h.ListClass)
@@ -65,7 +64,7 @@ func (s *Service) Run(ctx context.Context, h Handlers) {
 
 					r.Route("/locales", func(r chi.Router) {
 						r.Get("/", h.ListLocalesForPlace)
-						r.With(auth).With(sysadmin).Put("/", h.SetLocalesForClass)
+						r.With(auth).With(sysadmin).Put("/", h.SetLocaleForClass)
 					})
 				})
 			})

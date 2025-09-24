@@ -1,12 +1,11 @@
 package responses
 
 import (
-	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/resources"
 )
 
-func Place(m models.PlaceWithDetails) resources.Place {
+func Place(m models.Place) resources.Place {
 	resp := resources.Place{
 		Data: resources.PlaceData{
 			Id:   m.ID,
@@ -48,17 +47,17 @@ func Place(m models.PlaceWithDetails) resources.Place {
 	return resp
 }
 
-func PlacesCollection(ms []models.PlaceWithDetails, pag pagi.Response) resources.PlacesCollection {
+func PlacesCollection(ms models.PlacesCollection) resources.PlacesCollection {
 	resp := resources.PlacesCollection{
-		Data: make([]resources.PlaceData, 0, len(ms)),
+		Data: make([]resources.PlaceData, 0, len(ms.Data)),
 		Links: resources.PaginationData{
-			PageNumber: int64(pag.Page),
-			PageSize:   int64(pag.Size),
-			TotalItems: int64(pag.Total),
+			PageNumber: int64(ms.Page),
+			PageSize:   int64(ms.Size),
+			TotalItems: int64(ms.Total),
 		},
 	}
 
-	for _, m := range ms {
+	for _, m := range ms.Data {
 		place := Place(m).Data
 
 		resp.Data = append(resp.Data, place)
@@ -80,13 +79,18 @@ func PlaceLocale(m models.PlaceLocale) resources.PlaceLocale {
 	}
 }
 
-func PlaceLocalesCollection(ms []models.PlaceLocale, pag pagi.Response) resources.PlaceLocalesCollection {
+func PlaceLocalesCollection(ms models.PlaceLocaleCollection) resources.PlaceLocalesCollection {
 	resp := resources.PlaceLocalesCollection{
-		Data:     make([]resources.RelationshipDataObject, 0, len(ms)),
-		Included: make([]resources.PlaceLocaleData, 0, len(ms)),
+		Data:     make([]resources.RelationshipDataObject, 0, len(ms.Data)),
+		Included: make([]resources.PlaceLocaleData, 0, len(ms.Data)),
+		Links: resources.PaginationData{
+			PageNumber: int64(ms.Page),
+			PageSize:   int64(ms.Size),
+			TotalItems: int64(ms.Total),
+		},
 	}
 
-	for _, m := range ms {
+	for _, m := range ms.Data {
 		locale := PlaceLocale(m).Data
 
 		resp.Data = append(resp.Data, resources.RelationshipDataObject{

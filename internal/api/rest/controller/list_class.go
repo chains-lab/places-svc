@@ -11,9 +11,10 @@ import (
 	"github.com/chains-lab/places-svc/internal/api/rest/responses"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-func (h Service) ListClass(w http.ResponseWriter, r *http.Request) {
+func (s Service) ListClass(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
 	var filters class.FilterListParams
@@ -32,26 +33,28 @@ func (h Service) ListClass(w http.ResponseWriter, r *http.Request) {
 		} else if parentCycle == "false" {
 			filters.ParentCycle = false
 		} else {
-			ape.RenderErr(w, problems.InvalidParameter(
-				"verified",
-				fmt.Errorf("invalid boolean value: %s", parentCycle)),
-			)
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				"query": fmt.Errorf("invalid parent_cycle value: %s", parentCycle),
+			})...)
 			return
 		}
 	}
 
-	pag, _ := pagi.GetPagination(r)
+	pag, size := pagi.GetPagination(r)
+
+	filters.Page = pag
+	filters.Size = size
+
 	locale := DetectLocale(w, r)
 
-	classes, pagResp, err := h.domain.Class.List(r.Context(), locale, filters, pag)
+	classes, err := s.domain.Class.List(r.Context(), locale, filters)
 	if err != nil {
-		h.log.WithError(err).Error("failed to list classes")
+		s.log.WithError(err).Error("failed to list classes")
 		switch {
 		case errors.Is(err, errx.ErrorClassStatusInvalid):
-			ape.RenderErr(w, problems.InvalidParameter(
-				"status",
-				fmt.Errorf("invalid status value: %s", *filters.Status)),
-			)
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				"query": fmt.Errorf("invalid status value: %s", *filters.Status),
+			})...)
 		case errors.Is(err, errx.ErrorParentClassNotFound):
 			ape.RenderErr(w, problems.NotFound(
 				fmt.Sprintf("parent class %s not found", *filters.Parent)),
@@ -63,5 +66,5 @@ func (h Service) ListClass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ape.Render(w, http.StatusOK, responses.ClassesCollection(classes, pagResp))
+	ape.Render(w, http.StatusOK, responses.ClassesCollection(classes))
 }
