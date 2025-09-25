@@ -31,7 +31,7 @@ func (s Service) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = s.domain.Place.SetLocales(r.Context(), req.Data.Id, locales...)
+	err = s.domain.place.SetLocales(r.Context(), req.Data.Id, locales...)
 	if err != nil {
 		s.log.WithError(err).Error("failed to set place locales")
 		switch {

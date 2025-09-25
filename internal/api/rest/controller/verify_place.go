@@ -25,7 +25,7 @@ func (s Service) VerifyPlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := s.domain.Place.Verify(r.Context(), placeID)
+	res, err := s.domain.place.Verify(r.Context(), placeID)
 	if err != nil {
 		s.log.WithError(err).Error("failed to verify place")
 		switch {

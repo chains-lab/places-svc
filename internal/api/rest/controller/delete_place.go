@@ -24,7 +24,7 @@ func (s Service) DeletePlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.domain.Place.DeleteOne(r.Context(), placeID)
+	err = s.domain.place.DeleteOne(r.Context(), placeID)
 	if err != nil {
 		s.log.WithError(err).Error("failed to delete place")
 		switch {

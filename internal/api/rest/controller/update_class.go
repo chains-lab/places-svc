@@ -30,13 +30,11 @@ func (s Service) UpdateClass(w http.ResponseWriter, r *http.Request) {
 	if req.Data.Attributes.Icon != nil {
 		params.Icon = req.Data.Attributes.Icon
 	}
+	if req.Data.Attributes.Name != nil {
+		params.Name = req.Data.Attributes.Name
+	}
 
-	resp, err := s.domain.Class.Update(
-		r.Context(),
-		req.Data.Id,
-		DetectLocale(w, r),
-		params,
-	)
+	resp, err := s.domain.class.Update(r.Context(), req.Data.Id, params)
 	if err != nil {
 		s.log.WithError(err).Error("error updating class")
 		switch {
@@ -45,9 +43,9 @@ func (s Service) UpdateClass(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, errx.ErrorClassParentCycle):
 			ape.RenderErr(w, problems.Conflict(
 				fmt.Sprintf("parent cycle detected for class with code %s", req.Data.Id)))
-		case errors.Is(err, errx.ErrorClassParentEqualCode):
-			ape.RenderErr(w, problems.Conflict(
-				fmt.Sprintf("parent equal code for class with code %s", req.Data.Id)))
+		//case errors.Is(err, errx.ErrorClassParentEqualCode):
+		//	ape.RenderErr(w, problems.Conflict(
+		//		fmt.Sprintf("parent equal code for class with code %s", req.Data.Id)))
 		case errors.Is(err, errx.ErrorParentClassNotFound):
 			ape.RenderErr(w, problems.NotFound(
 				fmt.Sprintf("parent class %s not found", *req.Data.Attributes.Parent)))

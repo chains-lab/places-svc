@@ -455,7 +455,7 @@ func (q *placesQ) FilterTimetableBetween(start, end int) schemas.PlacesQ {
 }
 
 func (q *placesQ) WithLocale(locale string) schemas.PlacesQ {
-	l := sanitizeLocale(locale)
+	l := schemas.SanitizeLocale(locale)
 
 	col := func(field, alias string, def any) sq.Sqlizer {
 		return sq.Expr(

@@ -12,9 +12,7 @@ import (
 )
 
 func (s Service) GetClass(w http.ResponseWriter, r *http.Request) {
-	locale := DetectLocale(w, r)
-
-	res, err := s.domain.Class.Get(r.Context(), chi.URLParam(r, "class"), locale)
+	res, err := s.domain.class.Get(r.Context(), chi.URLParam(r, "class"))
 	if err != nil {
 		s.log.WithError(err).WithField("class", chi.URLParam(r, "class")).Error("error getting class")
 		switch {

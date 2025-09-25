@@ -9,7 +9,7 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	"github.com/chains-lab/logium"
-	cmd2 "github.com/chains-lab/places-svc/cmd"
+	"github.com/chains-lab/places-svc/cmd"
 	"github.com/chains-lab/places-svc/cmd/migrations"
 	"github.com/chains-lab/places-svc/internal"
 	"github.com/sirupsen/logrus"
@@ -39,21 +39,21 @@ func Run(args []string) bool {
 
 	var wg sync.WaitGroup
 
-	cmd, err := service.Parse(args[1:])
+	c, err := service.Parse(args[1:])
 	if err != nil {
 		log.WithError(err).Error("failed to parse arguments")
 		return false
 	}
 
-	switch cmd {
+	switch c {
 	case serviceCmd.FullCommand():
-		cmd2.StartServices(ctx, cfg, log, &wg)
+		cmd.StartServices(ctx, cfg, log, &wg)
 	case migrateUpCmd.FullCommand():
 		err = migrations.MigrateUp(cfg.Database.SQL.URL)
 	case migrateDownCmd.FullCommand():
 		err = migrations.MigrateDown(cfg.Database.SQL.URL)
 	default:
-		log.Errorf("unknown command %s", cmd)
+		log.Errorf("unknown command %s", c)
 		return false
 	}
 	if err != nil {

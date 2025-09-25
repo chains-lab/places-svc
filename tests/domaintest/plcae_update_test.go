@@ -40,7 +40,7 @@ func TestPlaceUpdate(t *testing.T) {
 		Class:         RestaurantClass.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        "en",
-		Name:          "Restaurant Place",
+		Name:          "Restaurant place",
 		Address:       "123 Main St",
 		Description:   "A nice restaurant place",
 	})
@@ -51,7 +51,7 @@ func TestPlaceUpdate(t *testing.T) {
 		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{30.1, 50.1},
 		Locale:        "en",
-		Name:          "SuperMarket Place",
+		Name:          "SuperMarket place",
 		Address:       "456 Market St",
 		Description:   "A big supermarket place",
 	})
@@ -62,7 +62,7 @@ func TestPlaceUpdate(t *testing.T) {
 		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{31.1, 51.1},
 		Locale:        enum.LocaleUK,
-		Name:          "SuperMarket Place Second City",
+		Name:          "SuperMarket place Second City",
 		Address:       "789 Market St",
 		Description:   "A big supermarket place in second city",
 	})

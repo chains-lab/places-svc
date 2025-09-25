@@ -177,7 +177,7 @@ func (s Service) ListPlace(w http.ResponseWriter, r *http.Request) {
 				ape.RenderErr(w, problems.BadRequest(validation.Errors{
 					"sort": errors.New("the 'point' parameter is required when sorting by distance"),
 				})...)
-				
+
 				return
 			}
 
@@ -186,7 +186,7 @@ func (s Service) ListPlace(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	places, err := s.domain.Place.List(r.Context(), DetectLocale(w, r), filters, sort)
+	places, err := s.domain.place.List(r.Context(), DetectLocale(w, r), filters, sort)
 	if err != nil {
 		ape.RenderErr(w, problems.InternalError())
 		return

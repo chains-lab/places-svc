@@ -150,52 +150,6 @@ components:
               $ref: '#/components/schemas/RelationshipLinks'
             data:
               $ref: '#/components/schemas/RelationshipDataObject'
-    ClassLocale:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          required:
-            - id
-            - type
-            - attributes
-          properties:
-            id:
-              type: string
-              format: string
-              description: class_code + locale
-              example: 'yoga:en'
-            type:
-              type: string
-              enum:
-                - place_class_locale
-            attributes:
-              type: object
-              required:
-                - name
-              properties:
-                name:
-                  type: string
-                  description: Class name
-    ClassLocalesCollection:
-      type: object
-      required:
-        - data
-        - included
-        - links
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/RelationshipDataObject'
-        included:
-          type: array
-          items:
-            $ref: '#/components/schemas/ClassLocale/properties/data'
-        links:
-          $ref: '#/components/schemas/PaginationData'
     CreateClass:
       type: object
       required:

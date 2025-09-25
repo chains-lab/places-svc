@@ -34,7 +34,7 @@ func TestPlaceLocales(t *testing.T) {
 		Class:         FoodClass.Code,
 		Point:         [2]float64{30.1, 50.1},
 		Locale:        "en",
-		Name:          "Food Place",
+		Name:          "Food place",
 		Address:       "456 Market St",
 		Description:   "A big Food place",
 	})
@@ -45,7 +45,7 @@ func TestPlaceLocales(t *testing.T) {
 		Class:         RestaurantClass.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        "en",
-		Name:          "Restaurant Place",
+		Name:          "Restaurant place",
 		Address:       "123 Main St",
 		Description:   "A nice restaurant place",
 	})
@@ -56,18 +56,18 @@ func TestPlaceLocales(t *testing.T) {
 		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{31.1, 51.1},
 		Locale:        enum.LocaleEN,
-		Name:          "SuperMarket Place Second City",
+		Name:          "SuperMarket place Second City",
 		Address:       "789 Market St",
 		Description:   "A big supermarket place in second city",
 	})
 
 	err = s.domain.place.SetLocales(ctx, food.ID, place.SetLocaleParams{
 		Locale:      enum.LocaleUK,
-		Name:        "Food Place UK",
+		Name:        "Food place UK",
 		Description: "A big Food place UK",
 	}, place.SetLocaleParams{
 		Locale:      enum.LocaleRU,
-		Name:        "Food Place RU",
+		Name:        "Food place RU",
 		Description: "A big Food place RU",
 	})
 	if err != nil {
@@ -76,7 +76,7 @@ func TestPlaceLocales(t *testing.T) {
 
 	err = s.domain.place.SetLocales(ctx, restaurant.ID, place.SetLocaleParams{
 		Locale:      enum.LocaleUK,
-		Name:        "Restaurant Place UK",
+		Name:        "Restaurant place UK",
 		Description: "A nice restaurant place UK",
 	})
 	if err != nil {
@@ -105,7 +105,7 @@ func TestPlaceLocales(t *testing.T) {
 	t.Logf("ListPlaces: got %d places", len(shops.Data))
 
 	for i, _ := range shops.Data {
-		t.Logf("Place: %+v", shops.Data[i])
+		t.Logf("place: %+v", shops.Data[i])
 		switch shops.Data[i].ID {
 		case food.ID:
 			if shops.Data[i].Locale != enum.LocaleUK {

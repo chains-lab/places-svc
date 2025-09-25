@@ -2,7 +2,9 @@ package schemas
 
 import (
 	"context"
+	"regexp"
 
+	"github.com/chains-lab/enum"
 	"github.com/google/uuid"
 )
 
@@ -35,4 +37,14 @@ type PlaceLocale struct {
 type UpdatePlaceLocaleParams struct {
 	Name        *string
 	Description *string
+}
+
+var reLocale = regexp.MustCompile(`^[a-z]{2}$`)
+
+func SanitizeLocale(l string) string {
+	if reLocale.MatchString(l) {
+		return l
+	}
+
+	return enum.LocaleEN
 }

@@ -29,6 +29,7 @@ func NewClassesQ(db *sql.DB) schemas.ClassesQ {
 			"pc.parent",
 			"pc.status",
 			"pc.icon",
+			"pc.name",
 			"pc.path",
 			"pc.created_at",
 			"pc.updated_at",
@@ -40,24 +41,25 @@ func NewClassesQ(db *sql.DB) schemas.ClassesQ {
 	}
 }
 
-func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (schemas.PlaceClass, error) {
-	var pc schemas.PlaceClass
+func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (schemas.Class, error) {
+	var pc schemas.Class
 	if err := scanner.Scan(
 		&pc.Code,
 		&pc.Parent,
 		&pc.Status,
 		&pc.Icon,
+		&pc.Name,
 		&pc.Path,
 		&pc.CreatedAt,
 		&pc.UpdatedAt,
 	); err != nil {
-		return schemas.PlaceClass{}, err
+		return schemas.Class{}, err
 	}
 	return pc, nil
 }
 
-func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (schemas.PlaceClassWithLocale, error) {
-	var pc schemas.PlaceClassWithLocale
+func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (schemas.Class, error) {
+	var pc schemas.Class
 	if err := scanner.Scan(
 		&pc.Code,
 		&pc.Parent,
@@ -67,19 +69,19 @@ func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (sch
 		&pc.CreatedAt,
 		&pc.UpdatedAt,
 		&pc.Name,
-		&pc.Locale,
 	); err != nil {
-		return schemas.PlaceClassWithLocale{}, err
+		return schemas.Class{}, err
 	}
 	return pc, nil
 }
 
-func (q *classesQ) Insert(ctx context.Context, in schemas.PlaceClass) error {
+func (q *classesQ) Insert(ctx context.Context, in schemas.Class) error {
 	values := map[string]any{
 		"code":   in.Code,
 		"status": in.Status,
 		"icon":   in.Icon,
 		"path":   in.Path,
+		"name":   in.Name,
 	}
 	if in.Parent.Valid {
 		values["parent"] = in.Parent.String
@@ -100,10 +102,10 @@ func (q *classesQ) Insert(ctx context.Context, in schemas.PlaceClass) error {
 	return err
 }
 
-func (q *classesQ) Get(ctx context.Context) (schemas.PlaceClass, error) {
+func (q *classesQ) Get(ctx context.Context) (schemas.Class, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return schemas.PlaceClass{}, fmt.Errorf("build select %s: %w", placeClassesTable, err)
+		return schemas.Class{}, fmt.Errorf("build select %s: %w", placeClassesTable, err)
 	}
 	var row *sql.Row
 	if tx, ok := TxFromCtx(ctx); ok {
@@ -114,7 +116,7 @@ func (q *classesQ) Get(ctx context.Context) (schemas.PlaceClass, error) {
 	return scanPlaceClass(row)
 }
 
-func (q *classesQ) Select(ctx context.Context) ([]schemas.PlaceClass, error) {
+func (q *classesQ) Select(ctx context.Context) ([]schemas.Class, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("build select %s: %w", placeClassesTable, err)
@@ -130,7 +132,7 @@ func (q *classesQ) Select(ctx context.Context) ([]schemas.PlaceClass, error) {
 	}
 	defer rows.Close()
 
-	var out []schemas.PlaceClass
+	var out []schemas.Class
 	for rows.Next() {
 		pc, err := scanPlaceClass(rows)
 		if err != nil {
@@ -157,6 +159,9 @@ func (q *classesQ) Update(ctx context.Context, params schemas.UpdateClassParams)
 	}
 	if params.Icon != nil {
 		values["icon"] = *params.Icon
+	}
+	if params.Name != nil {
+		values["name"] = *params.Name
 	}
 
 	query, args, err := q.updater.SetMap(values).ToSql()
@@ -216,6 +221,23 @@ func (q *classesQ) FilterStatus(status string) schemas.ClassesQ {
 	return q
 }
 
+func (q *classesQ) FilterName(name string) schemas.ClassesQ {
+	q.selector = q.selector.Where(sq.Eq{"pc.name": name})
+	q.updater = q.updater.Where(sq.Eq{"pc.name": name})
+	q.deleter = q.deleter.Where(sq.Eq{"pc.name": name})
+	q.counter = q.counter.Where(sq.Eq{"pc.name": name})
+	return q
+}
+
+func (q *classesQ) FilterNameLike(name string) schemas.ClassesQ {
+	likePattern := fmt.Sprintf("%%%s%%", name)
+	q.selector = q.selector.Where(sq.Like{"pc.name": likePattern})
+	q.updater = q.updater.Where(sq.Like{"pc.name": likePattern})
+	q.deleter = q.deleter.Where(sq.Like{"pc.name": likePattern})
+	q.counter = q.counter.Where(sq.Like{"pc.name": likePattern})
+	return q
+}
+
 func (q *classesQ) FilterParentCycle(code string) schemas.ClassesQ {
 	cond := sq.Expr(
 		"pc.path <@ (SELECT path FROM "+placeClassesTable+" WHERE code = ?)",
@@ -226,79 +248,6 @@ func (q *classesQ) FilterParentCycle(code string) schemas.ClassesQ {
 	q.deleter = q.deleter.Where(cond)
 	q.counter = q.counter.Where(cond)
 	return q
-}
-
-func (q *classesQ) WithLocale(locale string) schemas.ClassesQ {
-	l := sanitizeLocale(locale)
-
-	col := func(field, alias string) sq.Sqlizer {
-		return sq.Expr(
-			`COALESCE(
-               (SELECT i.`+field+`
-                  FROM `+classLocalesTable+` i
-                 WHERE i.class = pc.code AND i.locale = ?),
-               (SELECT i2.`+field+`
-                  FROM `+classLocalesTable+` i2
-                 WHERE i2.class = pc.code AND i2.locale = 'en')
-             ) AS `+alias,
-			l,
-		)
-	}
-
-	q.selector = q.selector.
-		Column(col("name", "loc_name")).
-		Column(col("locale", "loc_locale"))
-
-	return q
-}
-
-func (q *classesQ) GetWithLocale(ctx context.Context, locale string) (schemas.PlaceClassWithLocale, error) {
-	qq := *q
-	qq.WithLocale(locale)
-
-	query, args, err := qq.selector.Limit(1).ToSql()
-	if err != nil {
-		return schemas.PlaceClassWithLocale{}, fmt.Errorf("build select %s: %w", placeClassesTable, err)
-	}
-
-	var row *sql.Row
-	if tx, ok := TxFromCtx(ctx); ok {
-		row = tx.QueryRowContext(ctx, query, args...)
-	} else {
-		row = q.db.QueryRowContext(ctx, query, args...)
-	}
-	return scanPlaceClassWithLocale(row)
-}
-
-func (q *classesQ) SelectWithLocale(ctx context.Context, locale string) ([]schemas.PlaceClassWithLocale, error) {
-	qq := *q
-	qq.WithLocale(locale)
-
-	query, args, err := qq.selector.ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("build select %s: %w", placeClassesTable, err)
-	}
-
-	var rows *sql.Rows
-	if tx, ok := TxFromCtx(ctx); ok {
-		rows, err = tx.QueryContext(ctx, query, args...)
-	} else {
-		rows, err = q.db.QueryContext(ctx, query, args...)
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var out []schemas.PlaceClassWithLocale
-	for rows.Next() {
-		pc, err := scanPlaceClassWithLocale(rows)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, pc)
-	}
-	return out, rows.Err()
 }
 
 func (q *classesQ) OrderBy(orderBy string) schemas.ClassesQ {

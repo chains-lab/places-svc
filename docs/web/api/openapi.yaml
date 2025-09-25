@@ -97,28 +97,6 @@ components:
           $ref: '#/components/schemas/ClassRelationships_parent'
       required:
       - parent
-    ClassLocale:
-      properties:
-        data:
-          $ref: '#/components/schemas/ClassLocale_data'
-      required:
-      - data
-    ClassLocalesCollection:
-      properties:
-        data:
-          items:
-            $ref: '#/components/schemas/RelationshipDataObject'
-          type: array
-        included:
-          items:
-            $ref: '#/components/schemas/ClassLocale/properties/data'
-          type: array
-        links:
-          $ref: '#/components/schemas/PaginationData'
-      required:
-      - data
-      - included
-      - links
     CreateClass:
       properties:
         data:
@@ -331,30 +309,6 @@ components:
           $ref: '#/components/schemas/RelationshipLinks'
         data:
           $ref: '#/components/schemas/RelationshipDataObject'
-    ClassLocale_data_attributes:
-      properties:
-        name:
-          description: Class name
-          type: string
-      required:
-      - name
-    ClassLocale_data:
-      properties:
-        id:
-          description: class_code + locale
-          example: yoga:en
-          format: string
-          type: string
-        type:
-          enum:
-          - place_class_locale
-          type: string
-        attributes:
-          $ref: '#/components/schemas/ClassLocale_data_attributes'
-      required:
-      - attributes
-      - id
-      - type
     CreateClass_data_attributes:
       properties:
         icon:

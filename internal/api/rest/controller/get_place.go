@@ -27,7 +27,7 @@ func (s Service) GetPlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := s.domain.Place.Get(r.Context(), placeID, locale)
+	res, err := s.domain.place.Get(r.Context(), placeID, locale)
 	if err != nil {
 		s.log.WithError(err).WithField("place_id", placeID).Error("error getting place")
 		switch {

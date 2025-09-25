@@ -13,9 +13,8 @@ import (
 
 func (s Service) ActivateClass(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	locale := DetectLocale(w, r)
 
-	res, err := s.domain.Class.Activate(r.Context(), code, locale)
+	res, err := s.domain.class.Activate(r.Context(), code)
 	if err != nil {
 		s.log.WithError(err).Error("failed to activate class")
 		switch {

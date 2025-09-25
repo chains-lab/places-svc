@@ -39,7 +39,7 @@ func (m Service) Create(
 		parentValue = sql.NullString{String: *params.Parent, Valid: true}
 	}
 
-	_, err = m.db.ClassLocales().FilterName(params.Name).FilterLocale(enum.DefaultLocale).Get(ctx)
+	_, err = m.db.Classes().FilterName(params.Name).Get(ctx)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return models.Class{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class locale existence, cause: %w", err))
 	}
@@ -52,11 +52,12 @@ func (m Service) Create(
 	now := time.Now().UTC()
 
 	trxErr := m.db.Transaction(ctx, func(ctx context.Context) error {
-		err = m.db.Classes().Insert(ctx, schemas.PlaceClass{
+		err = m.db.Classes().Insert(ctx, schemas.Class{
 			Code:      params.Code,
 			Parent:    parentValue,
 			Status:    enum.PlaceClassStatusesInactive,
 			Icon:      params.Icon,
+			Name:      params.Name,
 			CreatedAt: now,
 			UpdatedAt: now,
 		})
@@ -66,22 +67,11 @@ func (m Service) Create(
 			)
 		}
 
-		err = m.db.ClassLocales().Insert(ctx, schemas.ClassLocale{
-			Class:  params.Code,
-			Locale: enum.DefaultLocale,
-			Name:   params.Name,
-		})
-		if err != nil {
-			return errx.ErrorInternal.Raise(
-				fmt.Errorf("failed to create class locale, cause: %w", err),
-			)
-		}
-
 		return nil
 	})
 	if trxErr != nil {
 		return models.Class{}, trxErr
 	}
 
-	return m.Get(ctx, params.Code, enum.DefaultLocale)
+	return m.Get(ctx, params.Code)
 }

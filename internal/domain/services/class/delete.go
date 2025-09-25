@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 )
 
@@ -13,7 +12,7 @@ func (m Service) Delete(
 	ctx context.Context,
 	code string,
 ) error {
-	_, err := m.Get(ctx, code, enum.LocaleEN)
+	_, err := m.Get(ctx, code)
 	if err != nil {
 		return err
 	}
@@ -42,7 +41,7 @@ func (m Service) Delete(
 		)
 	}
 
-	err = m.db.ClassLocales().FilterClass(code).Delete(ctx)
+	err = m.db.Classes().FilterCode(code).Delete(ctx)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to delete class locales, cause: %w", err),

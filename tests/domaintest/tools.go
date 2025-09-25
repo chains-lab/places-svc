@@ -21,7 +21,7 @@ func CreateClass(s Setup, t *testing.T, name, code string, parent *string) model
 		t.Fatalf("CreateClass: %v", err)
 	}
 
-	c, err = s.domain.class.Activate(context.Background(), code, "en")
+	c, err = s.domain.class.Activate(context.Background(), code)
 	if err != nil {
 		t.Fatalf("ActivateClass: %v", err)
 	}

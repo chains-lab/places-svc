@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
 )
@@ -20,7 +19,7 @@ func TestCreatingClassAndDetails(t *testing.T) {
 
 	ctx := context.Background()
 
-	c, err := s.domain.class.Create(ctx, class.CreateParams{
+	firstClass, err := s.domain.class.Create(ctx, class.CreateParams{
 		Name: "Classes",
 		Code: "class_first",
 		Icon: "icon_1",
@@ -29,61 +28,27 @@ func TestCreatingClassAndDetails(t *testing.T) {
 		t.Fatalf("CreateClass: %v", err)
 	}
 
-	err = s.domain.class.SetLocale(ctx, c.Code, class.SetLocaleParams{
-		Locale: enum.LocaleEN,
-		Name:   "Classes EN",
-	},
-
-		class.SetLocaleParams{
-			Locale: enum.LocaleRU,
-			Name:   "Classes RU",
-		},
-
-		class.SetLocaleParams{
-			Locale: enum.LocaleUK,
-			Name:   "Classes UK",
-		})
-	if err != nil {
-		t.Fatalf("SetClassLocales: %v", err)
-	}
-
-	classEN, err := s.domain.class.Get(ctx, c.Code, enum.LocaleEN)
-	if err != nil {
-		t.Fatalf("GetClass EN: %v", err)
-	}
-	if classEN.Name != "Classes EN" {
-		t.Fatalf("GetClass EN: expected name %s, got %s", "Classes EN", classEN.Name)
-	}
-
-	classRU, err := s.domain.class.Get(ctx, c.Code, enum.LocaleRU)
-	if err != nil {
-		t.Fatalf("GetClass RU: %v", err)
-	}
-	if classRU.Name != "Classes RU" {
-		t.Fatalf("GetClass RU: expected name %s, got %s", "Classes RU", classRU.Name)
-	}
-
 	classChild, err := s.domain.class.Create(ctx, class.CreateParams{
 		Name:   "Classes Child",
 		Code:   "class_child",
 		Icon:   "icon_child",
-		Parent: &c.Code,
+		Parent: &firstClass.Code,
 	})
 	if err != nil {
 		t.Fatalf("CreateClass Child: %v", err)
 	}
-	if *classChild.Parent != c.Code {
-		t.Fatalf("CreateClass Child: expected parent %s, got %v", c.Code, classChild.Parent)
+	if *classChild.Parent != firstClass.Code {
+		t.Fatalf("CreateClass Child: expected parent %s, got %v", firstClass.Code, classChild.Parent)
 	}
 
-	_, err = s.domain.class.Update(ctx, c.Code, c.Locale, class.UpdateParams{
-		Parent: &c.Code,
+	_, err = s.domain.class.Update(ctx, firstClass.Code, class.UpdateParams{
+		Parent: &firstClass.Code,
 	})
-	if !errors.Is(err, errx.ErrorClassParentEqualCode) {
-		t.Fatalf("UpdateClass: expected error %v, got %v", errx.ErrorClassParentEqualCode, err)
+	if !errors.Is(err, errx.ErrorClassParentCycle) {
+		t.Fatalf("UpdateClass: expected error %v, got %v", errx.ErrorClassParentCycle, err)
 	}
 
-	_, err = s.domain.class.Update(ctx, c.Code, c.Locale, class.UpdateParams{
+	_, err = s.domain.class.Update(ctx, firstClass.Code, class.UpdateParams{
 		Parent: &classChild.Code,
 	})
 	if !errors.Is(err, errx.ErrorClassParentCycle) {
@@ -99,21 +64,21 @@ func TestCreatingClassAndDetails(t *testing.T) {
 		t.Fatalf("CreateClass Parent: %v", err)
 	}
 
-	c, err = s.domain.class.Update(ctx, c.Code, c.Locale, class.UpdateParams{
+	firstClass, err = s.domain.class.Update(ctx, firstClass.Code, class.UpdateParams{
 		Parent: &classParent.Code,
 	})
 	if err != nil {
 		t.Fatalf("UpdateClass: %v", err)
 	}
-	if *c.Parent != classParent.Code {
-		t.Fatalf("UpdateClass: expected parent %s, got %v", classParent.Code, c.Parent)
+	if *firstClass.Parent != classParent.Code {
+		t.Fatalf("UpdateClass: expected parent %s, got %v", classParent.Code, firstClass.Parent)
 	}
 
 	t.Logf("Parent: %v", classParent.Parent)
-	t.Logf("Classes: %s", *c.Parent)
+	t.Logf("Classes: %s", *firstClass.Parent)
 	t.Logf("Child: %s", *classChild.Parent)
 
-	classes, err := s.domain.class.List(ctx, enum.LocaleUK, class.FilterListParams{
+	classes, err := s.domain.class.List(ctx, class.FilterListParams{
 		Parent:      &classParent.Code,
 		ParentCycle: true,
 	})

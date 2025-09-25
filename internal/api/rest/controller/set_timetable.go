@@ -140,7 +140,7 @@ func (s Service) SetTimetable(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res, err := s.domain.Place.SetTimetable(r.Context(), req.Data.Id, params)
+	res, err := s.domain.place.SetTimetable(r.Context(), req.Data.Id, params)
 	if err != nil {
 		s.log.WithError(err).Error("could not set timetable")
 		switch {

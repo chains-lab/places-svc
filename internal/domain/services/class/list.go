@@ -20,17 +20,13 @@ type FilterListParams struct {
 	Size        uint
 }
 
-func (m Service) List(
-	ctx context.Context,
-	locale string,
-	filter FilterListParams,
-) (models.ClassesCollection, error) {
+func (m Service) List(ctx context.Context, filter FilterListParams) (models.ClassesCollection, error) {
 	limit, offset := pagi.PagConvert(filter.Page, filter.Size)
 
 	query := m.db.Classes()
 
 	if filter.Parent != nil {
-		_, err := m.Get(ctx, *filter.Parent, locale)
+		_, err := m.Get(ctx, *filter.Parent)
 		if errors.Is(err, errx.ErrorClassNotFound) {
 			return models.ClassesCollection{}, errx.ErrorParentClassNotFound.Raise(
 				fmt.Errorf("parent class not found: %s", *filter.Parent),
@@ -65,13 +61,7 @@ func (m Service) List(
 
 	query = query.Page(limit, offset)
 
-	l := locale
-	err := enum.IsValidLocaleSupported(l)
-	if err != nil {
-		l = enum.DefaultLocale
-	}
-
-	rows, err := query.SelectWithLocale(ctx, l)
+	rows, err := query.Select(ctx)
 	if err != nil {
 		return models.ClassesCollection{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to select classes, cause: %w", err),

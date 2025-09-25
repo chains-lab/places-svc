@@ -24,7 +24,7 @@ func (s Service) DeleteTimetable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.domain.Place.DeleteTimetable(r.Context(), placeID)
+	err = s.domain.place.DeleteTimetable(r.Context(), placeID)
 	if err != nil {
 		s.log.WithError(err).Error("failed to delete timetable")
 		switch {

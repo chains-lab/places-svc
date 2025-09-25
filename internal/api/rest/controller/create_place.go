@@ -53,7 +53,7 @@ func (s Service) CreatePlace(w http.ResponseWriter, r *http.Request) {
 		params.Website = req.Data.Attributes.Website
 	}
 
-	res, err := s.domain.Place.Create(r.Context(), params)
+	res, err := s.domain.place.Create(r.Context(), params)
 	if err != nil {
 		s.log.WithError(err).Error("error creating place")
 		switch {

@@ -17,62 +17,24 @@ import (
 )
 
 type Class interface {
-	Activate(
-		ctx context.Context,
-		code, locale string,
-	) (models.Class, error)
+	Activate(ctx context.Context, code string) (models.Class, error)
+	Deactivate(ctx context.Context, code string, replaceClasses string) (models.Class, error)
 
-	Deactivate(
-		ctx context.Context,
-		code, locale string,
-		replaceClasses string,
-	) (models.Class, error)
-
-	Create(
-		ctx context.Context,
-		params class.CreateParams,
-	) (models.Class, error)
-
-	Delete(
-		ctx context.Context,
-		code string,
-	) error
-
-	Get(
-		ctx context.Context,
-		code, locale string,
-	) (models.Class, error)
-
-	List(
-		ctx context.Context,
-		locale string,
-		filter class.FilterListParams,
-	) (models.ClassesCollection, error)
-
-	LocalesList(
-		ctx context.Context,
-		class string,
-		page uint,
-		size uint,
-	) (models.ClassLocaleCollection, error)
-
-	SetLocale(
-		ctx context.Context,
-		code string,
-		locales class.SetLocaleParams,
-	) error
-
-	DeleteLocale(
-		ctx context.Context,
-		class, locale string,
-	) error
+	Create(ctx context.Context, params class.CreateParams) (models.Class, error)
 
 	Update(
 		ctx context.Context,
 		code string,
-		locale string,
 		params class.UpdateParams,
 	) (models.Class, error)
+
+	Get(ctx context.Context, code string) (models.Class, error)
+	Delete(ctx context.Context, code string) error
+
+	List(
+		ctx context.Context,
+		filter class.FilterListParams,
+	) (models.ClassesCollection, error)
 }
 
 type Place interface {
@@ -152,8 +114,8 @@ type Place interface {
 }
 
 type domain struct {
-	Class
-	Place
+	class Class
+	place Place
 }
 
 type Service struct {
@@ -165,8 +127,8 @@ type Service struct {
 func NewService(cfg internal.Config, log logium.Logger, class class.Service, place place.Service) Service {
 	return Service{
 		domain: domain{
-			Class: class,
-			Place: place,
+			class: class,
+			place: place,
 		},
 
 		log: log,

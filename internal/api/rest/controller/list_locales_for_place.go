@@ -28,7 +28,7 @@ func (s Service) ListLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	locales, err := s.domain.Place.ListLocales(r.Context(), placeID, pag, size)
+	locales, err := s.domain.place.ListLocales(r.Context(), placeID, pag, size)
 	if err != nil {
 		s.log.WithError(err).Error("failed to get place locales")
 		switch {

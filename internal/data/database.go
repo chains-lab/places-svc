@@ -40,10 +40,6 @@ func (d *Database) Classes() schemas.ClassesQ {
 	return pgdb.NewClassesQ(d.db)
 }
 
-func (d *Database) ClassLocales() schemas.ClassLocalesQ {
-	return pgdb.NewClassLocalesQ(d.db)
-}
-
 func (d *Database) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
 	_, ok := pgdb.TxFromCtx(ctx)
 	if ok {

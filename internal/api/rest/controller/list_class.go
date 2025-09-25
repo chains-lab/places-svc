@@ -45,9 +45,7 @@ func (s Service) ListClass(w http.ResponseWriter, r *http.Request) {
 	filters.Page = pag
 	filters.Size = size
 
-	locale := DetectLocale(w, r)
-
-	classes, err := s.domain.Class.List(r.Context(), locale, filters)
+	classes, err := s.domain.class.List(r.Context(), filters)
 	if err != nil {
 		s.log.WithError(err).Error("failed to list classes")
 		switch {

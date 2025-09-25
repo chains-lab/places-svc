@@ -27,7 +27,7 @@ func (s Service) DeactivatePlace(w http.ResponseWriter, r *http.Request) {
 
 	locale := DetectLocale(w, r)
 
-	res, err := s.domain.Place.Deactivate(r.Context(), placeID, locale)
+	res, err := s.domain.place.Deactivate(r.Context(), placeID, locale)
 	if err != nil {
 		s.log.WithError(err).Errorf("error deactivating place with id %s", placeID)
 		switch {

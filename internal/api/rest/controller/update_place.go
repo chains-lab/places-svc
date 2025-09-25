@@ -34,7 +34,7 @@ func (s Service) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 		params.Class = req.Data.Attributes.Class
 	}
 
-	res, err := s.domain.Place.Update(
+	res, err := s.domain.place.Update(
 		r.Context(),
 		req.Data.Id,
 		DetectLocale(w, r),

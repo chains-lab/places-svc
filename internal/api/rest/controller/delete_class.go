@@ -14,7 +14,7 @@ import (
 func (s Service) DeleteClass(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "class_code")
 
-	err := s.domain.Class.Delete(r.Context(), code)
+	err := s.domain.class.Delete(r.Context(), code)
 	if err != nil {
 		s.log.WithError(err).WithField("class_code", code).Error("error deleting place")
 		switch {

@@ -4,13 +4,14 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/gatekit/mdlv"
 	"github.com/chains-lab/gatekit/roles"
 	"github.com/chains-lab/places-svc/internal/api/rest/meta"
 	"github.com/go-chi/chi/v5"
 )
 
-type Handlers interface {
+type Controller interface {
 
 	// Places level controller
 	CreatePlace(w http.ResponseWriter, r *http.Request)
@@ -36,62 +37,59 @@ type Handlers interface {
 	ActivateClass(w http.ResponseWriter, r *http.Request)
 	DeactivateClass(w http.ResponseWriter, r *http.Request)
 	DeleteClass(w http.ResponseWriter, r *http.Request)
-	SetLocaleForClass(w http.ResponseWriter, r *http.Request)
 }
 
-func (s *Service) Run(ctx context.Context, h Handlers) {
-	//svc := mdlv.ServiceGrant(enum.CitiesSVC, s.cfg.JWT.Service.SecretKey)
+func (s *Service) Run(ctx context.Context, c Controller) {
+	svc := mdlv.ServiceGrant(enum.CitiesSVC, s.cfg.JWT.Service.SecretKey)
 	auth := mdlv.Auth(meta.UserCtxKey, s.cfg.JWT.User.AccessToken.SecretKey)
 	sysadmin := mdlv.RoleGrant(meta.UserCtxKey, map[string]bool{
-		roles.Admin:     true,
-		roles.SuperUser: true,
+		roles.Admin: true,
+	})
+	moder := mdlv.RoleGrant(meta.UserCtxKey, map[string]bool{
+		roles.Admin: true,
+		roles.Moder: true,
 	})
 
 	s.router.Route("/places-svc/", func(r chi.Router) {
-		//r.Use(svc)
+		r.Use(svc)
 		r.Route("/v1", func(r chi.Router) {
 			r.Route("/classes", func(r chi.Router) {
-				r.Get("/", h.ListClass)
-				r.With(auth).With(sysadmin).Post("/", h.CreateClass)
+				r.Get("/", c.ListClass)
+				r.With(auth).With(sysadmin).Post("/", c.CreateClass)
 
 				r.Route("/{class_code}", func(r chi.Router) {
-					r.Get("/", h.GetClass)
-					r.With(auth).With(sysadmin).Put("/", h.UpdateClass)
-					r.With(auth).With(sysadmin).Delete("/", h.DeleteClass)
+					r.Get("/", c.GetClass)
+					r.With(auth).With(sysadmin).Put("/", c.UpdateClass)
+					r.With(auth).With(sysadmin).Delete("/", c.DeleteClass)
 
-					r.With(auth).With(sysadmin).Put("/activate", h.ActivateClass)
-					r.With(auth).With(sysadmin).Put("/deactivate", h.DeactivateClass)
-
-					r.Route("/locales", func(r chi.Router) {
-						r.Get("/", h.ListLocalesForPlace)
-						r.With(auth).With(sysadmin).Put("/", h.SetLocaleForClass)
-					})
+					r.With(auth).With(sysadmin).Put("/activate", c.ActivateClass)
+					r.With(auth).With(sysadmin).Put("/deactivate", c.DeactivateClass)
 				})
 			})
 
 			r.Route("/places", func(r chi.Router) {
-				r.Get("/", h.ListPlace)
-				r.With(auth).Post("/", h.CreatePlace)
+				r.Get("/", c.ListPlace)
+				r.With(auth).Post("/", c.CreatePlace)
 
 				r.Route("/{place_id}", func(r chi.Router) {
-					r.Get("/", h.GetPlace)
-					r.With(auth).Put("/", h.UpdatePlace)
-					r.With(auth).Delete("/", h.DeletePlace)
+					r.Get("/", c.GetPlace)
+					r.With(auth).Put("/", c.UpdatePlace)
+					r.With(auth).Delete("/", c.DeletePlace)
 
-					r.With(auth).Put("/activate", h.ActivatePlace)
-					r.With(auth).Put("/deactivate", h.DeactivatePlace)
-					r.With(auth).With(sysadmin).Put("/verified", h.VerifyPlace)
-					r.With(auth).With(sysadmin).Put("/unverified", h.UnverifyPlace)
+					r.With(auth).Put("/activate", c.ActivatePlace)
+					r.With(auth).Put("/deactivate", c.DeactivatePlace)
+					r.With(auth).With(moder).Put("/verified", c.VerifyPlace)
+					r.With(auth).With(moder).Put("/unverified", c.UnverifyPlace)
 
 					r.Route("/locales", func(r chi.Router) {
-						r.Get("/", h.ListLocalesForPlace)
-						r.With(auth).Put("/", h.SetLocalesForPlace)
+						r.Get("/", c.ListLocalesForPlace)
+						r.With(auth).Put("/", c.SetLocalesForPlace)
 					})
 
 					r.Route("/timetable", func(r chi.Router) {
-						r.Get("/", h.GetTimetable)
-						r.With(auth).Put("/", h.SetTimetable)
-						r.With(auth).Delete("/", h.DeleteTimetable)
+						r.Get("/", c.GetTimetable)
+						r.With(auth).Put("/", c.SetTimetable)
+						r.With(auth).Delete("/", c.DeleteTimetable)
 					})
 				})
 			})

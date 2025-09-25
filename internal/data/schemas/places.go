@@ -46,7 +46,7 @@ type Place struct {
 	ID            uuid.UUID     `storage:"id"`
 	CityID        uuid.UUID     `storage:"city_id"`
 	DistributorID uuid.NullUUID `storage:"distributor_id"`
-	Class         string        `storage:"Class"`
+	Class         string        `storage:"class"`
 
 	Status   string    `storage:"Status"`
 	Verified bool      `storage:"Verified"`

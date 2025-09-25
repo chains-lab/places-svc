@@ -6,21 +6,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 )
 
-func (m Service) Get(
-	ctx context.Context,
-	code, locale string,
-) (models.Class, error) {
-	err := enum.IsValidLocaleSupported(locale)
-	if err != nil {
-		locale = enum.LocaleEN
-	}
+func (m Service) Get(ctx context.Context, code string) (models.Class, error) {
 
-	class, err := m.db.Classes().FilterCode(code).GetWithLocale(ctx, locale)
+	class, err := m.db.Classes().FilterCode(code).Get(ctx)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):

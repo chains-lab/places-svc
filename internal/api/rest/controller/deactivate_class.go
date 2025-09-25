@@ -13,8 +13,6 @@ import (
 )
 
 func (s Service) DeactivateClass(w http.ResponseWriter, r *http.Request) {
-	locale := DetectLocale(w, r)
-
 	req, err := requests.DeactivateClass(r)
 	if err != nil {
 		ape.RenderErr(w, problems.BadRequest(err)...)
@@ -22,7 +20,7 @@ func (s Service) DeactivateClass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := s.domain.Class.Deactivate(r.Context(), req.Data.Id, locale, req.Data.Attributes.ReplacedClassCode)
+	res, err := s.domain.class.Deactivate(r.Context(), req.Data.Id, req.Data.Attributes.ReplacedClassCode)
 	if err != nil {
 		s.log.WithError(err).Errorf("error deactivating place")
 		switch {

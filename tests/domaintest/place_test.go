@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
@@ -40,7 +39,7 @@ func TestCreatingPlace(t *testing.T) {
 		t.Fatalf("CreateClass: %v", err)
 	}
 
-	classFirst, err = s.domain.class.Activate(ctx, classFirst.Code, enum.LocaleUK)
+	classFirst, err = s.domain.class.Activate(ctx, classFirst.Code)
 	if err != nil {
 		t.Fatalf("ActivateClass: %v", err)
 	}
@@ -54,7 +53,7 @@ func TestCreatingPlace(t *testing.T) {
 		Class:         classFirst.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        "en",
-		Name:          "Place Name",
+		Name:          "place Name",
 		Address:       "123 Main St",
 		Description:   "A nice p",
 	})

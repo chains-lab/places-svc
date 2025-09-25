@@ -31,7 +31,7 @@ func (s Service) CreateClass(w http.ResponseWriter, r *http.Request) {
 		params.Parent = req.Data.Attributes.Parent
 	}
 
-	res, err := s.domain.Class.Create(r.Context(), params)
+	res, err := s.domain.class.Create(r.Context(), params)
 	if err != nil {
 		s.log.WithError(err).Error("error creating class")
 		switch {

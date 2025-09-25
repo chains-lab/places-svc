@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: Cifra SSO REST API
-  description: SSO REST API for Cifra domain
+  title: Place Service API
+  description: API for managing places and their classes.
   version: 0.0.1
 
 paths:
@@ -31,10 +31,6 @@ components:
       $ref: './spec/components/schemas/ClassesCollection.yaml'
     ClassRelationships:
       $ref: './spec/components/schemas/ClassRelationships.yaml'
-    ClassLocale:
-      $ref: './spec/components/schemas/ClassLocale.yaml'
-    ClassLocalesCollection:
-        $ref: './spec/components/schemas/ClassLocalesCollection.yaml'
     CreateClass:
       $ref: './spec/components/schemas/CreateClass.yaml'
     UpdateClass:

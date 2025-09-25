@@ -51,39 +51,3 @@ func ClassesCollection(ms models.ClassesCollection) resources.ClassesCollection 
 
 	return resp
 }
-
-func ClassLocale(m models.ClassLocale) resources.ClassLocale {
-	return resources.ClassLocale{
-		Data: resources.ClassLocaleData{
-			Id:   m.Class,
-			Type: resources.ClassLocaleType,
-			Attributes: resources.ClassLocaleDataAttributes{
-				Name: m.Name,
-			},
-		},
-	}
-}
-
-func ClassLocalesCollection(ms models.ClassLocaleCollection) resources.ClassLocalesCollection {
-	resp := resources.ClassLocalesCollection{
-		Data:     make([]resources.RelationshipDataObject, 0, len(ms.Data)),
-		Included: make([]resources.ClassLocaleData, 0, len(ms.Data)),
-		Links: resources.PaginationData{
-			PageNumber: int64(ms.Page),
-			PageSize:   int64(ms.Size),
-			TotalItems: int64(ms.Total),
-		},
-	}
-
-	for _, m := range ms.Data {
-		classLocale := ClassLocale(m).Data
-
-		resp.Data = append(resp.Data, resources.RelationshipDataObject{
-			Type: resources.ClassLocaleType,
-			Id:   classLocale.Id,
-		})
-		resp.Included = append(resp.Included, classLocale)
-	}
-
-	return resp
-}

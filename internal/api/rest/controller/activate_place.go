@@ -27,7 +27,7 @@ func (s Service) ActivatePlace(w http.ResponseWriter, r *http.Request) {
 
 	locale := DetectLocale(w, r)
 
-	res, err := s.domain.Place.Activate(r.Context(), placeID, locale)
+	res, err := s.domain.place.Activate(r.Context(), placeID, locale)
 	if err != nil {
 		s.log.WithError(err).WithField("place_id", placeID).Error("error activating place")
 		switch {

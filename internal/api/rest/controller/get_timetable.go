@@ -24,7 +24,7 @@ func (s Service) GetTimetable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	timetable, err := s.domain.Place.GetTimetable(r.Context(), placeID)
+	timetable, err := s.domain.place.GetTimetable(r.Context(), placeID)
 	if err != nil {
 		s.log.WithError(err).Error("failed to get timetable")
 		switch {

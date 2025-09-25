@@ -11,11 +11,8 @@ import (
 	"github.com/chains-lab/places-svc/internal/domain/models"
 )
 
-func (m Service) Activate(
-	ctx context.Context,
-	code, locale string,
-) (models.Class, error) {
-	class, err := m.Get(ctx, code, locale)
+func (m Service) Activate(ctx context.Context, code string) (models.Class, error) {
+	class, err := m.Get(ctx, code)
 	if err != nil {
 		return models.Class{}, err
 	}
@@ -41,17 +38,13 @@ func (m Service) Activate(
 	return class, nil
 }
 
-func (m Service) Deactivate(
-	ctx context.Context,
-	code, locale string,
-	replaceClasses string,
-) (models.Class, error) {
-	class, err := m.Get(ctx, code, locale)
+func (m Service) Deactivate(ctx context.Context, code, replaceClasses string) (models.Class, error) {
+	class, err := m.Get(ctx, code)
 	if err != nil {
 		return models.Class{}, err
 	}
 
-	replaceClass, err := m.Get(ctx, replaceClasses, locale)
+	replaceClass, err := m.Get(ctx, replaceClasses)
 	if err != nil {
 		return models.Class{}, err
 	}

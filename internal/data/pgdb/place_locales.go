@@ -45,7 +45,7 @@ func (q *placeLocalesQ) New() schemas.PlaceLocalesQ { return NewPlaceLocalesQ(q.
 func (q *placeLocalesQ) Insert(ctx context.Context, in schemas.PlaceLocale) error {
 	values := map[string]any{
 		"place_id":    in.PlaceID,
-		"locale":      sanitizeLocale(in.Locale),
+		"locale":      schemas.SanitizeLocale(in.Locale),
 		"name":        in.Name,
 		"description": in.Description,
 	}
@@ -76,7 +76,7 @@ func (q *placeLocalesQ) Upsert(ctx context.Context, in ...schemas.PlaceLocale) e
 	for _, row := range in {
 		ph = append(ph, fmt.Sprintf("($%d,$%d,$%d,$%d)", i, i+1, i+2, i+3))
 		i += 4
-		args = append(args, row.PlaceID, sanitizeLocale(row.Locale), row.Name, row.Description)
+		args = append(args, row.PlaceID, schemas.SanitizeLocale(row.Locale), row.Name, row.Description)
 	}
 	query := fmt.Sprintf(`
 		INSERT INTO %s %s VALUES %s

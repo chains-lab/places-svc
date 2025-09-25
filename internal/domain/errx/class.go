@@ -29,9 +29,9 @@ var ErrorParentClassNotFound = ape.DeclareError("PARENT_CLASS_NOT_FOUND")
 // Its 409 - Conflict
 var ErrorClassParentCycle = ape.DeclareError("CLASS_FATHER_CYCLE")
 
-// ErrorClassParentEqualCode is used when we try to create/update class with parent that is equal to code
+// ErrorClassNameExists is used when we try to create/update class with name that already exists
 // Its 409 - Conflict
-var ErrorClassParentEqualCode = ape.DeclareError("CLASS_PARENT_EQUAL_CODE")
+var ErrorClassNameExists = ape.DeclareError("CLASS_NAME_EXISTS")
 
 // ErrorClassHasChildren is used when we try to delete class that has children
 // Its 409 - Conflict
