@@ -2,12 +2,10 @@ package place
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"time"
 
-	"github.com/chains-lab/places-svc/internal/data/schemas"
+	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/google/uuid"
@@ -16,90 +14,73 @@ import (
 
 type UpdateParams struct {
 	Class   *string
-	Status  *string
 	Point   *orb.Point
 	Website *string
 	Phone   *string
 	Address *string
 }
 
-func (m Service) Update(
+func (s Service) Update(
 	ctx context.Context,
 	placeID uuid.UUID,
 	locale string,
 	params UpdateParams,
 ) (models.Place, error) {
-	place, err := m.Get(ctx, placeID, locale)
+	place, err := s.Get(ctx, placeID, locale)
 	if err != nil {
 		return models.Place{}, err
 	}
 
-	stmt := schemas.UpdatePlaceParams{
-		UpdatedAt: time.Now().UTC(),
-	}
-
 	if params.Class != nil {
-		_, err = m.db.Classes().FilterCode(*params.Class).Get(ctx)
-		if err != nil {
-			switch {
-			case errors.Is(err, sql.ErrNoRows):
-				return models.Place{}, errx.ErrorClassNotFound.Raise(
-					fmt.Errorf("class with code %s not found, cause: %w", *params.Class, err),
-				)
-			default:
-				return models.Place{}, errx.ErrorInternal.Raise(
-					fmt.Errorf("failed to get class with code %s, cause: %w", *params.Class, err),
-				)
-			}
-		}
-		stmt.Class = params.Class
 		place.Class = *params.Class
 	}
-
-	if params.Status != nil {
-		stmt.Status = params.Status
-		place.Status = *params.Status
-	}
-
 	if params.Point != nil {
-		stmt.Point = params.Point
 		place.Point = *params.Point
 	}
-
 	if params.Website != nil {
-		switch *params.Website {
-		case "":
-			stmt.Website = &sql.NullString{Valid: false}
-			place.Website = nil
-		default:
-			stmt.Website = &sql.NullString{String: *params.Website, Valid: true}
-			place.Website = params.Website
-		}
+		place.Website = params.Website
 	}
-
 	if params.Phone != nil {
-		switch *params.Phone {
-		case "":
-			stmt.Phone = &sql.NullString{Valid: false}
-			place.Phone = nil
-		default:
-			stmt.Phone = &sql.NullString{String: *params.Phone, Valid: true}
-			place.Phone = params.Phone
-		}
+		place.Phone = params.Phone
 	}
+	if params.Address != nil {
+		place.Address = *params.Address
+	}
+	place.UpdatedAt = time.Now().UTC()
 
-	err = m.db.Places().FilterID(placeID).Update(ctx, stmt)
+	err = s.db.UpdatePlace(ctx, placeID, params, place.UpdatedAt)
 	if err != nil {
 		return models.Place{}, errx.ErrorInternal.Raise(
-			fmt.Errorf("failed to update place with id %s, cause: %w", placeID, err),
+			fmt.Errorf("failed to update place, cause: %w", err),
 		)
 	}
 
 	return place, nil
 }
 
-type UpdatePlacesFilter struct {
-	Class         *string
-	CityID        *uuid.UUID
-	DistributorID *uuid.UUID
+func (s Service) UpdateStatus(
+	ctx context.Context,
+	placeID uuid.UUID,
+	status string,
+	locale string,
+) (models.Place, error) {
+	place, err := s.Get(ctx, placeID, locale)
+	if err != nil {
+		return models.Place{}, err
+	}
+
+	err = enum.CheckPlaceStatus(status)
+	if err != nil {
+		return models.Place{}, err
+	}
+
+	place.UpdatedAt = time.Now().UTC()
+	place.Status = status
+
+	err = s.db.UpdatePlaceStatus(ctx, placeID, status, place.UpdatedAt)
+	if err != nil {
+		return models.Place{}, err
+	}
+
+	return place, nil
 }

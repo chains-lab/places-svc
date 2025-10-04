@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/chains-lab/places-svc/internal/data/pgdb"
-	"github.com/chains-lab/places-svc/internal/data/schemas"
+	"github.com/chains-lab/places-svc/internal/domain/models"
 	_ "github.com/lib/pq" // postgres driver don`t delete
 )
 
@@ -24,19 +24,19 @@ func NewDatabase(url string) Database {
 	return Database{db}
 }
 
-func (d *Database) Places() schemas.PlacesQ {
+func (d *Database) Places() pgdb.PlacesQ {
 	return pgdb.NewPlacesQ(d.db)
 }
 
-func (d *Database) PlaceLocales() schemas.PlaceLocalesQ {
+func (d *Database) PlaceLocales() pgdb.PlaceLocalesQ {
 	return pgdb.NewPlaceLocalesQ(d.db)
 }
 
-func (d *Database) PlaceTimetables() schemas.PlaceTimetablesQ {
+func (d *Database) PlaceTimetables() pgdb.PlaceTimetablesQ {
 	return pgdb.NewPlaceTimetablesQ(d.db)
 }
 
-func (d *Database) Classes() schemas.ClassesQ {
+func (d *Database) Classes() pgdb.ClassesQ {
 	return pgdb.NewClassesQ(d.db)
 }
 
@@ -78,4 +78,88 @@ func (d *Database) Transaction(ctx context.Context, fn func(ctx context.Context)
 	}
 
 	return nil
+}
+
+func modelFromDB(in pgdb.PlaceWithDetails) models.Place {
+	p := detailsFromDB(in.Place)
+	t := timetableFromDB(in.Timetable)
+
+	out := models.Place{
+		ID:            p.ID,
+		CityID:        p.CityID,
+		DistributorID: p.DistributorID,
+		Class:         p.Class,
+
+		Status:    p.Status,
+		Verified:  p.Verified,
+		Ownership: p.Ownership,
+		Point:     p.Point,
+		Address:   p.Address,
+
+		Locale:      in.Locale,
+		Name:        in.Name,
+		Description: in.Description,
+
+		CreatedAt: p.CreatedAt,
+		UpdatedAt: p.UpdatedAt,
+
+		Timetable: t,
+	}
+	if p.Website != nil {
+		out.Website = p.Website
+	}
+	if p.Phone != nil {
+		out.Phone = p.Phone
+	}
+
+	return out
+}
+
+func detailsFromDB(dbPlace pgdb.Place) models.PlaceDetails {
+	place := models.PlaceDetails{
+		ID:        dbPlace.ID,
+		CityID:    dbPlace.CityID,
+		Class:     dbPlace.Class,
+		Status:    dbPlace.Status,
+		Verified:  dbPlace.Verified,
+		Point:     dbPlace.Point,
+		Address:   dbPlace.Address,
+		CreatedAt: dbPlace.CreatedAt,
+		UpdatedAt: dbPlace.UpdatedAt,
+	}
+	if dbPlace.DistributorID.Valid {
+		place.DistributorID = &dbPlace.DistributorID.UUID
+	}
+	if dbPlace.Website.Valid {
+		place.Website = &dbPlace.Website.String
+	}
+	if dbPlace.Phone.Valid {
+		place.Phone = &dbPlace.Phone.String
+	}
+
+	return place
+}
+
+func localeFromDB(dbLoc pgdb.PlaceLocale) models.PlaceLocale {
+	return models.PlaceLocale{
+		PlaceID:     dbLoc.PlaceID,
+		Locale:      dbLoc.Locale,
+		Name:        dbLoc.Name,
+		Description: dbLoc.Description,
+	}
+
+}
+
+func timetableFromDB(dbTI []pgdb.PlaceTimetable) models.Timetable {
+	res := models.Timetable{
+		Table: make([]models.TimeInterval, 0, len(dbTI)),
+	}
+	for _, ti := range dbTI {
+		res.Table = append(res.Table, models.TimeInterval{
+			From: models.NumberMinutesToMoment(ti.StartMin),
+			To:   models.NumberMinutesToMoment(ti.EndMin),
+		})
+	}
+
+	return res
 }

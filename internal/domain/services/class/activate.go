@@ -6,13 +6,12 @@ import (
 	"time"
 
 	"github.com/chains-lab/enum"
-	"github.com/chains-lab/places-svc/internal/data/schemas"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 )
 
-func (m Service) Activate(ctx context.Context, code string) (models.Class, error) {
-	class, err := m.Get(ctx, code)
+func (s Service) Activate(ctx context.Context, code string) (models.Class, error) {
+	class, err := s.Get(ctx, code)
 	if err != nil {
 		return models.Class{}, err
 	}
@@ -21,80 +20,71 @@ func (m Service) Activate(ctx context.Context, code string) (models.Class, error
 		return class, nil
 	}
 
-	status := enum.PlaceClassStatusesActive
 	now := time.Now().UTC()
-	err = m.db.Classes().FilterCode(code).Update(ctx, schemas.UpdateClassParams{
-		Status:    &status,
-		UpdatedAt: now,
-	})
+	err = s.db.UpdateClassStatus(ctx, code, enum.PlaceClassStatusesActive, now)
 	if err != nil {
 		return models.Class{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to activate class with code %s, cause: %w", code, err),
 		)
 	}
 
-	class.Status = status
+	class.Status = enum.PlaceClassStatusesActive
 	class.UpdatedAt = now
+
 	return class, nil
 }
 
-func (m Service) Deactivate(ctx context.Context, code, replaceClasses string) (models.Class, error) {
-	class, err := m.Get(ctx, code)
-	if err != nil {
-		return models.Class{}, err
-	}
-
-	replaceClass, err := m.Get(ctx, replaceClasses)
-	if err != nil {
-		return models.Class{}, err
-	}
-
-	if replaceClass.Code == replaceClass.Code {
+func (s Service) Deactivate(ctx context.Context, code, replaceCode string) (models.Class, error) {
+	if code == replaceCode {
 		return models.Class{}, errx.ErrorClassDeactivateReplaceSame.Raise(
-			fmt.Errorf("cannot replace class %s with itself", replaceClasses),
+			fmt.Errorf("cannot replace class %s with itself", replaceCode),
 		)
+	}
+
+	current, err := s.Get(ctx, code)
+	if err != nil {
+		return models.Class{}, err
+	}
+
+	replaceClass, err := s.Get(ctx, replaceCode)
+	if err != nil {
+		return models.Class{}, err
 	}
 
 	if replaceClass.Status == enum.PlaceClassStatusesInactive {
 		return models.Class{}, errx.ErrorClassDeactivateReplaceInactive.Raise(
-			fmt.Errorf("cannot replace with inactive class %s", replaceClasses),
+			fmt.Errorf("cannot replace with inactive class %s", replaceCode),
 		)
 	}
 
-	if class.Status == enum.PlaceClassStatusesInactive {
-		return class, nil
+	if current.Status == enum.PlaceClassStatusesInactive {
+		return current, nil
 	}
 
-	status := enum.PlaceClassStatusesInactive
 	now := time.Now().UTC()
-	trxErr := m.db.Transaction(ctx, func(ctx context.Context) error {
-		err = m.db.Classes().FilterCode(code).Update(ctx, schemas.UpdateClassParams{
-			Status:    &status,
-			UpdatedAt: now,
-		})
+
+	if err = s.db.Transaction(ctx, func(ctx context.Context) error {
+		err = s.db.UpdateClassStatus(ctx, code, enum.PlaceClassStatusesInactive, now)
 		if err != nil {
 			return errx.ErrorInternal.Raise(
 				fmt.Errorf("failed to deactivate class with code %s, cause: %w", code, err),
 			)
 		}
 
-		err = m.db.Places().FilterClass(code).Update(ctx, schemas.UpdatePlaceParams{
-			Class:     &replaceClasses,
-			UpdatedAt: now,
-		})
+		err = s.db.ReplaceClassInPlaces(ctx, code, replaceCode, now)
 		if err != nil {
 			return errx.ErrorInternal.Raise(
-				fmt.Errorf("failed to update places with class %s to class %s, cause: %w", code, replaceClasses, err),
+				fmt.Errorf("failed to update places with class %s to class %s, cause: %w", code, replaceCode, err),
 			)
 		}
 
 		return nil
-	})
-	if trxErr != nil {
-		return models.Class{}, trxErr
+	}); err != nil {
+		return models.Class{}, err
 	}
 
-	class.Status = status
-	class.UpdatedAt = now
-	return class, nil
+	current.Status = enum.PlaceClassStatusesInactive
+	current.UpdatedAt = now
+
+	return current, nil
 }

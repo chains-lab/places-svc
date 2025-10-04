@@ -24,7 +24,7 @@ func (s Service) DeleteClass(w http.ResponseWriter, r *http.Request) {
 			ape.RenderErr(w, problems.Forbidden("cannot delete active class"))
 		case errors.Is(err, errx.ErrorCantDeleteClassWithPlaces):
 			ape.RenderErr(w, problems.Forbidden("cannot delete class with places"))
-		case errors.Is(err, errx.ErrorClassHasChildren):
+		case errors.Is(err, errx.ErrorCannotDeleteClassWithChildren):
 			ape.RenderErr(w, problems.Forbidden("cannot delete class with children"))
 		default:
 			ape.RenderErr(w, problems.InternalError())

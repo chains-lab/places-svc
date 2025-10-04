@@ -14,6 +14,10 @@ type Class struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+func (c Class) IsNil() bool {
+	return c.Code == ""
+}
+
 type ClassesCollection struct {
 	Data  []Class `json:"data"`
 	Page  uint    `json:"page"`

@@ -69,7 +69,7 @@ func TestPlacesFilters(t *testing.T) {
 		Description:   "A big supermarket p in second city",
 	})
 
-	p, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+	p, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 		Classes: []string{
 			FoodClass.Code,
 		},
@@ -77,7 +77,7 @@ func TestPlacesFilters(t *testing.T) {
 			distributorFirstID,
 			distributorSecondID,
 		},
-	}, place.SortListField{})
+	}, place.SortParams{})
 	if err != nil {
 		t.Fatalf("ListPlaces by FoodClass: %v", err)
 	}
@@ -95,12 +95,12 @@ func TestPlacesFilters(t *testing.T) {
 	}
 
 	placeTxt := "PlaceDetails"
-	p, err = s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+	p, err = s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 		Name: &placeTxt,
 		Classes: []string{
 			SuperMarketClass.Code,
 		},
-	}, place.SortListField{})
+	}, place.SortParams{})
 	if err != nil {
 		t.Fatalf("ListPlaces by SuperMarketClass: %v", err)
 	}
@@ -125,9 +125,9 @@ func TestPlacesFilters(t *testing.T) {
 		t.Errorf("GetPlace: expected name 'SuperMarket PlaceDetails', got '%s'", placeSuperMarket.Name)
 	}
 
-	p, err = s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+	p, err = s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 		CityIDs: []uuid.UUID{cityFirstID},
-	}, place.SortListField{})
+	}, place.SortParams{})
 	if err != nil {
 		t.Fatalf("ListPlaces by CityID: %v", err)
 	}
@@ -181,11 +181,11 @@ func TestPlacesFilters(t *testing.T) {
 		Description:   "A trendy clothes shop UK",
 	})
 
-	p, err = s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+	p, err = s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 		Classes: []string{
 			ShopsClass.Code,
 		},
-	}, place.SortListField{})
+	}, place.SortParams{})
 	if err != nil {
 		t.Fatalf("ListPlaces by CityID after adding shops: %v", err)
 	}
@@ -276,7 +276,7 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	}
 
 	// sanity-check: без фильтров должно быть 4
-	all, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{}, place.SortListField{})
+	all, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{}, place.SortParams{})
 	if err != nil {
 		t.Fatalf("ListPlaces (no filters): %v", err)
 	}
@@ -285,9 +285,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	}
 
 	t.Run("Filter by classData=Food (должно включать детей)", func(t *testing.T) {
-		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			Classes: []string{FoodClass.Code}, // ждём Food + SuperMarket + Restaurant
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
@@ -297,9 +297,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	})
 
 	t.Run("Filter by classData=SuperMarket", func(t *testing.T) {
-		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			Classes: []string{SuperMarketClass.Code},
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
@@ -309,9 +309,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	})
 
 	t.Run("Filter by CityIDs=city1", func(t *testing.T) {
-		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			CityIDs: []uuid.UUID{city1},
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
@@ -322,9 +322,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	})
 
 	t.Run("Filter by DistributorIDs", func(t *testing.T) {
-		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			DistributorIDs: []uuid.UUID{distributorA},
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
@@ -335,9 +335,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	})
 
 	t.Run("Filter by Verified=true", func(t *testing.T) {
-		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			Verified: boolPtr(true),
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
@@ -349,9 +349,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	})
 
 	t.Run("Filter by Name LIKE 'Market'", func(t *testing.T) {
-		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			Name: strptr("Market"),
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
@@ -362,9 +362,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	})
 
 	t.Run("Filter by Address LIKE 'Main St'", func(t *testing.T) {
-		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			Address: strptr("Main St"),
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
@@ -376,12 +376,12 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 	})
 
 	t.Run("Geo filter (radius ~2km from center) + sort by distance ASC", func(t *testing.T) {
-		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
-			Location: &place.FilterListDistance{
+		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
+			Location: &place.FilterDistance{
 				Point:   orb.Point{30.000, 50.000},
 				RadiusM: 2000,
 			},
-		}, place.SortListField{
+		}, place.SortParams{
 			ByDistance: func(b bool) *bool { return &b }(true),
 		})
 		if err != nil {
@@ -400,10 +400,10 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 
 	t.Run("PagConvert with class=Food, page size=2", func(t *testing.T) {
 		// Всего 4 по классу Food (включая детей)
-		page1, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		page1, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			Classes: []string{FoodClass.Code},
 			Page:    1, Size: 2,
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}
@@ -411,10 +411,10 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 			t.Fatalf("page1: len=%d total=%d; want 2/4", len(page1.Data), page1.Total)
 		}
 
-		page2, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{
+		page2, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 			Classes: []string{FoodClass.Code},
 			Page:    2, Size: 2,
-		}, place.SortListField{})
+		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
 		}

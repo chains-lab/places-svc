@@ -6,6 +6,7 @@ import (
 
 	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
+	"github.com/chains-lab/places-svc/internal/domain/services/plocale"
 	"github.com/google/uuid"
 )
 
@@ -61,11 +62,11 @@ func TestPlaceLocales(t *testing.T) {
 		Description:   "A big supermarket place in second city",
 	})
 
-	err = s.domain.place.SetLocales(ctx, food.ID, place.SetLocaleParams{
+	err = s.domain.place.SetLocales(ctx, food.ID, plocale.SetParams{
 		Locale:      enum.LocaleUK,
 		Name:        "Food place UK",
 		Description: "A big Food place UK",
-	}, place.SetLocaleParams{
+	}, plocale.SetParams{
 		Locale:      enum.LocaleRU,
 		Name:        "Food place RU",
 		Description: "A big Food place RU",
@@ -74,7 +75,7 @@ func TestPlaceLocales(t *testing.T) {
 		t.Fatalf("SetPlaceLocales: %v", err)
 	}
 
-	err = s.domain.place.SetLocales(ctx, restaurant.ID, place.SetLocaleParams{
+	err = s.domain.place.SetLocales(ctx, restaurant.ID, plocale.SetParams{
 		Locale:      enum.LocaleUK,
 		Name:        "Restaurant place UK",
 		Description: "A nice restaurant place UK",
@@ -91,7 +92,7 @@ func TestPlaceLocales(t *testing.T) {
 		t.Fatalf("expected locale %s, got %s", enum.LocaleEN, clothesEn.Locale)
 	}
 
-	shops, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterListParams{}, place.SortListField{})
+	shops, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{}, place.SortParams{})
 	if err != nil {
 		t.Fatalf("ListPlaces: %v", err)
 	}

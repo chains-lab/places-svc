@@ -4,16 +4,34 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/chains-lab/places-svc/internal/data/schemas"
+	"github.com/chains-lab/enum"
 	"github.com/google/uuid"
 )
 
 const placeLocalizationTable = "place_i18n"
 
-type placeLocalesQ struct {
+var reLocale = regexp.MustCompile(`^[a-z]{2}$`)
+
+func SanitizeLocale(l string) string {
+	if reLocale.MatchString(l) {
+		return l
+	}
+
+	return enum.LocaleEN
+}
+
+type PlaceLocale struct {
+	PlaceID     uuid.UUID `storage:"place_id"`
+	Locale      string    `storage:"locale"`
+	Name        string    `storage:"name"`
+	Description string    `storage:"description"`
+}
+
+type PlaceLocalesQ struct {
 	db       *sql.DB
 	selector sq.SelectBuilder
 	inserter sq.InsertBuilder
@@ -22,10 +40,10 @@ type placeLocalesQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewPlaceLocalesQ(db *sql.DB) schemas.PlaceLocalesQ {
+func NewPlaceLocalesQ(db *sql.DB) PlaceLocalesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-	return &placeLocalesQ{
+	return PlaceLocalesQ{
 		db: db,
 		selector: b.Select(
 			"place_id",
@@ -40,12 +58,12 @@ func NewPlaceLocalesQ(db *sql.DB) schemas.PlaceLocalesQ {
 	}
 }
 
-func (q *placeLocalesQ) New() schemas.PlaceLocalesQ { return NewPlaceLocalesQ(q.db) }
+func (q PlaceLocalesQ) New() PlaceLocalesQ { return NewPlaceLocalesQ(q.db) }
 
-func (q *placeLocalesQ) Insert(ctx context.Context, in schemas.PlaceLocale) error {
+func (q PlaceLocalesQ) Insert(ctx context.Context, in PlaceLocale) error {
 	values := map[string]any{
 		"place_id":    in.PlaceID,
-		"locale":      schemas.SanitizeLocale(in.Locale),
+		"locale":      SanitizeLocale(in.Locale),
 		"name":        in.Name,
 		"description": in.Description,
 	}
@@ -62,7 +80,7 @@ func (q *placeLocalesQ) Insert(ctx context.Context, in schemas.PlaceLocale) erro
 	return err
 }
 
-func (q *placeLocalesQ) Upsert(ctx context.Context, in ...schemas.PlaceLocale) error {
+func (q PlaceLocalesQ) Upsert(ctx context.Context, in ...PlaceLocale) error {
 	if len(in) == 0 {
 		return nil
 	}
@@ -76,7 +94,7 @@ func (q *placeLocalesQ) Upsert(ctx context.Context, in ...schemas.PlaceLocale) e
 	for _, row := range in {
 		ph = append(ph, fmt.Sprintf("($%d,$%d,$%d,$%d)", i, i+1, i+2, i+3))
 		i += 4
-		args = append(args, row.PlaceID, schemas.SanitizeLocale(row.Locale), row.Name, row.Description)
+		args = append(args, row.PlaceID, SanitizeLocale(row.Locale), row.Name, row.Description)
 	}
 	query := fmt.Sprintf(`
 		INSERT INTO %s %s VALUES %s
@@ -93,10 +111,10 @@ func (q *placeLocalesQ) Upsert(ctx context.Context, in ...schemas.PlaceLocale) e
 	return err
 }
 
-func (q *placeLocalesQ) Get(ctx context.Context) (schemas.PlaceLocale, error) {
+func (q PlaceLocalesQ) Get(ctx context.Context) (PlaceLocale, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return schemas.PlaceLocale{}, fmt.Errorf("build select %s: %w", placeLocalizationTable, err)
+		return PlaceLocale{}, fmt.Errorf("build select %s: %w", placeLocalizationTable, err)
 	}
 
 	var row *sql.Row
@@ -106,14 +124,14 @@ func (q *placeLocalesQ) Get(ctx context.Context) (schemas.PlaceLocale, error) {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
 
-	var out schemas.PlaceLocale
+	var out PlaceLocale
 	if err := row.Scan(&out.PlaceID, &out.Locale, &out.Name, &out.Description); err != nil {
 		return out, err
 	}
 	return out, nil
 }
 
-func (q *placeLocalesQ) Select(ctx context.Context) ([]schemas.PlaceLocale, error) {
+func (q PlaceLocalesQ) Select(ctx context.Context) ([]PlaceLocale, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("build select %s: %w", placeLocalizationTable, err)
@@ -130,9 +148,9 @@ func (q *placeLocalesQ) Select(ctx context.Context) ([]schemas.PlaceLocale, erro
 	}
 	defer rows.Close()
 
-	var out []schemas.PlaceLocale
+	var out []PlaceLocale
 	for rows.Next() {
-		var pl schemas.PlaceLocale
+		var pl PlaceLocale
 		if err := rows.Scan(&pl.PlaceID, &pl.Locale, &pl.Name, &pl.Description); err != nil {
 			return nil, fmt.Errorf("scan %s: %w", placeLocalizationTable, err)
 		}
@@ -141,21 +159,10 @@ func (q *placeLocalesQ) Select(ctx context.Context) ([]schemas.PlaceLocale, erro
 	return out, rows.Err()
 }
 
-func (q *placeLocalesQ) Update(ctx context.Context, params schemas.UpdatePlaceLocaleParams) error {
-	updates := map[string]any{}
-	if params.Name != nil {
-		updates["name"] = *params.Name
-	}
-	if params.Description != nil {
-		updates["description"] = *params.Description
-	}
-	if len(updates) == 0 {
-		return nil // no-op
-	}
-
-	query, args, err := q.updater.SetMap(updates).ToSql()
+func (q PlaceLocalesQ) Update(ctx context.Context) error {
+	query, args, err := q.updater.ToSql()
 	if err != nil {
-		return fmt.Errorf("build update %s: %w", placeLocalizationTable, err)
+		return fmt.Errorf("building update query for %s: %w", placeLocalizationTable, err)
 	}
 
 	if tx, ok := TxFromCtx(ctx); ok {
@@ -166,7 +173,17 @@ func (q *placeLocalesQ) Update(ctx context.Context, params schemas.UpdatePlaceLo
 	return err
 }
 
-func (q *placeLocalesQ) Delete(ctx context.Context) error {
+func (q PlaceLocalesQ) UpdateName(name string) PlaceLocalesQ {
+	q.updater = q.updater.Set("name", name)
+	return q
+}
+
+func (q PlaceLocalesQ) UpdateDescription(description string) PlaceLocalesQ {
+	q.updater = q.updater.Set("description", description)
+	return q
+}
+
+func (q PlaceLocalesQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
 		return fmt.Errorf("build delete %s: %w", placeLocalizationTable, err)
@@ -179,7 +196,7 @@ func (q *placeLocalesQ) Delete(ctx context.Context) error {
 	return err
 }
 
-func (q *placeLocalesQ) FilterPlaceID(id uuid.UUID) schemas.PlaceLocalesQ {
+func (q PlaceLocalesQ) FilterPlaceID(id uuid.UUID) PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"place_id": id})
 	q.updater = q.updater.Where(sq.Eq{"place_id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"place_id": id})
@@ -187,7 +204,7 @@ func (q *placeLocalesQ) FilterPlaceID(id uuid.UUID) schemas.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) FilterByLocale(locale string) schemas.PlaceLocalesQ {
+func (q PlaceLocalesQ) FilterByLocale(locale string) PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"locale": locale})
 	q.updater = q.updater.Where(sq.Eq{"locale": locale})
 	q.deleter = q.deleter.Where(sq.Eq{"locale": locale})
@@ -195,7 +212,7 @@ func (q *placeLocalesQ) FilterByLocale(locale string) schemas.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) FilterByName(name string) schemas.PlaceLocalesQ {
+func (q PlaceLocalesQ) FilterByName(name string) PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"name": name})
 	q.updater = q.updater.Where(sq.Eq{"name": name})
 	q.deleter = q.deleter.Where(sq.Eq{"name": name})
@@ -203,7 +220,7 @@ func (q *placeLocalesQ) FilterByName(name string) schemas.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) OrderByLocale(asc bool) schemas.PlaceLocalesQ {
+func (q PlaceLocalesQ) OrderByLocale(asc bool) PlaceLocalesQ {
 	dir := "DESC"
 	if asc {
 		dir = "ASC"
@@ -212,12 +229,12 @@ func (q *placeLocalesQ) OrderByLocale(asc bool) schemas.PlaceLocalesQ {
 	return q
 }
 
-func (q *placeLocalesQ) Page(limit, offset uint) schemas.PlaceLocalesQ {
+func (q PlaceLocalesQ) Page(limit, offset uint) PlaceLocalesQ {
 	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
 	return q
 }
 
-func (q *placeLocalesQ) Count(ctx context.Context) (uint, error) {
+func (q PlaceLocalesQ) Count(ctx context.Context) (uint, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("build count %s: %w", placeLocalizationTable, err)

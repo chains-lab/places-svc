@@ -2,12 +2,10 @@ package place
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/chains-lab/enum"
-	"github.com/chains-lab/places-svc/internal/data/schemas"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/place/geo"
@@ -19,17 +17,18 @@ type CreateParams struct {
 	CityID        uuid.UUID
 	DistributorID *uuid.UUID
 	Class         string
-	Website       *string
 	Address       string
 	Status        string
 	Phone         *string
+	Website       *string
 	Point         orb.Point
-	Locale        string
-	Name          string
-	Description   string
+
+	Locale      string
+	Name        string
+	Description string
 }
 
-func (m Service) Create(
+func (s Service) Create(
 	ctx context.Context,
 	params CreateParams,
 ) (models.Place, error) {
@@ -37,7 +36,7 @@ func (m Service) Create(
 
 	placeID := uuid.New()
 
-	stmt := schemas.Place{
+	place := models.Place{
 		ID:        placeID,
 		CityID:    params.CityID,
 		Class:     params.Class,
@@ -49,39 +48,38 @@ func (m Service) Create(
 		UpdatedAt: now,
 	}
 	if params.DistributorID != nil {
-		stmt.DistributorID = uuid.NullUUID{UUID: *params.DistributorID, Valid: true}
+		place.DistributorID = params.DistributorID
 	}
 	if params.Website != nil {
-		stmt.Website = sql.NullString{String: *params.Website, Valid: true}
+		place.Website = params.Website
 	}
 	if params.Phone != nil {
-		stmt.Phone = sql.NullString{String: *params.Phone, Valid: true}
+		place.Phone = params.Phone
 	}
 
 	var addr geo.Address
-	trxErr := m.db.Transaction(ctx, func(ctx context.Context) error {
-		err := m.db.Places().Insert(ctx, stmt)
+	if err := s.db.Transaction(ctx, func(ctx context.Context) error {
+		err := s.db.CreatePlace(ctx, place)
 		if err != nil {
 			return errx.ErrorInternal.Raise(
 				fmt.Errorf("could not create place, cause %w", err),
 			)
 		}
 
-		stmtLocale := schemas.PlaceLocale{
-
+		stmtLocale := models.PlaceLocale{
 			PlaceID:     placeID,
 			Locale:      params.Locale,
 			Name:        params.Name,
 			Description: params.Description,
 		}
-		err = m.db.PlaceLocales().Insert(ctx, stmtLocale)
+		err = s.db.CreatePlaceLocale(ctx, stmtLocale)
 		if err != nil {
 			return errx.ErrorInternal.Raise(
 				fmt.Errorf("could not create place locale, cause %w", err),
 			)
 		}
 
-		addr, err = m.geo.Guess(ctx, orb.Point{30.5234, 50.4501}) // Киев
+		addr, err = s.geo.Guess(ctx, params.Point)
 		if err != nil {
 			return errx.ErrorInternal.Raise(
 				fmt.Errorf("could not guess address for Location, cause %w", err),
@@ -89,9 +87,8 @@ func (m Service) Create(
 		}
 
 		return nil
-	})
-	if trxErr != nil {
-		return models.Place{}, trxErr
+	}); err != nil {
+		return models.Place{}, err
 	}
 
 	res := models.Place{

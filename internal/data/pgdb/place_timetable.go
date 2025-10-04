@@ -7,13 +7,19 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/chains-lab/places-svc/internal/data/schemas"
 	"github.com/google/uuid"
 )
 
 const placeTimetablesTable = "place_timetables"
 
-type placeTimetablesQ struct {
+type PlaceTimetable struct {
+	ID       uuid.UUID `storage:"id"        json:"id"`
+	PlaceID  uuid.UUID `storage:"place_id"  json:"place_id"`
+	StartMin int       `storage:"start_min" json:"start_min"`
+	EndMin   int       `storage:"end_min"   json:"end_min"`
+}
+
+type PlaceTimetablesQ struct {
 	db       *sql.DB
 	selector sq.SelectBuilder
 	inserter sq.InsertBuilder
@@ -22,10 +28,10 @@ type placeTimetablesQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewPlaceTimetablesQ(db *sql.DB) schemas.PlaceTimetablesQ {
+func NewPlaceTimetablesQ(db *sql.DB) PlaceTimetablesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-	return &placeTimetablesQ{
+	return PlaceTimetablesQ{
 		db: db,
 		selector: b.Select(
 			"id",
@@ -40,11 +46,9 @@ func NewPlaceTimetablesQ(db *sql.DB) schemas.PlaceTimetablesQ {
 	}
 }
 
-func (q *placeTimetablesQ) New() schemas.PlaceTimetablesQ { return NewPlaceTimetablesQ(q.db) }
+func (q PlaceTimetablesQ) New() PlaceTimetablesQ { return NewPlaceTimetablesQ(q.db) }
 
-// ---------- CRUD ----------
-
-func (q *placeTimetablesQ) Insert(ctx context.Context, in ...schemas.PlaceTimetable) error {
+func (q PlaceTimetablesQ) Insert(ctx context.Context, in ...PlaceTimetable) error {
 	if len(in) == 0 {
 		return nil
 	}
@@ -67,7 +71,7 @@ func (q *placeTimetablesQ) Insert(ctx context.Context, in ...schemas.PlaceTimeta
 	return err
 }
 
-func (q *placeTimetablesQ) Upsert(ctx context.Context, in ...schemas.PlaceTimetable) error {
+func (q PlaceTimetablesQ) Upsert(ctx context.Context, in ...PlaceTimetable) error {
 	if len(in) == 0 {
 		return nil
 	}
@@ -100,10 +104,10 @@ func (q *placeTimetablesQ) Upsert(ctx context.Context, in ...schemas.PlaceTimeta
 	return err
 }
 
-func (q *placeTimetablesQ) Get(ctx context.Context) (schemas.PlaceTimetable, error) {
+func (q PlaceTimetablesQ) Get(ctx context.Context) (PlaceTimetable, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return schemas.PlaceTimetable{}, fmt.Errorf("build select %s: %w", placeTimetablesTable, err)
+		return PlaceTimetable{}, fmt.Errorf("build select %s: %w", placeTimetablesTable, err)
 	}
 
 	var row *sql.Row
@@ -113,14 +117,14 @@ func (q *placeTimetablesQ) Get(ctx context.Context) (schemas.PlaceTimetable, err
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
 
-	var out schemas.PlaceTimetable
+	var out PlaceTimetable
 	if err := row.Scan(&out.ID, &out.PlaceID, &out.StartMin, &out.EndMin); err != nil {
 		return out, err
 	}
 	return out, nil
 }
 
-func (q *placeTimetablesQ) Select(ctx context.Context) ([]schemas.PlaceTimetable, error) {
+func (q PlaceTimetablesQ) Select(ctx context.Context) ([]PlaceTimetable, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("build select %s: %w", placeTimetablesTable, err)
@@ -137,9 +141,9 @@ func (q *placeTimetablesQ) Select(ctx context.Context) ([]schemas.PlaceTimetable
 	}
 	defer rows.Close()
 
-	var out []schemas.PlaceTimetable
+	var out []PlaceTimetable
 	for rows.Next() {
-		var t schemas.PlaceTimetable
+		var t PlaceTimetable
 		if err := rows.Scan(&t.ID, &t.PlaceID, &t.StartMin, &t.EndMin); err != nil {
 			return nil, err
 		}
@@ -148,7 +152,7 @@ func (q *placeTimetablesQ) Select(ctx context.Context) ([]schemas.PlaceTimetable
 	return out, rows.Err()
 }
 
-func (q *placeTimetablesQ) Delete(ctx context.Context) error {
+func (q PlaceTimetablesQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
 		return fmt.Errorf("build delete %s: %w", placeTimetablesTable, err)
@@ -161,9 +165,7 @@ func (q *placeTimetablesQ) Delete(ctx context.Context) error {
 	return err
 }
 
-// ---------- filters ----------
-
-func (q *placeTimetablesQ) FilterByID(id uuid.UUID) schemas.PlaceTimetablesQ {
+func (q PlaceTimetablesQ) FilterByID(id uuid.UUID) PlaceTimetablesQ {
 	q.selector = q.selector.Where(sq.Eq{"id": id})
 	q.updater = q.updater.Where(sq.Eq{"id": id})
 	q.deleter = q.deleter.Where(sq.Eq{"id": id})
@@ -171,7 +173,7 @@ func (q *placeTimetablesQ) FilterByID(id uuid.UUID) schemas.PlaceTimetablesQ {
 	return q
 }
 
-func (q *placeTimetablesQ) FilterPlaceID(placeID uuid.UUID) schemas.PlaceTimetablesQ {
+func (q PlaceTimetablesQ) FilterPlaceID(placeID uuid.UUID) PlaceTimetablesQ {
 	q.selector = q.selector.Where(sq.Eq{"place_id": placeID})
 	q.updater = q.updater.Where(sq.Eq{"place_id": placeID})
 	q.deleter = q.deleter.Where(sq.Eq{"place_id": placeID})
@@ -179,7 +181,7 @@ func (q *placeTimetablesQ) FilterPlaceID(placeID uuid.UUID) schemas.PlaceTimetab
 	return q
 }
 
-func (q *placeTimetablesQ) FilterBetween(start, end int) schemas.PlaceTimetablesQ {
+func (q PlaceTimetablesQ) FilterBetween(start, end int) PlaceTimetablesQ {
 	const week = 7 * 24 * 60 // 10080
 
 	norm := func(x int) int {
@@ -224,12 +226,12 @@ func (q *placeTimetablesQ) FilterBetween(start, end int) schemas.PlaceTimetables
 
 // ---------- page/count ----------
 
-func (q *placeTimetablesQ) Page(limit, offset uint64) schemas.PlaceTimetablesQ {
+func (q PlaceTimetablesQ) Page(limit, offset uint64) PlaceTimetablesQ {
 	q.selector = q.selector.Limit(limit).Offset(offset)
 	return q
 }
 
-func (q *placeTimetablesQ) Count(ctx context.Context) (uint64, error) {
+func (q PlaceTimetablesQ) Count(ctx context.Context) (uint64, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("build count %s: %w", placeTimetablesTable, err)

@@ -122,8 +122,8 @@ func TestFilterPlaceByTime(t *testing.T) {
 	call := func(win models.TimeInterval) (models.PlacesCollection, int) {
 		res, err := s.domain.place.List(
 			ctx, enum.LocaleEN,
-			place.FilterListParams{Time: &win},
-			place.SortListField{},
+			place.FilterParams{Time: &win},
+			place.SortParams{},
 		)
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)

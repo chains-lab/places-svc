@@ -26,11 +26,19 @@ type PlaceDetails struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+func (p PlaceDetails) IsNil() bool {
+	return p.ID == uuid.Nil
+}
+
 type PlaceLocale struct {
 	PlaceID     uuid.UUID `json:"place_id"`
 	Locale      string    `json:"locale"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
+}
+
+func (p PlaceLocale) IsNil() bool {
+	return p.PlaceID == uuid.Nil
 }
 
 type Place struct {
@@ -56,6 +64,10 @@ type Place struct {
 	UpdatedAt time.Time `json:"updated_at"`
 
 	Timetable Timetable
+}
+
+func (p Place) IsNil() bool {
+	return p.ID == uuid.Nil
 }
 
 type PlacesCollection struct {

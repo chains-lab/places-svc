@@ -17,7 +17,7 @@ import (
 func (s Service) ListClass(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
-	var filters class.FilterListParams
+	var filters class.FilterParams
 
 	if parent := q.Get("parent"); parent != "" {
 		filters.Parent = &parent

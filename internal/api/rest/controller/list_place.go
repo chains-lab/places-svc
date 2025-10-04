@@ -19,7 +19,7 @@ import (
 
 func (s Service) ListPlace(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	var filters place.FilterListParams
+	var filters place.FilterParams
 
 	if cities := q["city_id"]; len(cities) > 0 {
 		cityIDs := make([]uuid.UUID, 0, len(cities))
@@ -82,7 +82,7 @@ func (s Service) ListPlace(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var geo *place.FilterListDistance
+	var geo *place.FilterDistance
 	if point := strings.TrimSpace(q.Get("point")); point != "" {
 		parts := strings.Split(point, ",")
 		if len(parts) != 2 {
@@ -106,7 +106,7 @@ func (s Service) ListPlace(w http.ResponseWriter, r *http.Request) {
 			})...)
 			return
 		}
-		geo = &place.FilterListDistance{Point: [2]float64{lon, lat}}
+		geo = &place.FilterDistance{Point: [2]float64{lon, lat}}
 	}
 
 	if radius := strings.TrimSpace(q.Get("radius")); radius != "" {
@@ -167,7 +167,7 @@ func (s Service) ListPlace(w http.ResponseWriter, r *http.Request) {
 
 	sorts := pagi.SortFields(r)
 
-	sort := place.SortListField{}
+	sort := place.SortParams{}
 	for _, s := range sorts {
 		switch s.Field {
 		case "created_at":

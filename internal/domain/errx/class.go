@@ -33,9 +33,9 @@ var ErrorClassParentCycle = ape.DeclareError("CLASS_FATHER_CYCLE")
 // Its 409 - Conflict
 var ErrorClassNameExists = ape.DeclareError("CLASS_NAME_EXISTS")
 
-// ErrorClassHasChildren is used when we try to delete class that has children
+// ErrorCannotDeleteClassWithChildren is used when we try to delete class that has children
 // Its 409 - Conflict
-var ErrorClassHasChildren = ape.DeclareError("CLASS_HAS_CHILDREN")
+var ErrorCannotDeleteClassWithChildren = ape.DeclareError("CANNOT_DELETE_CLASS_WITH_CHILDREN")
 
 // ErrorClassDeactivateReplaceSame is used when we try to deactivate class and replace with itself
 // Its 409 - Conflict

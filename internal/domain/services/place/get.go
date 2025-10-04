@@ -2,8 +2,6 @@ package place
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/chains-lab/enum"
@@ -12,29 +10,24 @@ import (
 	"github.com/google/uuid"
 )
 
-func (m Service) Get(
-	ctx context.Context,
-	placeID uuid.UUID,
-	locale string,
-) (models.Place, error) {
-	err := enum.IsValidLocaleSupported(locale)
+func (s Service) Get(ctx context.Context, placeID uuid.UUID, locale string) (models.Place, error) {
+	err := enum.CheckLocale(locale)
 	if err != nil {
 		locale = enum.LocaleEN
 	}
 
-	place, err := m.db.Places().FilterID(placeID).GetWithDetails(ctx, locale)
+	place, err := s.db.GetPlaceByID(ctx, placeID, locale)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return models.Place{}, errx.ErrorPlaceNotFound.Raise(
-				fmt.Errorf("place with id %s not found, cause %w", placeID, err),
-			)
-		default:
-			return models.Place{}, errx.ErrorInternal.Raise(
-				fmt.Errorf("failed to get place with id %s: %w", placeID, err),
-			)
-		}
+		return models.Place{}, errx.ErrorInternal.Raise(
+			fmt.Errorf("failed to get place with id %s: %w", placeID, err),
+		)
 	}
 
-	return modelFromDB(place), nil
+	if place.IsNil() {
+		return models.Place{}, errx.ErrorPlaceNotFound.Raise(
+			fmt.Errorf("place with id %s not found", placeID),
+		)
+	}
+
+	return place, nil
 }

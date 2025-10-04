@@ -94,7 +94,7 @@ func TestPlaceUpdate(t *testing.T) {
 		t.Errorf("expected place to be verified, got not verified")
 	}
 
-	restaurant, err = s.domain.place.Activate(ctx, restaurant.ID, enum.LocaleUK)
+	restaurant, err = s.domain.place.UpdateStatus(ctx, restaurant.ID, enum.LocaleUK)
 	if err != nil {
 		t.Fatalf("ActivatePlace: %v", err)
 	}

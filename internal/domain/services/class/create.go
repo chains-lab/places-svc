@@ -2,13 +2,10 @@ package class
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/chains-lab/enum"
-	"github.com/chains-lab/places-svc/internal/data/schemas"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 )
@@ -20,41 +17,43 @@ type CreateParams struct {
 	Name   string
 }
 
-func (m Service) Create(
+func (s Service) Create(
 	ctx context.Context,
 	params CreateParams,
 ) (models.Class, error) {
-	_, err := m.db.Classes().FilterCode(params.Code).Get(ctx)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return models.Class{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class existence, cause: %w", err))
+	exist, err := s.db.ClassIsExistByCode(ctx, params.Code)
+	if err != nil {
+		return models.Class{}, errx.ErrorInternal.Raise(
+			fmt.Errorf("failed to check class existence, cause: %w", err),
+		)
 	}
-	if err == nil {
+
+	if exist {
 		return models.Class{}, errx.ErrorClassCodeAlreadyTaken.Raise(
 			fmt.Errorf("class with code %s already exists", params.Code),
 		)
 	}
 
-	parentValue := sql.NullString{}
-	if params.Parent != nil {
-		parentValue = sql.NullString{String: *params.Parent, Valid: true}
+	exist, err = s.db.ClassIsExistByName(ctx, params.Name)
+	if err != nil {
+		return models.Class{}, errx.ErrorInternal.Raise(
+			fmt.Errorf("failed to check class name existence, cause: %w", err),
+		)
 	}
 
-	_, err = m.db.Classes().FilterName(params.Name).Get(ctx)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return models.Class{}, errx.ErrorInternal.Raise(fmt.Errorf("failed to check class locale existence, cause: %w", err))
-	}
-	if err == nil {
+	if exist {
 		return models.Class{}, errx.ErrorClassNameAlreadyTaken.Raise(
-			fmt.Errorf("class locale with name %s already exists", params.Name),
+			fmt.Errorf("class with name %s already exists", params.Name),
 		)
 	}
 
 	now := time.Now().UTC()
 
-	trxErr := m.db.Transaction(ctx, func(ctx context.Context) error {
-		err = m.db.Classes().Insert(ctx, schemas.Class{
+	var class models.Class
+	if err = s.db.Transaction(ctx, func(ctx context.Context) error {
+		class, err = s.db.CreateClass(ctx, models.Class{
 			Code:      params.Code,
-			Parent:    parentValue,
+			Parent:    params.Parent,
 			Status:    enum.PlaceClassStatusesInactive,
 			Icon:      params.Icon,
 			Name:      params.Name,
@@ -68,10 +67,9 @@ func (m Service) Create(
 		}
 
 		return nil
-	})
-	if trxErr != nil {
-		return models.Class{}, trxErr
+	}); err != nil {
+		return models.Class{}, err
 	}
 
-	return m.Get(ctx, params.Code)
+	return class, nil
 }

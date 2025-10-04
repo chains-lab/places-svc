@@ -9,7 +9,7 @@ import (
 	"github.com/chains-lab/ape/problems"
 	"github.com/chains-lab/places-svc/internal/api/rest/requests"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
-	"github.com/chains-lab/places-svc/internal/domain/services/place"
+	"github.com/chains-lab/places-svc/internal/domain/services/plocale"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
@@ -22,9 +22,9 @@ func (s Service) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	locales := make([]place.SetLocaleParams, 0, len(req.Data.Attributes.Locales))
+	locales := make([]plocale.SetParams, 0, len(req.Data.Attributes.Locales))
 	for _, attr := range req.Data.Attributes.Locales {
-		locales = append(locales, place.SetLocaleParams{
+		locales = append(locales, plocale.SetParams{
 			Locale:      attr.Locale,
 			Name:        attr.Name,
 			Description: attr.Description,

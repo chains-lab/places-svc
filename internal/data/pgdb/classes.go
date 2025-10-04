@@ -4,14 +4,25 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/chains-lab/places-svc/internal/data/schemas"
 )
 
-const placeClassesTable = "place_classes"
+const classesTable = "place_classes"
 
-type classesQ struct {
+type Class struct {
+	Code      string         `storage:"code"`
+	Parent    sql.NullString `storage:"parent"` // NULL для корней
+	Status    string         `storage:"status"`
+	Icon      string         `storage:"icon"`
+	Name      string         `storage:"name"`
+	Path      string         `storage:"path"` // ltree как text
+	CreatedAt time.Time      `storage:"created_at"`
+	UpdatedAt time.Time      `storage:"updated_at"`
+}
+
+type ClassesQ struct {
 	db       *sql.DB
 	selector sq.SelectBuilder
 	inserter sq.InsertBuilder
@@ -20,9 +31,9 @@ type classesQ struct {
 	counter  sq.SelectBuilder
 }
 
-func NewClassesQ(db *sql.DB) schemas.ClassesQ {
+func NewClassesQ(db *sql.DB) ClassesQ {
 	b := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-	return &classesQ{
+	return ClassesQ{
 		db: db,
 		selector: b.Select(
 			"pc.code",
@@ -33,16 +44,16 @@ func NewClassesQ(db *sql.DB) schemas.ClassesQ {
 			"pc.path",
 			"pc.created_at",
 			"pc.updated_at",
-		).From(placeClassesTable + " AS pc"),
-		inserter: b.Insert(placeClassesTable),
-		updater:  b.Update(placeClassesTable + " AS pc"),
-		deleter:  b.Delete(placeClassesTable + " AS pc"),
-		counter:  b.Select("COUNT(*) AS count").From(placeClassesTable + " AS pc"),
+		).From(classesTable + " AS pc"),
+		inserter: b.Insert(classesTable),
+		updater:  b.Update(classesTable + " AS pc"),
+		deleter:  b.Delete(classesTable + " AS pc"),
+		counter:  b.Select("COUNT(*) AS count").From(classesTable + " AS pc"),
 	}
 }
 
-func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (schemas.Class, error) {
-	var pc schemas.Class
+func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (Class, error) {
+	var pc Class
 	if err := scanner.Scan(
 		&pc.Code,
 		&pc.Parent,
@@ -53,13 +64,13 @@ func scanPlaceClass(scanner interface{ Scan(dest ...any) error }) (schemas.Class
 		&pc.CreatedAt,
 		&pc.UpdatedAt,
 	); err != nil {
-		return schemas.Class{}, err
+		return Class{}, err
 	}
 	return pc, nil
 }
 
-func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (schemas.Class, error) {
-	var pc schemas.Class
+func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (Class, error) {
+	var pc Class
 	if err := scanner.Scan(
 		&pc.Code,
 		&pc.Parent,
@@ -70,12 +81,12 @@ func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (sch
 		&pc.UpdatedAt,
 		&pc.Name,
 	); err != nil {
-		return schemas.Class{}, err
+		return Class{}, err
 	}
 	return pc, nil
 }
 
-func (q *classesQ) Insert(ctx context.Context, in schemas.Class) error {
+func (q ClassesQ) Insert(ctx context.Context, in Class) error {
 	values := map[string]any{
 		"code":   in.Code,
 		"status": in.Status,
@@ -91,7 +102,7 @@ func (q *classesQ) Insert(ctx context.Context, in schemas.Class) error {
 
 	query, args, err := q.inserter.SetMap(values).ToSql()
 	if err != nil {
-		return fmt.Errorf("build insert %s: %w", placeClassesTable, err)
+		return fmt.Errorf("build insert %s: %w", classesTable, err)
 	}
 
 	if tx, ok := TxFromCtx(ctx); ok {
@@ -102,10 +113,10 @@ func (q *classesQ) Insert(ctx context.Context, in schemas.Class) error {
 	return err
 }
 
-func (q *classesQ) Get(ctx context.Context) (schemas.Class, error) {
+func (q ClassesQ) Get(ctx context.Context) (Class, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return schemas.Class{}, fmt.Errorf("build select %s: %w", placeClassesTable, err)
+		return Class{}, fmt.Errorf("build select %s: %w", classesTable, err)
 	}
 	var row *sql.Row
 	if tx, ok := TxFromCtx(ctx); ok {
@@ -116,10 +127,10 @@ func (q *classesQ) Get(ctx context.Context) (schemas.Class, error) {
 	return scanPlaceClass(row)
 }
 
-func (q *classesQ) Select(ctx context.Context) ([]schemas.Class, error) {
+func (q ClassesQ) Select(ctx context.Context) ([]Class, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("build select %s: %w", placeClassesTable, err)
+		return nil, fmt.Errorf("build select %s: %w", classesTable, err)
 	}
 	var rows *sql.Rows
 	if tx, ok := TxFromCtx(ctx); ok {
@@ -132,7 +143,7 @@ func (q *classesQ) Select(ctx context.Context) ([]schemas.Class, error) {
 	}
 	defer rows.Close()
 
-	var out []schemas.Class
+	var out []Class
 	for rows.Next() {
 		pc, err := scanPlaceClass(rows)
 		if err != nil {
@@ -143,30 +154,12 @@ func (q *classesQ) Select(ctx context.Context) ([]schemas.Class, error) {
 	return out, rows.Err()
 }
 
-func (q *classesQ) Update(ctx context.Context, params schemas.UpdateClassParams) error {
-	values := map[string]any{
-		"updated_at": params.UpdatedAt,
-	}
-	if params.Parent != nil {
-		if params.Parent.Valid {
-			values["parent"] = params.Parent.String
-		} else {
-			values["parent"] = nil
-		}
-	}
-	if params.Status != nil {
-		values["status"] = *params.Status
-	}
-	if params.Icon != nil {
-		values["icon"] = *params.Icon
-	}
-	if params.Name != nil {
-		values["name"] = *params.Name
-	}
+func (q ClassesQ) Update(ctx context.Context, updatedAt time.Time) error {
+	q.updater = q.updater.Set("updated_at", updatedAt)
 
-	query, args, err := q.updater.SetMap(values).ToSql()
+	query, args, err := q.updater.ToSql()
 	if err != nil {
-		return fmt.Errorf("build update %s: %w", placeClassesTable, err)
+		return fmt.Errorf("building update query for %s: %w", classesTable, err)
 	}
 
 	if tx, ok := TxFromCtx(ctx); ok {
@@ -177,10 +170,34 @@ func (q *classesQ) Update(ctx context.Context, params schemas.UpdateClassParams)
 	return err
 }
 
-func (q *classesQ) Delete(ctx context.Context) error {
+func (q ClassesQ) UpdateParent(parent sql.NullString) ClassesQ {
+	if parent.Valid {
+		q.updater = q.updater.Set("pc.parent", parent.String)
+	} else {
+		q.updater = q.updater.Set("pc.parent", nil)
+	}
+	return q
+}
+
+func (q ClassesQ) UpdateStatus(status string) ClassesQ {
+	q.updater = q.updater.Set("pc.status", status)
+	return q
+}
+
+func (q ClassesQ) UpdateIcon(icon string) ClassesQ {
+	q.updater = q.updater.Set("pc.icon", icon)
+	return q
+}
+
+func (q ClassesQ) UpdateName(name string) ClassesQ {
+	q.updater = q.updater.Set("pc.name", name)
+	return q
+}
+
+func (q ClassesQ) Delete(ctx context.Context) error {
 	query, args, err := q.deleter.ToSql()
 	if err != nil {
-		return fmt.Errorf("build delete %s: %w", placeClassesTable, err)
+		return fmt.Errorf("build delete %s: %w", classesTable, err)
 	}
 	if tx, ok := TxFromCtx(ctx); ok {
 		_, err = tx.ExecContext(ctx, query, args...)
@@ -190,7 +207,7 @@ func (q *classesQ) Delete(ctx context.Context) error {
 	return err
 }
 
-func (q *classesQ) FilterCode(code string) schemas.ClassesQ {
+func (q ClassesQ) FilterCode(code string) ClassesQ {
 	q.selector = q.selector.Where(sq.Eq{"pc.code": code})
 	q.updater = q.updater.Where(sq.Eq{"pc.code": code})
 	q.deleter = q.deleter.Where(sq.Eq{"pc.code": code})
@@ -198,7 +215,7 @@ func (q *classesQ) FilterCode(code string) schemas.ClassesQ {
 	return q
 }
 
-func (q *classesQ) FilterParent(parent sql.NullString) schemas.ClassesQ {
+func (q ClassesQ) FilterParent(parent sql.NullString) ClassesQ {
 	if !parent.Valid {
 		q.selector = q.selector.Where("pc.parent IS NULL")
 		q.updater = q.updater.Where("pc.parent IS NULL")
@@ -213,7 +230,7 @@ func (q *classesQ) FilterParent(parent sql.NullString) schemas.ClassesQ {
 	return q
 }
 
-func (q *classesQ) FilterStatus(status string) schemas.ClassesQ {
+func (q ClassesQ) FilterStatus(status string) ClassesQ {
 	q.selector = q.selector.Where(sq.Eq{"pc.status": status})
 	q.updater = q.updater.Where(sq.Eq{"pc.status": status})
 	q.deleter = q.deleter.Where(sq.Eq{"pc.status": status})
@@ -221,7 +238,7 @@ func (q *classesQ) FilterStatus(status string) schemas.ClassesQ {
 	return q
 }
 
-func (q *classesQ) FilterName(name string) schemas.ClassesQ {
+func (q ClassesQ) FilterName(name string) ClassesQ {
 	q.selector = q.selector.Where(sq.Eq{"pc.name": name})
 	q.updater = q.updater.Where(sq.Eq{"pc.name": name})
 	q.deleter = q.deleter.Where(sq.Eq{"pc.name": name})
@@ -229,7 +246,7 @@ func (q *classesQ) FilterName(name string) schemas.ClassesQ {
 	return q
 }
 
-func (q *classesQ) FilterNameLike(name string) schemas.ClassesQ {
+func (q ClassesQ) FilterNameLike(name string) ClassesQ {
 	likePattern := fmt.Sprintf("%%%s%%", name)
 	q.selector = q.selector.Where(sq.Like{"pc.name": likePattern})
 	q.updater = q.updater.Where(sq.Like{"pc.name": likePattern})
@@ -238,9 +255,9 @@ func (q *classesQ) FilterNameLike(name string) schemas.ClassesQ {
 	return q
 }
 
-func (q *classesQ) FilterParentCycle(code string) schemas.ClassesQ {
+func (q ClassesQ) FilterParentCycle(code string) ClassesQ {
 	cond := sq.Expr(
-		"pc.path <@ (SELECT path FROM "+placeClassesTable+" WHERE code = ?)",
+		"pc.path <@ (SELECT path FROM "+classesTable+" WHERE code = ?)",
 		code,
 	)
 	q.selector = q.selector.Where(cond)
@@ -250,20 +267,20 @@ func (q *classesQ) FilterParentCycle(code string) schemas.ClassesQ {
 	return q
 }
 
-func (q *classesQ) OrderBy(orderBy string) schemas.ClassesQ {
+func (q ClassesQ) OrderBy(orderBy string) ClassesQ {
 	q.selector = q.selector.OrderBy(orderBy)
 	return q
 }
 
-func (q *classesQ) Page(limit, offset uint) schemas.ClassesQ {
+func (q ClassesQ) Page(limit, offset uint) ClassesQ {
 	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
 	return q
 }
 
-func (q *classesQ) Count(ctx context.Context) (uint, error) {
+func (q ClassesQ) Count(ctx context.Context) (uint, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
-		return 0, fmt.Errorf("build count %s: %w", placeClassesTable, err)
+		return 0, fmt.Errorf("build count %s: %w", classesTable, err)
 	}
 	var row *sql.Row
 	if tx, ok := TxFromCtx(ctx); ok {

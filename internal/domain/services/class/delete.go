@@ -2,34 +2,33 @@ package class
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 )
 
-func (m Service) Delete(
+func (s Service) Delete(
 	ctx context.Context,
 	code string,
 ) error {
-	_, err := m.Get(ctx, code)
+	_, err := s.Get(ctx, code)
 	if err != nil {
 		return err
 	}
 
-	count, err := m.db.Classes().FilterParent(sql.NullString{String: code, Valid: true}).Count(ctx)
+	count, err := s.db.CountClassChildren(ctx, code)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to check class children existence, cause: %w", err),
 		)
 	}
 	if count > 0 {
-		return errx.ErrorClassHasChildren.Raise(
-			fmt.Errorf("class with code %s has children, cannot be deleted", code),
+		return errx.ErrorCannotDeleteClassWithChildren.Raise(
+			fmt.Errorf("failed to delete class %s with active children", code),
 		)
 	}
 
-	count, err = m.db.Places().FilterClass(code).Count(ctx)
+	count, err = s.db.CountPlacesByClass(ctx, code)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to check places with class existence, cause: %w", err),
@@ -41,10 +40,10 @@ func (m Service) Delete(
 		)
 	}
 
-	err = m.db.Classes().FilterCode(code).Delete(ctx)
+	err = s.db.DeleteClass(ctx, code)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
-			fmt.Errorf("failed to delete class locales, cause: %w", err),
+			fmt.Errorf("failed to delete class %s, cause: %w", code, err),
 		)
 	}
 

@@ -1,104 +1,36 @@
 package place
 
 import (
-	"github.com/chains-lab/places-svc/internal/data"
-	"github.com/chains-lab/places-svc/internal/data/schemas"
+	"context"
+	"time"
+
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/place/geo"
+	"github.com/google/uuid"
 )
 
 type Service struct {
-	db  data.Database
+	db  database
 	geo *geo.Guesser
 }
 
-func NewService(db data.Database) Service {
-	return Service{
-		db:  db,
-		geo: geo.NewGuesser(),
-	}
+func NewService(db database) Service {
+	return Service{db: db}
 }
 
-func modelFromDB(in schemas.PlaceWithDetails) models.Place {
-	p := detailsFromDB(in.Place)
-	t := timetableFromDB(in.Timetable)
+type database interface {
+	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
 
-	out := models.Place{
-		ID:            p.ID,
-		CityID:        p.CityID,
-		DistributorID: p.DistributorID,
-		Class:         p.Class,
+	CreatePlace(ctx context.Context, input models.Place) error
 
-		Status:    p.Status,
-		Verified:  p.Verified,
-		Ownership: p.Ownership,
-		Point:     p.Point,
-		Address:   p.Address,
+	UpdatePlace(ctx context.Context, placeID uuid.UUID, params UpdateParams, updatedAt time.Time) error
+	UpdateVerifiedPlace(ctx context.Context, placeID uuid.UUID, verified bool, updatedAt time.Time) error
+	UpdatePlaceStatus(ctx context.Context, placeID uuid.UUID, status string, updatedAt time.Time) error
 
-		Locale:      in.Locale,
-		Name:        in.Name,
-		Description: in.Description,
+	FilterPlaces(ctx context.Context, locale string, filter FilterParams, sort SortParams, page, size uint64) (models.PlacesCollection, error)
+	GetPlaceByID(ctx context.Context, placeID uuid.UUID, locale string) (models.Place, error)
 
-		CreatedAt: p.CreatedAt,
-		UpdatedAt: p.UpdatedAt,
+	DeletePlace(ctx context.Context, placeID uuid.UUID) error
 
-		Timetable: t,
-	}
-	if p.Website != nil {
-		out.Website = p.Website
-	}
-	if p.Phone != nil {
-		out.Phone = p.Phone
-	}
-
-	return out
-}
-
-func detailsFromDB(dbPlace schemas.Place) models.PlaceDetails {
-	place := models.PlaceDetails{
-		ID:        dbPlace.ID,
-		CityID:    dbPlace.CityID,
-		Class:     dbPlace.Class,
-		Status:    dbPlace.Status,
-		Verified:  dbPlace.Verified,
-		Point:     dbPlace.Point,
-		Address:   dbPlace.Address,
-		CreatedAt: dbPlace.CreatedAt,
-		UpdatedAt: dbPlace.UpdatedAt,
-	}
-	if dbPlace.DistributorID.Valid {
-		place.DistributorID = &dbPlace.DistributorID.UUID
-	}
-	if dbPlace.Website.Valid {
-		place.Website = &dbPlace.Website.String
-	}
-	if dbPlace.Phone.Valid {
-		place.Phone = &dbPlace.Phone.String
-	}
-
-	return place
-}
-
-func localeFromDB(dbLoc schemas.PlaceLocale) models.PlaceLocale {
-	return models.PlaceLocale{
-		PlaceID:     dbLoc.PlaceID,
-		Locale:      dbLoc.Locale,
-		Name:        dbLoc.Name,
-		Description: dbLoc.Description,
-	}
-
-}
-
-func timetableFromDB(dbTI []schemas.PlaceTimetable) models.Timetable {
-	res := models.Timetable{
-		Table: make([]models.TimeInterval, 0, len(dbTI)),
-	}
-	for _, ti := range dbTI {
-		res.Table = append(res.Table, models.TimeInterval{
-			From: models.NumberMinutesToMoment(ti.StartMin),
-			To:   models.NumberMinutesToMoment(ti.EndMin),
-		})
-	}
-
-	return res
+	CreatePlaceLocale(ctx context.Context, input models.PlaceLocale) error
 }

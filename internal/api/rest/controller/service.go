@@ -13,6 +13,7 @@ import (
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
+	"github.com/chains-lab/places-svc/internal/domain/services/plocale"
 	"github.com/google/uuid"
 )
 
@@ -33,7 +34,7 @@ type Class interface {
 
 	List(
 		ctx context.Context,
-		filter class.FilterListParams,
+		filter class.FilterParams,
 	) (models.ClassesCollection, error)
 }
 
@@ -68,14 +69,14 @@ type Place interface {
 	List(
 		ctx context.Context,
 		locale string,
-		filter place.FilterListParams,
-		sort place.SortListField,
+		filter place.FilterParams,
+		sort place.SortParams,
 	) (models.PlacesCollection, error)
 
 	SetLocales(
 		ctx context.Context,
 		placeID uuid.UUID,
-		locales ...place.SetLocaleParams,
+		locales ...plocale.SetParams,
 	) error
 
 	ListLocales(
