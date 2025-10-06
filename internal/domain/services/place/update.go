@@ -51,10 +51,18 @@ func (s Service) Update(
 		place.Point = *params.Point
 	}
 	if params.Website != nil {
-		place.Website = params.Website
+		if *params.Website == "" {
+			place.Website = nil
+		} else {
+			place.Website = params.Website
+		}
 	}
 	if params.Phone != nil {
-		place.Phone = params.Phone
+		if *params.Phone == "" {
+			place.Phone = nil
+		} else {
+			place.Phone = params.Phone
+		}
 	}
 	if params.Address != nil {
 		place.Address = *params.Address

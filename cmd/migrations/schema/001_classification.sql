@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS ltree;
 CREATE TYPE place_class_statuses AS ENUM (
     'active',
     'inactive'
-    );
+);
 
 -- Основная таблица-дерево
 CREATE TABLE IF NOT EXISTS place_classes (

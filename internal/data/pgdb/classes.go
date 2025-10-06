@@ -195,25 +195,25 @@ func (q ClassesQ) Update(ctx context.Context, updatedAt time.Time) error {
 
 func (q ClassesQ) UpdateParent(parent sql.NullString) ClassesQ {
 	if parent.Valid {
-		q.updater = q.updater.Set("pc.parent", parent.String)
+		q.updater = q.updater.Set("parent", parent.String)
 	} else {
-		q.updater = q.updater.Set("pc.parent", nil)
+		q.updater = q.updater.Set("parent", nil)
 	}
 	return q
 }
 
 func (q ClassesQ) UpdateStatus(status string) ClassesQ {
-	q.updater = q.updater.Set("pc.status", status)
+	q.updater = q.updater.Set("status", status)
 	return q
 }
 
 func (q ClassesQ) UpdateIcon(icon string) ClassesQ {
-	q.updater = q.updater.Set("pc.icon", icon)
+	q.updater = q.updater.Set("icon", icon)
 	return q
 }
 
 func (q ClassesQ) UpdateName(name string) ClassesQ {
-	q.updater = q.updater.Set("pc.name", name)
+	q.updater = q.updater.Set("name", name)
 	return q
 }
 

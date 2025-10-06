@@ -71,7 +71,7 @@ func (s Service) Create(
 
 	var addr string
 	if err = s.db.Transaction(ctx, func(ctx context.Context) error {
-		err = s.db.CreatePlace(ctx, place)
+		err = s.db.CreatePlace(ctx, place.Details())
 		if err != nil {
 			return errx.ErrorInternal.Raise(
 				fmt.Errorf("could not create place, cause %w", err),

@@ -26,7 +26,7 @@ type database interface {
 
 	ClassIsExistByCode(ctx context.Context, code string) (bool, error)
 
-	CreatePlace(ctx context.Context, input models.Place) error
+	CreatePlace(ctx context.Context, input models.PlaceDetails) error
 
 	UpdatePlace(ctx context.Context, placeID uuid.UUID, params UpdateParams, updatedAt time.Time) error
 	UpdateVerifiedPlace(ctx context.Context, placeID uuid.UUID, verified bool, updatedAt time.Time) error

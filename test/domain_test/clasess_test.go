@@ -1,4 +1,4 @@
-package domaintest
+package domain_test
 
 import (
 	"context"
@@ -7,15 +7,16 @@ import (
 
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
+	"github.com/chains-lab/places-svc/test"
 )
 
-func TestCreatingClassAndDetails(t *testing.T) {
+func TestClasses(t *testing.T) {
 	s, err := newSetup(t)
 	if err != nil {
 		t.Fatalf("newSetup: %v", err)
 	}
 
-	cleanDb(t)
+	test.CleanDB(t)
 
 	ctx := context.Background()
 
@@ -81,11 +82,11 @@ func TestCreatingClassAndDetails(t *testing.T) {
 	classes, err := s.domain.class.Filter(ctx, class.FilterParams{
 		Parent:      &classParent.Code,
 		ParentCycle: true,
-	})
+	}, 1, 10)
 	if err != nil {
-		t.Fatalf("ListClasses: %v", err)
+		t.Fatalf("FilterClasses: %v", err)
 	}
 	if len(classes.Data) != 3 {
-		t.Fatalf("ListClasses: expected 3 classes, got %d", len(classes.Data))
+		t.Fatalf("FilterClasses: expected 3 classes, got %d", len(classes.Data))
 	}
 }

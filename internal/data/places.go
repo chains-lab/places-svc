@@ -12,18 +12,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func (d Database) CreatePlace(ctx context.Context, input models.Place) error {
-	err := d.sql.places.Insert(ctx, placeModelToSchema(input))
-	if err != nil {
-		return err
-	}
-
-	return d.sql.pLocales.Insert(ctx, pgdb.PlaceLocale{
-		PlaceID:     input.ID,
-		Locale:      input.Locale,
-		Name:        input.Name,
-		Description: input.Description,
-	})
+func (d Database) CreatePlace(ctx context.Context, input models.PlaceDetails) error {
+	return d.sql.places.Insert(ctx, placeModelToSchema(input))
 }
 
 func (d Database) GetPlaceByID(ctx context.Context, placeID uuid.UUID, locale string) (models.Place, error) {
@@ -91,14 +81,14 @@ func (d Database) FilterPlaces(
 		query = query.OrderByDistance(filter.Location.Point, *sort.ByDistance)
 	}
 
-	rows, err := query.Select(ctx)
+	rows, err := query.SelectWithDetails(ctx, locale)
 	if err != nil {
 		return models.PlacesCollection{}, err
 	}
 
 	collection := make([]models.Place, 0, len(rows))
 	for _, row := range rows {
-		collection = append(collection, placeDetailsSchemaToModel(row))
+		collection = append(collection, placeSchemaToModel(row))
 	}
 
 	return models.PlacesCollection{
@@ -130,10 +120,18 @@ func (d Database) UpdatePlace(ctx context.Context, placeID uuid.UUID, params pla
 		query = query.UpdateAddress(*params.Address)
 	}
 	if params.Phone != nil {
-		query = query.UpdatePhone(sql.NullString{String: *params.Phone, Valid: true})
+		if *params.Phone == "" {
+			query = query.UpdatePhone(sql.NullString{Valid: false})
+		} else {
+			query = query.UpdatePhone(sql.NullString{String: *params.Phone, Valid: true})
+		}
 	}
 	if params.Website != nil {
-		query = query.UpdateWebsite(sql.NullString{String: *params.Website, Valid: true})
+		if *params.Website == "" {
+			query = query.UpdateWebsite(sql.NullString{Valid: false})
+		} else {
+			query = query.UpdateWebsite(sql.NullString{String: *params.Website, Valid: true})
+		}
 	}
 
 	return query.FilterID(placeID).Update(ctx, updatedAt)
@@ -151,7 +149,7 @@ func (d Database) DeletePlace(ctx context.Context, placeID uuid.UUID) error {
 	return d.sql.places.New().FilterID(placeID).Delete(ctx)
 }
 
-func placeModelToSchema(model models.Place) pgdb.PlaceRow {
+func placeModelToSchema(model models.PlaceDetails) pgdb.PlaceRow {
 	res := pgdb.PlaceRow{
 		ID:        model.ID,
 		CityID:    model.CityID,
@@ -224,6 +222,20 @@ func placeSchemaToModel(schema pgdb.Place) models.Place {
 	}
 	if schema.Phone.Valid {
 		res.Phone = &schema.Phone.String
+	}
+
+	var timetable []models.TimeInterval
+	for _, schemaInterval := range schema.Timetable {
+		from := models.NumberMinutesToMoment(schemaInterval.StartMin)
+		to := models.NumberMinutesToMoment(schemaInterval.EndMin)
+		timetable = append(timetable, models.TimeInterval{
+			From: from,
+			To:   to,
+		})
+	}
+
+	res.Timetable = models.Timetable{
+		Table: timetable,
 	}
 
 	return res

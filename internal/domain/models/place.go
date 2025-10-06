@@ -70,6 +70,24 @@ func (p Place) IsNil() bool {
 	return p.ID == uuid.Nil
 }
 
+func (p Place) Details() PlaceDetails {
+	return PlaceDetails{
+		ID:            p.ID,
+		CityID:        p.CityID,
+		DistributorID: p.DistributorID,
+		Class:         p.Class,
+		Status:        p.Status,
+		Verified:      p.Verified,
+		Ownership:     p.Ownership,
+		Point:         p.Point,
+		Address:       p.Address,
+		Website:       p.Website,
+		Phone:         p.Phone,
+		CreatedAt:     p.CreatedAt,
+		UpdatedAt:     p.UpdatedAt,
+	}
+}
+
 type PlacesCollection struct {
 	Data  []Place `json:"data"`
 	Page  uint64  `json:"page"`

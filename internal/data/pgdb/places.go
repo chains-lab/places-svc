@@ -540,8 +540,8 @@ func (q PlacesQ) WithTimetable() PlacesQ {
 
 func (q PlacesQ) GetWithDetails(ctx context.Context, locale string) (Place, error) {
 	qq := q
-	qq.WithLocale(locale)
-	qq.WithTimetable()
+	qq = qq.WithLocale(locale)
+	qq = qq.WithTimetable()
 
 	query, args, err := qq.selector.Limit(1).ToSql()
 	if err != nil {
@@ -559,8 +559,8 @@ func (q PlacesQ) GetWithDetails(ctx context.Context, locale string) (Place, erro
 
 func (q PlacesQ) SelectWithDetails(ctx context.Context, locale string) ([]Place, error) {
 	qq := q
-	qq.WithLocale(locale)
-	qq.WithTimetable()
+	qq = qq.WithLocale(locale)
+	qq = qq.WithTimetable()
 
 	query, args, err := qq.selector.ToSql()
 	if err != nil {

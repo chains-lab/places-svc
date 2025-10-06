@@ -31,7 +31,7 @@ var ErrorParentClassNotFound = ape.DeclareError("PARENT_CLASS_NOT_FOUND")
 
 // ErrorClassParentCycle is used when we try to create/update class with parent that creates cycle
 // Its 409 - Conflict
-var ErrorClassParentCycle = ape.DeclareError("CLASS_FATHER_CYCLE")
+var ErrorClassParentCycle = ape.DeclareError("CLASS_PARENT_CYCLE")
 
 // ErrorClassNameExists is used when we try to create/update class with name that already exists
 // Its 409 - Conflict

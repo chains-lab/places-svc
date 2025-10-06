@@ -46,7 +46,7 @@ func (d Database) CountPlacesByClass(ctx context.Context, classCode string) (uin
 }
 
 func (d Database) UpdateClass(ctx context.Context, code string, params class.UpdateParams, updateAt time.Time) error {
-	query := d.sql.classes.New()
+	query := d.sql.classes.New().FilterCode(code)
 
 	if params.Name != nil {
 		query = query.UpdateName(*params.Name)
@@ -64,6 +64,7 @@ func (d Database) UpdateClass(ctx context.Context, code string, params class.Upd
 
 	return query.Update(ctx, updateAt)
 }
+
 func (d Database) UpdateClassStatus(ctx context.Context, code string, status string, updateAt time.Time) error {
 	return d.sql.classes.New().FilterCode(code).UpdateStatus(status).Update(ctx, updateAt)
 }
@@ -119,7 +120,10 @@ func (d Database) FilterClasses(
 }
 
 func (d Database) CheckParentCycle(ctx context.Context, classCode, parentCode string) (bool, error) {
-	return d.sql.classes.New().FilterCode(classCode).FilterParentCycle(parentCode).Exists(ctx)
+	return d.sql.classes.New().
+		FilterCode(parentCode).
+		FilterParentCycle(classCode).
+		Exists(ctx)
 }
 
 func (d Database) DeleteClass(ctx context.Context, code string) error {
