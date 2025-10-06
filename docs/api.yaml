@@ -56,6 +56,10 @@ components:
       $ref: './spec/components/schemas/PlaceLocalesCollection.yaml'
     SetLocalesForPlace:
       $ref: './spec/components/schemas/SetLocalesForPlace.yaml'
+    UpdatePlaceVerified:
+      $ref: './spec/components/schemas/UpdatePlaceVerified.yaml'
+    UpdatePlaceStatus:
+      $ref: './spec/components/schemas/UpdatePlaceStatus.yaml'
 
     Timetable:
       $ref: './spec/components/schemas/Timetable.yaml'

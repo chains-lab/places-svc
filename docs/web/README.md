@@ -131,6 +131,12 @@ Class | Method | HTTP request | Description
  - [UpdatePlace](docs/UpdatePlace.md)
  - [UpdatePlaceData](docs/UpdatePlaceData.md)
  - [UpdatePlaceDataAttributes](docs/UpdatePlaceDataAttributes.md)
+ - [UpdatePlaceStatus](docs/UpdatePlaceStatus.md)
+ - [UpdatePlaceStatusData](docs/UpdatePlaceStatusData.md)
+ - [UpdatePlaceStatusDataAttributes](docs/UpdatePlaceStatusDataAttributes.md)
+ - [UpdatePlaceVerified](docs/UpdatePlaceVerified.md)
+ - [UpdatePlaceVerifiedData](docs/UpdatePlaceVerifiedData.md)
+ - [UpdatePlaceVerifiedDataAttributes](docs/UpdatePlaceVerifiedDataAttributes.md)
 
 
 ## Documentation For Authorization

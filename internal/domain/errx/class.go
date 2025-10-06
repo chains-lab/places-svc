@@ -6,6 +6,10 @@ import "github.com/chains-lab/ape"
 // Its 404 - Not Found
 var ErrorClassNotFound = ape.DeclareError("CLASS_NOT_FOUND")
 
+// ErrorReplaceClassNotFound is used when we try to replace class with another class that does not exist
+// Its 404 - Not Found
+var ErrorReplaceClassNotFound = ape.DeclareError("REPLACE_CLASS_NOT_FOUND")
+
 // ErrorClassStatusInvalid is used when we try to set/get invalid status to class
 // Its 400 - Bad Request
 var ErrorClassStatusInvalid = ape.DeclareError("CLASS_STATUS_INVALID")

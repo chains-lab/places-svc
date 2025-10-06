@@ -2,6 +2,7 @@ package class
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -48,6 +49,11 @@ func (s Service) Deactivate(ctx context.Context, code, replaceCode string) (mode
 
 	replaceClass, err := s.Get(ctx, replaceCode)
 	if err != nil {
+		if errors.Is(err, errx.ErrorClassCodeAlreadyTaken) {
+			return models.Class{}, errx.ErrorReplaceClassNotFound.Raise(
+				fmt.Errorf("replace class with code %s not found", replaceCode),
+			)
+		}
 		return models.Class{}, err
 	}
 

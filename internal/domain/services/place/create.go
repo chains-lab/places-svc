@@ -56,9 +56,22 @@ func (s Service) Create(
 		place.Phone = params.Phone
 	}
 
+	exist, err := s.db.ClassIsExistByCode(ctx, params.Class)
+	if err != nil {
+		return models.Place{}, errx.ErrorInternal.Raise(
+			fmt.Errorf("could not verify class existence, cause %w", err),
+		)
+	}
+
+	if !exist {
+		return models.Place{}, errx.ErrorClassNotFound.Raise(
+			fmt.Errorf("class %s not found", params.Class),
+		)
+	}
+
 	var addr string
-	if err := s.db.Transaction(ctx, func(ctx context.Context) error {
-		err := s.db.CreatePlace(ctx, place)
+	if err = s.db.Transaction(ctx, func(ctx context.Context) error {
+		err = s.db.CreatePlace(ctx, place)
 		if err != nil {
 			return errx.ErrorInternal.Raise(
 				fmt.Errorf("could not create place, cause %w", err),

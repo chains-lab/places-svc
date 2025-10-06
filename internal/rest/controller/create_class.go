@@ -39,6 +39,10 @@ func (s Service) CreateClass(w http.ResponseWriter, r *http.Request) {
 			ape.RenderErr(w, problems.Conflict(
 				fmt.Sprintf("class %s already exists", req.Data.Id)),
 			)
+		case errors.Is(err, errx.ErrorClassNameAlreadyTaken):
+			ape.RenderErr(w, problems.Conflict(
+				fmt.Sprintf("class with name %s already exists", req.Data.Attributes.Name)),
+			)
 		case errors.Is(err, errx.ErrorParentClassNotFound):
 			ape.RenderErr(w, problems.NotFound(
 				fmt.Sprintf("parent class %s not found", *req.Data.Attributes.Parent)),

@@ -54,6 +54,12 @@ docs/UpdateClassDataAttributes.md
 docs/UpdatePlace.md
 docs/UpdatePlaceData.md
 docs/UpdatePlaceDataAttributes.md
+docs/UpdatePlaceStatus.md
+docs/UpdatePlaceStatusData.md
+docs/UpdatePlaceStatusDataAttributes.md
+docs/UpdatePlaceVerified.md
+docs/UpdatePlaceVerifiedData.md
+docs/UpdatePlaceVerifiedDataAttributes.md
 git_push.sh
 go.mod
 go.sum
@@ -105,6 +111,12 @@ model_update_class_data_attributes.go
 model_update_place.go
 model_update_place_data.go
 model_update_place_data_attributes.go
+model_update_place_status.go
+model_update_place_status_data.go
+model_update_place_status_data_attributes.go
+model_update_place_verified.go
+model_update_place_verified_data.go
+model_update_place_verified_data_attributes.go
 response.go
 test/api_test__test.go
 utils.go

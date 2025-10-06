@@ -200,6 +200,18 @@ components:
           $ref: '#/components/schemas/SetLocalesForPlace_data'
       required:
       - data
+    UpdatePlaceVerified:
+      properties:
+        data:
+          $ref: '#/components/schemas/UpdatePlaceVerified_data'
+      required:
+      - data
+    UpdatePlaceStatus:
+      properties:
+        data:
+          $ref: '#/components/schemas/UpdatePlaceStatus_data'
+      required:
+      - data
     Timetable:
       properties:
         data:
@@ -645,6 +657,53 @@ components:
           type: string
         attributes:
           $ref: '#/components/schemas/SetLocalesForPlace_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+    UpdatePlaceVerified_data_attributes:
+      properties:
+        verified:
+          description: place verification status
+          type: boolean
+      required:
+      - verified
+    UpdatePlaceVerified_data:
+      properties:
+        id:
+          format: uuid
+          type: string
+        type:
+          enum:
+          - place
+          type: string
+        attributes:
+          $ref: '#/components/schemas/UpdatePlaceVerified_data_attributes'
+      required:
+      - attributes
+      - id
+      - type
+    UpdatePlaceStatus_data_attributes:
+      properties:
+        status:
+          description: place status
+          enum:
+          - active
+          - inactive
+          type: string
+      required:
+      - status
+    UpdatePlaceStatus_data:
+      properties:
+        id:
+          format: uuid
+          type: string
+        type:
+          enum:
+          - place
+          type: string
+        attributes:
+          $ref: '#/components/schemas/UpdatePlaceStatus_data_attributes'
       required:
       - attributes
       - id

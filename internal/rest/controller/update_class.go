@@ -43,12 +43,12 @@ func (s Service) UpdateClass(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, errx.ErrorClassParentCycle):
 			ape.RenderErr(w, problems.Conflict(
 				fmt.Sprintf("parent cycle detected for class with code %s", req.Data.Id)))
-		//case errors.Is(err, errx.ErrorClassParentEqualCode):
-		//	ape.RenderErr(w, problems.Conflict(
-		//		fmt.Sprintf("parent equal code for class with code %s", req.Data.Id)))
 		case errors.Is(err, errx.ErrorParentClassNotFound):
 			ape.RenderErr(w, problems.NotFound(
 				fmt.Sprintf("parent class %s not found", *req.Data.Attributes.Parent)))
+		case errors.Is(err, errx.ErrorClassNameExists):
+			ape.RenderErr(w, problems.Conflict(
+				fmt.Sprintf("class with name %s already exists", *req.Data.Attributes.Name)))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}

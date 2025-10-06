@@ -18,8 +18,8 @@ properties:
       attributes:
         type: object
         required:
-          - verify
+          - verified
         properties:
-          verify:
+          verified:
             type: boolean
             description: "place verification status"

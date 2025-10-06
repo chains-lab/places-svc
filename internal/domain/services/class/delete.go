@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 )
 
@@ -11,11 +12,16 @@ func (s Service) Delete(
 	ctx context.Context,
 	code string,
 ) error {
-	_, err := s.Get(ctx, code)
+	class, err := s.Get(ctx, code)
 	if err != nil {
 		return err
 	}
 
+	if class.Status == enum.PlaceClassStatusesActive {
+		return errx.ErrorCannotDeleteActiveClass.Raise(
+			fmt.Errorf("failed to delete active class %s", code),
+		)
+	}
 	count, err := s.db.CountClassChildren(ctx, code)
 	if err != nil {
 		return errx.ErrorInternal.Raise(

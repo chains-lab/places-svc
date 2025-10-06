@@ -21,7 +21,7 @@ type Controller interface {
 	FilterPlace(w http.ResponseWriter, r *http.Request)
 
 	UpdatePlace(w http.ResponseWriter, r *http.Request)
-	UpdateVerifyPlace(w http.ResponseWriter, r *http.Request)
+	UpdateVerifiedPlace(w http.ResponseWriter, r *http.Request)
 	UpdatePlaceStatus(w http.ResponseWriter, r *http.Request)
 
 	DeletePlace(w http.ResponseWriter, r *http.Request)
@@ -137,7 +137,7 @@ func Run(ctx context.Context, cfg internal.Config, log logium.Logger, m Middlewa
 					r.Group(func(r chi.Router) {
 						r.Use(auth)
 
-						r.With(sysmoder).Put("/verify", c.UpdateVerifyPlace)
+						r.With(sysmoder).Put("/verify", c.UpdateVerifiedPlace)
 					})
 				})
 			})

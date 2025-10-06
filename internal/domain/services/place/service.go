@@ -24,6 +24,8 @@ func NewService(db database, geo GeoGuesser) Service {
 type database interface {
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
 
+	ClassIsExistByCode(ctx context.Context, code string) (bool, error)
+
 	CreatePlace(ctx context.Context, input models.Place) error
 
 	UpdatePlace(ctx context.Context, placeID uuid.UUID, params UpdateParams, updatedAt time.Time) error

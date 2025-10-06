@@ -26,6 +26,8 @@ func (s Service) DeactivateClass(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, errx.ErrorClassNotFound):
 			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("class with code %s not found", req.Data.Id)))
+		case errors.Is(err, errx.ErrorReplaceClassNotFound):
+			ape.RenderErr(w, problems.NotFound(fmt.Sprintf("replace class with code %s not found", req.Data.Attributes.ReplacedClassCode)))
 		case errors.Is(err, errx.ErrorClassDeactivateReplaceSame):
 			ape.RenderErr(w, problems.Conflict(fmt.Sprintf("class cannot replace itself")))
 		case errors.Is(err, errx.ErrorClassDeactivateReplaceInactive):

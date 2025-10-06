@@ -32,6 +32,19 @@ func (s Service) Update(
 	}
 
 	if params.Class != nil {
+		exist, err := s.db.ClassIsExistByCode(ctx, *params.Class)
+		if err != nil {
+			return models.Place{}, errx.ErrorInternal.Raise(
+				fmt.Errorf("failed to check class existence, cause: %w", err),
+			)
+		}
+
+		if !exist {
+			return models.Place{}, errx.ErrorClassNotFound.Raise(
+				fmt.Errorf("class with code '%s' not found", *params.Class),
+			)
+		}
+
 		place.Class = *params.Class
 	}
 	if params.Point != nil {

@@ -35,14 +35,12 @@ func (s Service) SetLocalesForPlace(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.log.WithError(err).Error("failed to set place locales")
 		switch {
-		case errors.Is(err, errx.ErrorPlaceNotFound):
-			ape.RenderErr(w, problems.NotFound("place not found"))
-		case errors.Is(err, errx.ErrorNeedAtLeastOneLocaleForPlace):
-			ape.RenderErr(w, problems.Conflict("place must have at least one locale"))
 		case errors.Is(err, errx.ErrorInvalidLocale):
 			ape.RenderErr(w, problems.BadRequest(validation.Errors{
 				"locales": fmt.Errorf("invalid locale"),
 			})...)
+		case errors.Is(err, errx.ErrorPlaceNotFound):
+			ape.RenderErr(w, problems.NotFound("place not found"))
 		default:
 			ape.RenderErr(w, problems.InternalError())
 		}
