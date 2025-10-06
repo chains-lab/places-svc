@@ -20,7 +20,7 @@ func (c Class) IsNil() bool {
 
 type ClassesCollection struct {
 	Data  []Class `json:"data"`
-	Page  uint    `json:"page"`
-	Size  uint    `json:"size"`
-	Total uint    `json:"total"`
+	Page  uint64  `json:"page"`
+	Size  uint64  `json:"size"`
+	Total uint64  `json:"total"`
 }

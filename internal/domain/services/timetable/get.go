@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s Service) GetTimetable(ctx context.Context, placeID uuid.UUID) (models.Timetable, error) {
+func (s Service) GetForPlace(ctx context.Context, placeID uuid.UUID) (models.Timetable, error) {
 	rows, err := s.db.GetTimetableByPlaceID(ctx, placeID)
 	if err != nil {
 		return models.Timetable{}, errx.ErrorInternal.Raise(

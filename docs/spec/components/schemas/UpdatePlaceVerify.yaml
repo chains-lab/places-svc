@@ -1,0 +1,25 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: uuid
+      type:
+        type: string
+        enum: [ place ]
+      attributes:
+        type: object
+        required:
+          - verify
+        properties:
+          verify:
+            type: boolean
+            description: "place verification status"

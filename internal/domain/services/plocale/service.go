@@ -21,7 +21,7 @@ type database interface {
 	PlaceExists(ctx context.Context, placeID uuid.UUID) (bool, error)
 	GetPlaceByID(ctx context.Context, placeID uuid.UUID, locale string) (models.Place, error)
 
-	UpsertLocaleForPlace(ctx context.Context, locales ...SetParams) error
+	UpsertLocaleForPlace(ctx context.Context, placeID uuid.UUID, locales ...SetParams) error
 
 	GetPlaceLocales(
 		ctx context.Context,

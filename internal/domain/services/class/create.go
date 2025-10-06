@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 )
@@ -48,18 +48,18 @@ func (s Service) Create(
 	}
 
 	now := time.Now().UTC()
+	class := models.Class{
+		Code:      params.Code,
+		Parent:    params.Parent,
+		Status:    enum.PlaceClassStatusesInactive,
+		Icon:      params.Icon,
+		Name:      params.Name,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 
-	var class models.Class
 	if err = s.db.Transaction(ctx, func(ctx context.Context) error {
-		class, err = s.db.CreateClass(ctx, models.Class{
-			Code:      params.Code,
-			Parent:    params.Parent,
-			Status:    enum.PlaceClassStatusesInactive,
-			Icon:      params.Icon,
-			Name:      params.Name,
-			CreatedAt: now,
-			UpdatedAt: now,
-		})
+		err = s.db.CreateClass(ctx, class)
 		if err != nil {
 			return errx.ErrorInternal.Raise(
 				fmt.Errorf("failed to create class, cause: %w", err),

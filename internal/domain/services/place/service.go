@@ -5,17 +5,20 @@ import (
 	"time"
 
 	"github.com/chains-lab/places-svc/internal/domain/models"
-	"github.com/chains-lab/places-svc/internal/domain/services/place/geo"
 	"github.com/google/uuid"
+	"github.com/paulmach/orb"
 )
 
 type Service struct {
 	db  database
-	geo *geo.Guesser
+	geo GeoGuesser
 }
 
-func NewService(db database) Service {
-	return Service{db: db}
+func NewService(db database, geo GeoGuesser) Service {
+	return Service{
+		db:  db,
+		geo: geo,
+	}
 }
 
 type database interface {
@@ -33,4 +36,8 @@ type database interface {
 	DeletePlace(ctx context.Context, placeID uuid.UUID) error
 
 	CreatePlaceLocale(ctx context.Context, input models.PlaceLocale) error
+}
+
+type GeoGuesser interface {
+	Guess(ctx context.Context, pt orb.Point) (string, error)
 }

@@ -8,15 +8,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ServerConfig struct {
-	Name     string `mapstructure:"name"`
+type ServeiceConfig struct {
+	Name string `mapstructure:"name"`
+}
+
+type LogConfig struct {
+	Level  string `mapstructure:"level"`
+	Format string `mapstructure:"format"`
+}
+
+type RestConfig struct {
 	Port     string `mapstructure:"port"`
-	BasePath string `mapstructure:"base_path"`
-	TestMode bool   `mapstructure:"test_mode"`
-	Log      struct {
-		Level  string `mapstructure:"level"`
-		Format string `mapstructure:"format"`
-	} `mapstructure:"log"`
 	Timeouts struct {
 		Read       time.Duration `mapstructure:"read"`
 		ReadHeader time.Duration `mapstructure:"read_header"`
@@ -29,25 +31,6 @@ type DatabaseConfig struct {
 	SQL struct {
 		URL string `mapstructure:"url"`
 	} `mapstructure:"sql"`
-
-	Redis struct {
-		Addr     string `mapstructure:"addr"`
-		Password string `mapstructure:"password"`
-		DB       int    `mapstructure:"storage"`
-		Lifetime int    `mapstructure:"lifetime"`
-	} `mapstructure:"redis"`
-}
-
-type OAuthConfig struct {
-	Google struct {
-		ClientID     string `mapstructure:"client_id"`
-		ClientSecret string `mapstructure:"client_secret"`
-		RedirectURL  string `mapstructure:"redirect_url"`
-	}
-}
-
-type KafkaConfig struct {
-	Brokers []string `mapstructure:"brokers"`
 }
 
 type JWTConfig struct {
@@ -61,26 +44,12 @@ type JWTConfig struct {
 	} `mapstructure:"service"`
 }
 
-type RabbitConfig struct {
-	URL      string `mapstructure:"url"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-}
-
-type SwaggerConfig struct {
-	Enabled bool   `mapstructure:"enabled"`
-	URL     string `mapstructure:"url"`
-	Port    string `mapstructure:"port"`
-}
-
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
+	Service  ServeiceConfig `mapstructure:"service"`
+	Log      LogConfig      `mapstructure:"log"`
+	Rest     RestConfig     `mapstructure:"rest"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
-	OAuth    OAuthConfig    `mapstructure:"oauth"`
-	Rabbit   RabbitConfig   `mapstructure:"rabbit"`
-	Kafka    KafkaConfig    `mapstructure:"kafka"`
 	Database DatabaseConfig `mapstructure:"database"`
-	Swagger  SwaggerConfig  `mapstructure:"swagger"`
 }
 
 func LoadConfig() (Config, error) {

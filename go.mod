@@ -1,6 +1,8 @@
 module github.com/chains-lab/places-svc
 
-go 1.24.5
+go 1.24.6
+
+toolchain go1.24.7
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
@@ -8,7 +10,7 @@ require (
 	github.com/chains-lab/ape v0.4.14
 	github.com/chains-lab/gatekit v0.2.4
 	github.com/chains-lab/logium v0.1.1
-	github.com/chains-lab/pagi v0.1.5
+	github.com/chains-lab/pagi v0.1.6
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/google/uuid v1.6.0

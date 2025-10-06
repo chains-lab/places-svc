@@ -78,7 +78,7 @@ func TestCreatingClassAndDetails(t *testing.T) {
 	t.Logf("Classes: %s", *firstClass.Parent)
 	t.Logf("Child: %s", *classChild.Parent)
 
-	classes, err := s.domain.class.List(ctx, class.FilterParams{
+	classes, err := s.domain.class.Filter(ctx, class.FilterParams{
 		Parent:      &classParent.Code,
 		ParentCycle: true,
 	})

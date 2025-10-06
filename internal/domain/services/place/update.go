@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/google/uuid"
@@ -61,8 +61,8 @@ func (s Service) Update(
 func (s Service) UpdateStatus(
 	ctx context.Context,
 	placeID uuid.UUID,
-	status string,
 	locale string,
+	status string,
 ) (models.Place, error) {
 	place, err := s.Get(ctx, placeID, locale)
 	if err != nil {
@@ -72,6 +72,12 @@ func (s Service) UpdateStatus(
 	err = enum.CheckPlaceStatus(status)
 	if err != nil {
 		return models.Place{}, err
+	}
+
+	if status == enum.PlaceStatusBlocked {
+		return models.Place{}, errx.ErrorCannotSetStatusBlocked.Raise(
+			fmt.Errorf("cannot set status to '%s', use Verify method instead", enum.PlaceStatusBlocked),
+		)
 	}
 
 	place.UpdatedAt = time.Now().UTC()

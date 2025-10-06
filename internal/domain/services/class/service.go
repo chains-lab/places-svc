@@ -18,7 +18,7 @@ func NewService(db database) Service {
 type database interface {
 	Transaction(ctx context.Context, fn func(ctx context.Context) error) error
 
-	CreateClass(ctx context.Context, class models.Class) (models.Class, error)
+	CreateClass(ctx context.Context, class models.Class) error
 
 	GetClassByCode(ctx context.Context, code string) (models.Class, error)
 
@@ -38,16 +38,3 @@ type database interface {
 
 	DeleteClass(ctx context.Context, code string) error
 }
-
-// TODO check for parent cycle
-//_, err = m.db.Classes().FilterParentCycle(class.Code).FilterCode(*params.Parent).Get(ctx)
-//if err != nil && !errors.Is(err, sql.ErrNoRows) {
-//return models.Class{}, errx.ErrorInternal.Raise(
-//fmt.Errorf("failed to check parent cycle for class with code %s, cause: %w", code, err),
-//)
-//}
-//if err == nil {
-//return models.Class{}, errx.ErrorClassParentCycle.Raise(
-//fmt.Errorf("parent cycle detected for class with code %s", code),
-//)
-//}

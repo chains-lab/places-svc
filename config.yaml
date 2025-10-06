@@ -1,14 +1,17 @@
 server:
   name: "places-svc"
+
+rest:
   port: ":8004"
-  log:
-    level: "debug"
-    format: "text"
   timeouts:
     read: 15 #seconds
     read_header: 15 #seconds
     write: 15 #seconds
     idle: 60 #seconds
+
+log:
+  level: "debug"
+  format: "text"
 
 database:
   sql:

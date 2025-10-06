@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/google/uuid"
@@ -42,7 +42,7 @@ func TestPlacesFilters(t *testing.T) {
 		Class:         RestaurantClass.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        "en",
-		Name:          "Restaurant PlaceDetails",
+		Name:          "Restaurant PlaceRow",
 		Address:       "123 Main St",
 		Description:   "A nice restaurant p",
 	})
@@ -53,7 +53,7 @@ func TestPlacesFilters(t *testing.T) {
 		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{30.1, 50.1},
 		Locale:        "en",
-		Name:          "SuperMarket PlaceDetails",
+		Name:          "SuperMarket PlaceRow",
 		Address:       "456 Market St",
 		Description:   "A big supermarket p",
 	})
@@ -64,7 +64,7 @@ func TestPlacesFilters(t *testing.T) {
 		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{31.1, 51.1},
 		Locale:        enum.LocaleUK,
-		Name:          "SuperMarket PlaceDetails Second City",
+		Name:          "SuperMarket PlaceRow Second City",
 		Address:       "789 Market St",
 		Description:   "A big supermarket p in second city",
 	})
@@ -73,7 +73,7 @@ func TestPlacesFilters(t *testing.T) {
 		Classes: []string{
 			FoodClass.Code,
 		},
-		DistributorIDs: []uuid.UUID{
+		DistributorID: []uuid.UUID{
 			distributorFirstID,
 			distributorSecondID,
 		},
@@ -84,7 +84,7 @@ func TestPlacesFilters(t *testing.T) {
 
 	t.Logf("ListPlaces by FoodClass: got %d p", len(p.Data))
 	for _, p := range p.Data {
-		t.Logf("PlaceDetails: %+v", p)
+		t.Logf("PlaceRow: %+v", p)
 	}
 
 	if len(p.Data) != 3 {
@@ -94,7 +94,7 @@ func TestPlacesFilters(t *testing.T) {
 		t.Fatalf("ListPlaces by FoodClass: expected total 2 p, got %d", p.Total)
 	}
 
-	placeTxt := "PlaceDetails"
+	placeTxt := "PlaceRow"
 	p, err = s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
 		Name: &placeTxt,
 		Classes: []string{
@@ -107,7 +107,7 @@ func TestPlacesFilters(t *testing.T) {
 
 	t.Logf("ListPlaces by SuperMarketClass: got %d p", len(p.Data))
 	for _, place := range p.Data {
-		t.Logf("PlaceDetails: %+v", place)
+		t.Logf("PlaceRow: %+v", place)
 	}
 
 	if len(p.Data) != 2 {
@@ -121,12 +121,12 @@ func TestPlacesFilters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetPlace: %v", err)
 	}
-	if placeSuperMarket.Name != "SuperMarket PlaceDetails" {
-		t.Errorf("GetPlace: expected name 'SuperMarket PlaceDetails', got '%s'", placeSuperMarket.Name)
+	if placeSuperMarket.Name != "SuperMarket PlaceRow" {
+		t.Errorf("GetPlace: expected name 'SuperMarket PlaceRow', got '%s'", placeSuperMarket.Name)
 	}
 
 	p, err = s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
-		CityIDs: []uuid.UUID{cityFirstID},
+		CityID: []uuid.UUID{cityFirstID},
 	}, place.SortParams{})
 	if err != nil {
 		t.Fatalf("ListPlaces by CityID: %v", err)
@@ -134,7 +134,7 @@ func TestPlacesFilters(t *testing.T) {
 
 	t.Logf("ListPlaces by CityID: got %d p", len(p.Data))
 	for _, place := range p.Data {
-		t.Logf("PlaceDetails: %+v", place)
+		t.Logf("PlaceRow: %+v", place)
 	}
 
 	_ = CreatePlace(s, t, place.CreateParams{
@@ -143,7 +143,7 @@ func TestPlacesFilters(t *testing.T) {
 		Class:         ShopsClass.Code,
 		Point:         [2]float64{30.4, 50.4},
 		Locale:        "en",
-		Name:          "Food PlaceDetails",
+		Name:          "Food PlaceRow",
 		Address:       "303 Food St",
 		Description:   "A delicious food p",
 	})
@@ -192,7 +192,7 @@ func TestPlacesFilters(t *testing.T) {
 
 	t.Logf("ListPlaces by codes after adding shops: got %d p", len(p.Data))
 	for _, place := range p.Data {
-		t.Logf("PlaceDetails: %+v", place)
+		t.Logf("PlaceRow: %+v", place)
 	}
 
 	if p.Total != 4 {
@@ -308,9 +308,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 		}
 	})
 
-	t.Run("Filter by CityIDs=city1", func(t *testing.T) {
+	t.Run("Filter by CityID=city1", func(t *testing.T) {
 		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
-			CityIDs: []uuid.UUID{city1},
+			CityID: []uuid.UUID{city1},
 		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)
@@ -321,9 +321,9 @@ func TestListPlaces_FiltersAndSorting(t *testing.T) {
 		}
 	})
 
-	t.Run("Filter by DistributorIDs", func(t *testing.T) {
+	t.Run("Filter by DistributorID", func(t *testing.T) {
 		places, err := s.domain.place.List(ctx, enum.LocaleUK, place.FilterParams{
-			DistributorIDs: []uuid.UUID{distributorA},
+			DistributorID: []uuid.UUID{distributorA},
 		}, place.SortParams{})
 		if err != nil {
 			t.Fatalf("ListPlaces: %v", err)

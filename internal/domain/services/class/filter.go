@@ -12,7 +12,7 @@ type FilterParams struct {
 	ParentCycle bool
 }
 
-func (s Service) List(
+func (s Service) Filter(
 	ctx context.Context,
 	filter FilterParams,
 	page, size uint64,

@@ -12,7 +12,7 @@ import (
 
 const placeTimetablesTable = "place_timetables"
 
-type PlaceTimetable struct {
+type PlaceTimetableRow struct {
 	ID       uuid.UUID `storage:"id"        json:"id"`
 	PlaceID  uuid.UUID `storage:"place_id"  json:"place_id"`
 	StartMin int       `storage:"start_min" json:"start_min"`
@@ -48,7 +48,7 @@ func NewPlaceTimetablesQ(db *sql.DB) PlaceTimetablesQ {
 
 func (q PlaceTimetablesQ) New() PlaceTimetablesQ { return NewPlaceTimetablesQ(q.db) }
 
-func (q PlaceTimetablesQ) Insert(ctx context.Context, in ...PlaceTimetable) error {
+func (q PlaceTimetablesQ) Insert(ctx context.Context, in ...PlaceTimetableRow) error {
 	if len(in) == 0 {
 		return nil
 	}
@@ -71,7 +71,7 @@ func (q PlaceTimetablesQ) Insert(ctx context.Context, in ...PlaceTimetable) erro
 	return err
 }
 
-func (q PlaceTimetablesQ) Upsert(ctx context.Context, in ...PlaceTimetable) error {
+func (q PlaceTimetablesQ) Upsert(ctx context.Context, in ...PlaceTimetableRow) error {
 	if len(in) == 0 {
 		return nil
 	}
@@ -104,10 +104,10 @@ func (q PlaceTimetablesQ) Upsert(ctx context.Context, in ...PlaceTimetable) erro
 	return err
 }
 
-func (q PlaceTimetablesQ) Get(ctx context.Context) (PlaceTimetable, error) {
+func (q PlaceTimetablesQ) Get(ctx context.Context) (PlaceTimetableRow, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return PlaceTimetable{}, fmt.Errorf("build select %s: %w", placeTimetablesTable, err)
+		return PlaceTimetableRow{}, fmt.Errorf("build select %s: %w", placeTimetablesTable, err)
 	}
 
 	var row *sql.Row
@@ -117,14 +117,14 @@ func (q PlaceTimetablesQ) Get(ctx context.Context) (PlaceTimetable, error) {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
 
-	var out PlaceTimetable
+	var out PlaceTimetableRow
 	if err := row.Scan(&out.ID, &out.PlaceID, &out.StartMin, &out.EndMin); err != nil {
 		return out, err
 	}
 	return out, nil
 }
 
-func (q PlaceTimetablesQ) Select(ctx context.Context) ([]PlaceTimetable, error) {
+func (q PlaceTimetablesQ) Select(ctx context.Context) ([]PlaceTimetableRow, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("build select %s: %w", placeTimetablesTable, err)
@@ -141,9 +141,9 @@ func (q PlaceTimetablesQ) Select(ctx context.Context) ([]PlaceTimetable, error) 
 	}
 	defer rows.Close()
 
-	var out []PlaceTimetable
+	var out []PlaceTimetableRow
 	for rows.Next() {
-		var t PlaceTimetable
+		var t PlaceTimetableRow
 		if err := rows.Scan(&t.ID, &t.PlaceID, &t.StartMin, &t.EndMin); err != nil {
 			return nil, err
 		}

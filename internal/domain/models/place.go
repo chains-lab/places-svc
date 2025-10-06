@@ -72,14 +72,14 @@ func (p Place) IsNil() bool {
 
 type PlacesCollection struct {
 	Data  []Place `json:"data"`
-	Page  uint    `json:"page"`
-	Size  uint    `json:"size"`
-	Total uint    `json:"total"`
+	Page  uint64  `json:"page"`
+	Size  uint64  `json:"size"`
+	Total uint64  `json:"total"`
 }
 
 type PlaceLocaleCollection struct {
 	Data  []PlaceLocale `json:"data"`
-	Page  uint          `json:"page"`
-	Size  uint          `json:"size"`
-	Total uint          `json:"total"`
+	Page  uint64        `json:"page"`
+	Size  uint64        `json:"size"`
+	Total uint64        `json:"total"`
 }

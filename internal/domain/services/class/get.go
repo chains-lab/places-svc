@@ -9,7 +9,6 @@ import (
 )
 
 func (s Service) Get(ctx context.Context, code string) (models.Class, error) {
-
 	class, err := s.db.GetClassByCode(ctx, code)
 	if err != nil {
 		return models.Class{}, errx.ErrorInternal.Raise(

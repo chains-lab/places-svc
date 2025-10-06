@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  description: SSO REST API for Cifra domain
-  title: Cifra SSO REST API
+  description: API for managing places and their classes.
+  title: Place Service API
   version: 0.0.1
 servers:
 - url: /

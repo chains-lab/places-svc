@@ -4,13 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/chains-lab/enum"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/google/uuid"
 )
 
-func (s Service) Verify(ctx context.Context, placeID uuid.UUID, value bool) (models.Place, error) {
-	place, err := s.Get(ctx, placeID, enum.LocaleEN)
+func (s Service) Verify(ctx context.Context, placeID uuid.UUID, locale string, value bool) (models.Place, error) {
+	place, err := s.Get(ctx, placeID, locale)
 	if err != nil {
 		return models.Place{}, err
 	}

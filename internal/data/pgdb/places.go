@@ -15,7 +15,7 @@ import (
 
 const placesTable = "places"
 
-type Place struct {
+type PlaceRow struct {
 	ID            uuid.UUID     `storage:"id"`
 	CityID        uuid.UUID     `storage:"city_id"`
 	DistributorID uuid.NullUUID `storage:"distributor_id"`
@@ -33,12 +33,12 @@ type Place struct {
 	UpdatedAt time.Time `storage:"updated_at"`
 }
 
-type PlaceWithDetails struct {
-	Place
+type Place struct {
+	PlaceRow
 	Locale      string
 	Name        string
 	Description string
-	Timetable   []PlaceTimetable
+	Timetable   []PlaceTimetableRow
 }
 
 type PlacesQ struct {
@@ -77,9 +77,9 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 	}
 }
 
-func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
+func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (PlaceRow, error) {
 	var (
-		p        Place
+		p        PlaceRow
 		lon, lat float64
 	)
 	if err := scanner.Scan(
@@ -97,7 +97,7 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 		&p.CreatedAt,
 		&p.UpdatedAt,
 	); err != nil {
-		return Place{}, err
+		return PlaceRow{}, err
 	}
 
 	p.Point = orb.Point{lon, lat}
@@ -105,9 +105,9 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	return p, nil
 }
 
-func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (PlaceWithDetails, error) {
+func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (Place, error) {
 	var (
-		p         Place
+		p         PlaceRow
 		lon, lat  float64
 		locLocale string
 		locName   string
@@ -134,20 +134,20 @@ func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (PlaceWit
 		&locDesc,
 		&ttJSON, // ← агрегированное расписание
 	); err != nil {
-		return PlaceWithDetails{}, err
+		return Place{}, err
 	}
 
 	p.Point = orb.Point{lon, lat}
 
-	var tt []PlaceTimetable
+	var tt []PlaceTimetableRow
 	if len(ttJSON) > 0 {
 		if err := json.Unmarshal(ttJSON, &tt); err != nil {
-			return PlaceWithDetails{}, fmt.Errorf("unmarshal timetable: %w", err)
+			return Place{}, fmt.Errorf("unmarshal timetable: %w", err)
 		}
 	}
 
-	return PlaceWithDetails{
-		Place:       p,
+	return Place{
+		PlaceRow:    p,
 		Locale:      locLocale,
 		Name:        locName,
 		Description: locDesc,
@@ -155,7 +155,11 @@ func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (PlaceWit
 	}, nil
 }
 
-func (q PlacesQ) Insert(ctx context.Context, in Place) error {
+func (q PlacesQ) New() PlacesQ {
+	return NewPlacesQ(q.db)
+}
+
+func (q PlacesQ) Insert(ctx context.Context, in PlaceRow) error {
 	stmt := map[string]interface{}{
 		"id":             in.ID,
 		"city_id":        in.CityID,
@@ -199,10 +203,10 @@ func (q PlacesQ) Insert(ctx context.Context, in Place) error {
 	return err
 }
 
-func (q PlacesQ) Get(ctx context.Context) (Place, error) {
+func (q PlacesQ) Get(ctx context.Context) (PlaceRow, error) {
 	query, args, err := q.selector.Limit(1).ToSql()
 	if err != nil {
-		return Place{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
+		return PlaceRow{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
 	}
 
 	var row *sql.Row
@@ -215,7 +219,7 @@ func (q PlacesQ) Get(ctx context.Context) (Place, error) {
 	return scanPlaceRow(row)
 }
 
-func (q PlacesQ) Select(ctx context.Context) ([]Place, error) {
+func (q PlacesQ) Select(ctx context.Context) ([]PlaceRow, error) {
 	query, args, err := q.selector.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("building select query for %s: %w", placesTable, err)
@@ -232,7 +236,7 @@ func (q PlacesQ) Select(ctx context.Context) ([]Place, error) {
 	}
 	defer rows.Close()
 
-	var out []Place
+	var out []PlaceRow
 	for rows.Next() {
 		m, err := scanPlaceRow(rows)
 		if err != nil {
@@ -534,14 +538,14 @@ func (q PlacesQ) WithTimetable() PlacesQ {
 	return q
 }
 
-func (q PlacesQ) GetWithDetails(ctx context.Context, locale string) (PlaceWithDetails, error) {
+func (q PlacesQ) GetWithDetails(ctx context.Context, locale string) (Place, error) {
 	qq := q
 	qq.WithLocale(locale)
 	qq.WithTimetable()
 
 	query, args, err := qq.selector.Limit(1).ToSql()
 	if err != nil {
-		return PlaceWithDetails{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
+		return Place{}, fmt.Errorf("building select query for %s: %w", placesTable, err)
 	}
 
 	var row *sql.Row
@@ -553,7 +557,7 @@ func (q PlacesQ) GetWithDetails(ctx context.Context, locale string) (PlaceWithDe
 	return scanPlaceWihDetails(row)
 }
 
-func (q PlacesQ) SelectWithDetails(ctx context.Context, locale string) ([]PlaceWithDetails, error) {
+func (q PlacesQ) SelectWithDetails(ctx context.Context, locale string) ([]Place, error) {
 	qq := q
 	qq.WithLocale(locale)
 	qq.WithTimetable()
@@ -574,7 +578,7 @@ func (q PlacesQ) SelectWithDetails(ctx context.Context, locale string) ([]PlaceW
 	}
 	defer rows.Close()
 
-	var out []PlaceWithDetails
+	var out []Place
 	for rows.Next() {
 		item, err := scanPlaceWihDetails(rows)
 		if err != nil {
@@ -609,7 +613,7 @@ func (q PlacesQ) OrderByDistance(point orb.Point, asc bool) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) Count(ctx context.Context) (uint, error) {
+func (q PlacesQ) Count(ctx context.Context) (uint64, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("building count query for %s: %w", placesTable, err)
@@ -620,15 +624,15 @@ func (q PlacesQ) Count(ctx context.Context) (uint, error) {
 	} else {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
-	var cnt uint
+	var cnt uint64
 	if err := row.Scan(&cnt); err != nil {
 		return 0, err
 	}
 	return cnt, nil
 }
 
-func (q PlacesQ) Page(limit, offset uint) PlacesQ {
-	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
+func (q PlacesQ) Page(limit, offset uint64) PlacesQ {
+	q.selector = q.selector.Limit(limit).Offset(offset)
 
 	return q
 }

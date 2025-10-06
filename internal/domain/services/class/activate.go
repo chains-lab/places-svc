@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 )

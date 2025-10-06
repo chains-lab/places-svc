@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/google/uuid"
 )
 
@@ -204,7 +204,7 @@ func (q PlaceLocalesQ) FilterPlaceID(id uuid.UUID) PlaceLocalesQ {
 	return q
 }
 
-func (q PlaceLocalesQ) FilterByLocale(locale string) PlaceLocalesQ {
+func (q PlaceLocalesQ) FilterLocale(locale string) PlaceLocalesQ {
 	q.selector = q.selector.Where(sq.Eq{"locale": locale})
 	q.updater = q.updater.Where(sq.Eq{"locale": locale})
 	q.deleter = q.deleter.Where(sq.Eq{"locale": locale})
@@ -229,18 +229,18 @@ func (q PlaceLocalesQ) OrderByLocale(asc bool) PlaceLocalesQ {
 	return q
 }
 
-func (q PlaceLocalesQ) Page(limit, offset uint) PlaceLocalesQ {
-	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
+func (q PlaceLocalesQ) Page(limit, offset uint64) PlaceLocalesQ {
+	q.selector = q.selector.Limit(limit).Offset(offset)
 	return q
 }
 
-func (q PlaceLocalesQ) Count(ctx context.Context) (uint, error) {
+func (q PlaceLocalesQ) Count(ctx context.Context) (uint64, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("build count %s: %w", placeLocalizationTable, err)
 	}
 
-	var cnt uint
+	var cnt uint64
 	var row *sql.Row
 	if tx, ok := TxFromCtx(ctx); ok {
 		row = tx.QueryRowContext(ctx, query, args...)

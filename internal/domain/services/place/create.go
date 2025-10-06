@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/chains-lab/places-svc/internal/domain/models"
-	"github.com/chains-lab/places-svc/internal/domain/services/place/geo"
 	"github.com/google/uuid"
 	"github.com/paulmach/orb"
 )
@@ -57,7 +56,7 @@ func (s Service) Create(
 		place.Phone = params.Phone
 	}
 
-	var addr geo.Address
+	var addr string
 	if err := s.db.Transaction(ctx, func(ctx context.Context) error {
 		err := s.db.CreatePlace(ctx, place)
 		if err != nil {
@@ -100,7 +99,7 @@ func (s Service) Create(
 		Point:       params.Point,
 		CreatedAt:   now,
 		UpdatedAt:   now,
-		Address:     fmt.Sprintf("%+v\n", addr),
+		Address:     addr,
 		Locale:      params.Locale,
 		Name:        params.Name,
 		Description: params.Description,

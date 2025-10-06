@@ -9,12 +9,13 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s Service) SetTimetable(
+func (s Service) SetForPlace(
 	ctx context.Context,
 	placeID uuid.UUID,
+	locale string,
 	intervals models.Timetable,
 ) (models.Place, error) {
-	place, err := s.db.GetPlaceByID(ctx, placeID)
+	place, err := s.db.GetPlaceByID(ctx, placeID, locale)
 	if err != nil {
 		return models.Place{}, errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to get place %s, cause: %w", placeID, err),

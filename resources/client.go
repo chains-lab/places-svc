@@ -1,7 +1,7 @@
 /*
-Cifra SSO REST API
+Place Service API
 
-SSO REST API for Cifra domain
+API for managing places and their classes.
 
 API version: 0.0.1
 */
@@ -41,7 +41,7 @@ var (
 	queryDescape    = strings.NewReplacer( "%5B", "[", "%5D", "]" )
 )
 
-// APIClient manages communication with the Cifra SSO REST API API v0.0.1
+// APIClient manages communication with the Place Service API API v0.0.1
 // In most cases there should be only one, shared, APIClient.
 type APIClient struct {
 	cfg    *Configuration

@@ -21,7 +21,7 @@ func Run(args []string) bool {
 		logrus.Fatalf("failed to load config: %v", err)
 	}
 
-	log := logium.NewLogger(cfg.Server.Log.Level, cfg.Server.Log.Format)
+	log := logium.NewLogger(cfg.Log.Level, cfg.Log.Format)
 	log.Info("Starting server...")
 
 	var (

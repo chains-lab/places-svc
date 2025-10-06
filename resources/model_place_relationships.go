@@ -1,7 +1,7 @@
 /*
-Cifra SSO REST API
+Place Service API
 
-SSO REST API for Cifra domain
+API for managing places and their classes.
 
 API version: 0.0.1
 */

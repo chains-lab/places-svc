@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/google/uuid"
@@ -34,7 +34,7 @@ func TestPlaceTimetable(t *testing.T) {
 		Class:         FoodClass.Code,
 		Point:         [2]float64{30.1, 50.1},
 		Locale:        enum.LocaleEN,
-		Name:          "Food PlaceDetails",
+		Name:          "Food PlaceRow",
 		Address:       "456 Market St",
 		Description:   "A big Food place",
 	})
@@ -44,7 +44,7 @@ func TestPlaceTimetable(t *testing.T) {
 		Class:         RestaurantClass.Code,
 		Point:         [2]float64{30.0, 50.0},
 		Locale:        enum.LocaleEN,
-		Name:          "Restaurant PlaceDetails",
+		Name:          "Restaurant PlaceRow",
 		Address:       "123 Main St",
 		Description:   "A nice restaurant place",
 	})
@@ -54,7 +54,7 @@ func TestPlaceTimetable(t *testing.T) {
 		Class:         SuperMarketClass.Code,
 		Point:         [2]float64{31.1, 51.1},
 		Locale:        enum.LocaleEN,
-		Name:          "SuperMarket PlaceDetails Second City",
+		Name:          "SuperMarket PlaceRow Second City",
 		Address:       "789 Market St",
 		Description:   "A big supermarket place in second city",
 	})
@@ -137,7 +137,7 @@ func TestPlaceTimetable(t *testing.T) {
 	}
 
 	if err = s.domain.place.DeleteTimetable(ctx, restaurant.ID); err != nil {
-		t.Fatalf("DeleteTimetable(restaurant): %v", err)
+		t.Fatalf("DeleteForPlace(restaurant): %v", err)
 	}
 	rAfterDel, err := s.domain.place.Get(ctx, restaurant.ID, enum.LocaleEN)
 	if err != nil {

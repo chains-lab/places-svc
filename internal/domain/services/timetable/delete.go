@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s Service) DeleteTimetable(ctx context.Context, placeID uuid.UUID) error {
+func (s Service) DeleteForPlace(ctx context.Context, placeID uuid.UUID) error {
 	exist, err := s.db.PlaceExists(ctx, placeID)
 	if err != nil {
 		return errx.ErrorInternal.Raise(

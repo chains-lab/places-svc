@@ -20,7 +20,7 @@ type database interface {
 
 	PlaceExists(ctx context.Context, placeID uuid.UUID) (bool, error)
 
-	GetPlaceByID(ctx context.Context, placeID uuid.UUID) (models.Place, error)
+	GetPlaceByID(ctx context.Context, placeID uuid.UUID, locale string) (models.Place, error)
 
 	SetTimetable(ctx context.Context, placeID uuid.UUID, intervals models.Timetable) error
 	GetTimetableByPlaceID(ctx context.Context, placeID uuid.UUID) (models.Timetable, error)

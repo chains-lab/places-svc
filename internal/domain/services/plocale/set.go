@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/errx"
 	"github.com/google/uuid"
 )
@@ -15,7 +15,7 @@ type SetParams struct {
 	Description string
 }
 
-func (s Service) Set(
+func (s Service) SetForPlace(
 	ctx context.Context,
 	placeID uuid.UUID,
 	locales ...SetParams,
@@ -45,7 +45,7 @@ func (s Service) Set(
 		)
 	}
 
-	err = s.db.UpsertLocaleForPlace(ctx, locales...)
+	err = s.db.UpsertLocaleForPlace(ctx, placeID, locales...)
 	if err != nil {
 		return errx.ErrorInternal.Raise(
 			fmt.Errorf("failed to upsert locales for place %s, cause: %w", placeID, err),

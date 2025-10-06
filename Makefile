@@ -6,6 +6,11 @@ OUTPUT_DIR := ./docs/web
 RESOURCES_DIR := ./resources
 
 generate-models:
+	test -d $(RESOURCES_DIR) || mkdir -p $(RESOURCES_DIR)
+	test -d $(dir $(API_SRC)) || mkdir -p $(dir $(API_SRC))
+	test -d $(dir $(API_BUNDLED)) || mkdir -p $(dir $(API_BUNDLED))
+	test -d $(OUTPUT_DIR) || mkdir -p $(OUTPUT_DIR)
+
 	find $(RESOURCES_DIR) -type f ! \( -name "enum_types.go" -o -name "links.go" \) -delete
 	swagger-cli bundle $(API_SRC) --outfile $(API_BUNDLED) --type yaml
 

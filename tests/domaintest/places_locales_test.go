@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/chains-lab/places-svc/internal/domain/services/plocale"
 	"github.com/google/uuid"

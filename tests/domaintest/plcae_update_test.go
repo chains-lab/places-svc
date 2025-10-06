@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chains-lab/enum"
+	"github.com/chains-lab/places-svc/internal/domain/enum"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
 	"github.com/google/uuid"
 )
@@ -96,7 +96,7 @@ func TestPlaceUpdate(t *testing.T) {
 
 	restaurant, err = s.domain.place.UpdateStatus(ctx, restaurant.ID, enum.LocaleUK)
 	if err != nil {
-		t.Fatalf("ActivatePlace: %v", err)
+		t.Fatalf("UpdatePlaceStatus: %v", err)
 	}
 	if restaurant.Status != enum.PlaceStatusActive {
 		t.Errorf("expected place status to be 'active', got '%s'", restaurant.Status)

@@ -3,6 +3,7 @@ package pgdb
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -86,6 +87,10 @@ func scanPlaceClassWithLocale(scanner interface{ Scan(dest ...any) error }) (Cla
 	return pc, nil
 }
 
+func (q ClassesQ) New() ClassesQ {
+	return NewClassesQ(q.db)
+}
+
 func (q ClassesQ) Insert(ctx context.Context, in Class) error {
 	values := map[string]any{
 		"code":   in.Code,
@@ -111,6 +116,24 @@ func (q ClassesQ) Insert(ctx context.Context, in Class) error {
 		_, err = q.db.ExecContext(ctx, query, args...)
 	}
 	return err
+}
+
+func (q ClassesQ) Exists(ctx context.Context) (bool, error) {
+	query, args, err := q.counter.Limit(1).ToSql()
+	if err != nil {
+		return false, fmt.Errorf("build exists %s: %w", classesTable, err)
+	}
+	var row *sql.Row
+	if tx, ok := TxFromCtx(ctx); ok {
+		row = tx.QueryRowContext(ctx, query, args...)
+	} else {
+		row = q.db.QueryRowContext(ctx, query, args...)
+	}
+	var cnt uint
+	if err := row.Scan(&cnt); err != nil {
+		return false, err
+	}
+	return cnt > 0, nil
 }
 
 func (q ClassesQ) Get(ctx context.Context) (Class, error) {
@@ -272,12 +295,12 @@ func (q ClassesQ) OrderBy(orderBy string) ClassesQ {
 	return q
 }
 
-func (q ClassesQ) Page(limit, offset uint) ClassesQ {
-	q.selector = q.selector.Limit(uint64(limit)).Offset(uint64(offset))
+func (q ClassesQ) Page(limit, offset uint64) ClassesQ {
+	q.selector = q.selector.Limit(limit).Offset(offset)
 	return q
 }
 
-func (q ClassesQ) Count(ctx context.Context) (uint, error) {
+func (q ClassesQ) Count(ctx context.Context) (uint64, error) {
 	query, args, err := q.counter.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("build count %s: %w", classesTable, err)
@@ -288,9 +311,49 @@ func (q ClassesQ) Count(ctx context.Context) (uint, error) {
 	} else {
 		row = q.db.QueryRowContext(ctx, query, args...)
 	}
-	var cnt uint
+	var cnt uint64
 	if err := row.Scan(&cnt); err != nil {
 		return 0, err
 	}
 	return cnt, nil
+}
+
+func (q ClassesQ) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
+	_, ok := TxFromCtx(ctx)
+	if ok {
+		return fn(ctx)
+	}
+
+	tx, err := q.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+		if err != nil {
+			rbErr := tx.Rollback()
+			if rbErr != nil && !errors.Is(rbErr, sql.ErrTxDone) {
+				err = fmt.Errorf("tx err: %v; rollback err: %v", err, rbErr)
+			}
+		}
+	}()
+
+	ctxWithTx := context.WithValue(ctx, TxKey, tx)
+
+	if err = fn(ctxWithTx); err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return fmt.Errorf("transaction failed: %v, rollback error: %v", err, rbErr)
+		}
+		return fmt.Errorf("transaction failed: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
 }

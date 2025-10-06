@@ -1,0 +1,26 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: uuid
+      type:
+        type: string
+        enum: [ place ]
+      attributes:
+        type: object
+        required:
+          - status
+        properties:
+          status:
+            type: string
+            description: "place status"
+            enum: [ active, inactive ]
