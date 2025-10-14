@@ -6,9 +6,9 @@ import (
 
 	"github.com/chains-lab/ape"
 	"github.com/chains-lab/ape/problems"
-	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
 	"github.com/chains-lab/places-svc/internal/rest/responses"
+	"github.com/chains-lab/restkit/pagi"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 

@@ -4,15 +4,14 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/chains-lab/gatekit/mdlv"
-	"github.com/chains-lab/gatekit/roles"
 	"github.com/chains-lab/logium"
 	"github.com/chains-lab/places-svc/internal"
 	"github.com/chains-lab/places-svc/internal/rest/meta"
+	"github.com/chains-lab/restkit/roles"
 	"github.com/go-chi/chi/v5"
 )
 
-type Controller interface {
+type Handlers interface {
 
 	// Places level controller
 	CreatePlace(w http.ResponseWriter, r *http.Request)
@@ -51,15 +50,18 @@ type Middleware interface {
 		allowedCompanyRoles map[string]bool,
 		allowedSysadminRoles map[string]bool,
 	) func(http.Handler) http.Handler
+	ServiceGrant(serviceName, skService string) func(http.Handler) http.Handler
+	Auth(userCtxKey interface{}, skUser string) func(http.Handler) http.Handler
+	RoleGrant(userCtxKey interface{}, allowedRoles map[string]bool) func(http.Handler) http.Handler
 }
 
-func Run(ctx context.Context, cfg internal.Config, log logium.Logger, m Middleware, c Controller) {
-	svc := mdlv.ServiceGrant(cfg.Service.Name, cfg.JWT.Service.SecretKey)
-	auth := mdlv.Auth(meta.UserCtxKey, cfg.JWT.User.AccessToken.SecretKey)
-	sysadmin := mdlv.RoleGrant(meta.UserCtxKey, map[string]bool{
+func Run(ctx context.Context, cfg internal.Config, log logium.Logger, m Middleware, h Handlers) {
+	svc := m.ServiceGrant(cfg.Service.Name, cfg.JWT.Service.SecretKey)
+	auth := m.Auth(meta.UserCtxKey, cfg.JWT.User.AccessToken.SecretKey)
+	sysadmin := m.RoleGrant(meta.UserCtxKey, map[string]bool{
 		roles.Admin: true,
 	})
-	sysmoder := mdlv.RoleGrant(meta.UserCtxKey, map[string]bool{
+	sysmoder := m.RoleGrant(meta.UserCtxKey, map[string]bool{
 		roles.Admin: true,
 		roles.Moder: true,
 	})
@@ -85,59 +87,59 @@ func Run(ctx context.Context, cfg internal.Config, log logium.Logger, m Middlewa
 		r.Use(svc)
 		r.Route("/v1", func(r chi.Router) {
 			r.Route("/classes", func(r chi.Router) {
-				r.Get("/", c.FilterClass)
-				r.With(auth, sysadmin).Post("/", c.CreateClass)
+				r.Get("/", h.FilterClass)
+				r.With(auth, sysadmin).Post("/", h.CreateClass)
 
 				r.Route("/{class_code}", func(r chi.Router) {
-					r.Get("/", c.GetClass)
+					r.Get("/", h.GetClass)
 
 					r.Group(func(r chi.Router) {
 						r.Use(auth, sysadmin)
-						r.Put("/", c.UpdateClass)
-						r.Delete("/", c.DeleteClass)
+						r.Put("/", h.UpdateClass)
+						r.Delete("/", h.DeleteClass)
 
-						r.Put("/activate", c.ActivateClass)
-						r.Put("/deactivate", c.DeactivateClass)
+						r.Put("/activate", h.ActivateClass)
+						r.Put("/deactivate", h.DeactivateClass)
 					})
 				})
 			})
 
 			r.Route("/places", func(r chi.Router) {
-				r.Get("/", c.FilterPlace)
-				r.With(auth).Post("/", c.CreatePlace)
+				r.Get("/", h.FilterPlace)
+				r.With(auth).Post("/", h.CreatePlace)
 
 				r.Route("/{place_id}", func(r chi.Router) {
-					r.Get("/", c.GetPlace)
+					r.Get("/", h.GetPlace)
 
 					r.Route("/locales", func(r chi.Router) {
-						r.Get("/", c.GetLocalesForPlace)
+						r.Get("/", h.GetLocalesForPlace)
 
-						r.With(auth, companyModer).Put("/", c.SetLocalesForPlace)
+						r.With(auth, companyModer).Put("/", h.SetLocalesForPlace)
 					})
 
 					r.Route("/timetable", func(r chi.Router) {
-						r.Get("/", c.GetTimetable)
+						r.Get("/", h.GetTimetable)
 
 						r.Group(func(r chi.Router) {
 							r.Use(auth, companyModer)
-							r.Put("/", c.SetTimetable)
-							r.Delete("/", c.DeleteTimetable)
+							r.Put("/", h.SetTimetable)
+							r.Delete("/", h.DeleteTimetable)
 						})
 					})
 
 					r.Group(func(r chi.Router) {
 						r.Use(auth)
 
-						r.With(companyModer).Put("/", c.UpdatePlace)
-						r.With(companyAdmin).Delete("/", c.DeletePlace)
+						r.With(companyModer).Put("/", h.UpdatePlace)
+						r.With(companyAdmin).Delete("/", h.DeletePlace)
 
-						r.With(companyAdmin).Put("/status", c.UpdatePlaceStatus)
+						r.With(companyAdmin).Put("/status", h.UpdatePlaceStatus)
 					})
 
 					r.Group(func(r chi.Router) {
 						r.Use(auth)
 
-						r.With(sysmoder).Put("/verify", c.UpdateVerifiedPlace)
+						r.With(sysmoder).Put("/verify", h.UpdateVerifiedPlace)
 					})
 				})
 			})

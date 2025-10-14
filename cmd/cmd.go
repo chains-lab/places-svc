@@ -42,8 +42,7 @@ func StartServices(ctx context.Context, cfg internal.Config, log logium.Logger, 
 	timetableSvc := timetable.NewService(database)
 
 	ctrl := controller.New(cfg, log, classSvc, placeSvc, pLocalesSvc, timetableSvc)
-
-	mdlv := middlewares.New(cfg, log)
+	mdlv := middlewares.New(log)
 
 	run(func() { rest.Run(ctx, cfg, log, mdlv, ctrl) })
 

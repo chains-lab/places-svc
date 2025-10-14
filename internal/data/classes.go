@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/data/pgdb"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/class"
+	"github.com/chains-lab/restkit/pagi"
 )
 
 func (d Database) CreateClass(ctx context.Context, class models.Class) error {

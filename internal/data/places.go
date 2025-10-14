@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/chains-lab/pagi"
 	"github.com/chains-lab/places-svc/internal/data/pgdb"
 	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/places-svc/internal/domain/services/place"
+	"github.com/chains-lab/restkit/pagi"
 	"github.com/google/uuid"
 )
 

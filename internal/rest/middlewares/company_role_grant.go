@@ -5,7 +5,7 @@ import (
 
 	"github.com/chains-lab/ape"
 	"github.com/chains-lab/ape/problems"
-	"github.com/chains-lab/gatekit/auth"
+	"github.com/chains-lab/restkit/auth"
 )
 
 func (s Service) CompanyRoleGrant(

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/chains-lab/gatekit/auth"
+	"github.com/chains-lab/restkit/auth"
 )
 
 type ctxKey int
