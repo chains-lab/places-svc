@@ -1,0 +1,32 @@
+services:
+  places-svc:
+    build: .
+    container_name: places-svc
+    environment:
+      - KV_VIPER_FILE=./config_docker.yaml
+    ports:
+      - "8005:8000"
+    networks:
+      - chains-net
+
+  places-svc-postgres:
+    image: postgres:15
+    container_name:  places-svc-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "7005:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - chains-net
+
+volumes:
+  pgdata:
+  bundle:
+
+networks:
+  chains-net:
+    external: true

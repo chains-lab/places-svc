@@ -2,12 +2,12 @@ server:
   name: "places-svc"
 
 rest:
-  port: ":8004"
+  port: ":8005"
   timeouts:
-    read: 15 #seconds
-    read_header: 15 #seconds
-    write: 15 #seconds
-    idle: 60 #seconds
+    read: 15s #seconds
+    read_header: 15s #seconds
+    write: 15s #seconds
+    idle: 60s #seconds
 
 log:
   level: "debug"
@@ -16,11 +16,6 @@ log:
 database:
   sql:
     url: "postgresql://postgres:postgres@localhost:7777/postgres?sslmode=disable"
-  redis:
-    addr: "localhost:7200"
-    password: "example"
-    db: 0
-    lifetime: 15 #minutes
 
 jwt:
   user:

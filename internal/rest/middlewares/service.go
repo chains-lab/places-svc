@@ -17,10 +17,6 @@ func New(log logium.Logger) Service {
 	}
 }
 
-func (s Service) ServiceGrant(serviceName, skService string) func(http.Handler) http.Handler {
-	return mdlv.ServiceGrant(serviceName, skService)
-}
-
 func (s Service) Auth(userCtxKey interface{}, skUser string) func(http.Handler) http.Handler {
 	return mdlv.Auth(userCtxKey, skUser)
 }

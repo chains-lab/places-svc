@@ -56,9 +56,9 @@ func (d Database) UpdateClass(ctx context.Context, code string, params class.Upd
 	}
 	if params.Parent != nil {
 		if *params.Parent == "" {
-			query = query.UpdateParent(sql.NullString{Valid: false})
+			query = query.UpdateParent(nil)
 		} else {
-			query = query.UpdateParent(sql.NullString{String: *params.Parent, Valid: true})
+			query = query.UpdateParent(params.Parent)
 		}
 	}
 

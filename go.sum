@@ -20,6 +20,8 @@ github.com/chains-lab/restkit v0.2.6 h1:SDQzCRoc8y5lrlOVkYKpJBi+icilHSFSnkzyBETM
 github.com/chains-lab/restkit v0.2.6/go.mod h1:oQnk8GZw0vNyz5YNR8kzp9U/uW0fXi2QRU825/RI01w=
 github.com/chains-lab/restkit v0.2.8 h1:vN+uCQLsw0OiIYpAPtyMVobcLJSYwziDAX/Opl626os=
 github.com/chains-lab/restkit v0.2.8/go.mod h1:XJahox52LJLWZ8/i+f9SJEWajqgyFJwqj2fH7B9Tw3U=
+github.com/chains-lab/restkit v0.3.0 h1:y9F8bJ0O2fOiNSm5+f5GEKa0H6VekjYfgXnwwvGiwMc=
+github.com/chains-lab/restkit v0.3.0/go.mod h1:XJahox52LJLWZ8/i+f9SJEWajqgyFJwqj2fH7B9Tw3U=
 github.com/chains-lab/restkit/pagi v0.1.6 h1:ftfw6FYTBw21ZBU8kL037Aqe2skoe7DPY3XtO1K6VKU=
 github.com/chains-lab/restkit/pagi v0.1.6/go.mod h1:Sd6bQC+IlZBggk78qI76Beed3yf5Yp+qPIwUpFTfTC0=
 github.com/chains-lab/svc-errors v0.2.2 h1:70aJpuCHhptxOXQTIntfSwG8xi0WmthSPUpj3o2F0ds=

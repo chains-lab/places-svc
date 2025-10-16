@@ -193,9 +193,9 @@ func (q ClassesQ) Update(ctx context.Context, updatedAt time.Time) error {
 	return err
 }
 
-func (q ClassesQ) UpdateParent(parent sql.NullString) ClassesQ {
-	if parent.Valid {
-		q.updater = q.updater.Set("parent", parent.String)
+func (q ClassesQ) UpdateParent(parent *string) ClassesQ {
+	if parent != nil {
+		q.updater = q.updater.Set("parent", parent)
 	} else {
 		q.updater = q.updater.Set("parent", nil)
 	}
