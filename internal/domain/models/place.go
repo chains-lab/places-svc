@@ -8,10 +8,10 @@ import (
 )
 
 type PlaceDetails struct {
-	ID            uuid.UUID  `json:"id"`
-	CityID        uuid.UUID  `json:"city_id"`
-	DistributorID *uuid.UUID `json:"distributor_id"`
-	Class         string     `json:"class"`
+	ID        uuid.UUID  `json:"id"`
+	CityID    uuid.UUID  `json:"city_id"`
+	CompanyID *uuid.UUID `json:"company_id"`
+	Class     string     `json:"class"`
 
 	Status    string    `json:"status"`
 	Verified  bool      `json:"verified"`
@@ -42,10 +42,10 @@ func (p PlaceLocale) IsNil() bool {
 }
 
 type Place struct {
-	ID            uuid.UUID  `json:"id"`
-	CityID        uuid.UUID  `json:"city_id"`
-	DistributorID *uuid.UUID `json:"distributor_id"`
-	Class         string     `json:"class"`
+	ID        uuid.UUID  `json:"id"`
+	CityID    uuid.UUID  `json:"city_id"`
+	CompanyID *uuid.UUID `json:"company_id"`
+	Class     string     `json:"class"`
 
 	Status    string    `json:"status"`
 	Verified  bool      `json:"verified"`
@@ -72,19 +72,19 @@ func (p Place) IsNil() bool {
 
 func (p Place) Details() PlaceDetails {
 	return PlaceDetails{
-		ID:            p.ID,
-		CityID:        p.CityID,
-		DistributorID: p.DistributorID,
-		Class:         p.Class,
-		Status:        p.Status,
-		Verified:      p.Verified,
-		Ownership:     p.Ownership,
-		Point:         p.Point,
-		Address:       p.Address,
-		Website:       p.Website,
-		Phone:         p.Phone,
-		CreatedAt:     p.CreatedAt,
-		UpdatedAt:     p.UpdatedAt,
+		ID:        p.ID,
+		CityID:    p.CityID,
+		CompanyID: p.CompanyID,
+		Class:     p.Class,
+		Status:    p.Status,
+		Verified:  p.Verified,
+		Ownership: p.Ownership,
+		Point:     p.Point,
+		Address:   p.Address,
+		Website:   p.Website,
+		Phone:     p.Phone,
+		CreatedAt: p.CreatedAt,
+		UpdatedAt: p.UpdatedAt,
 	}
 }
 

@@ -33,16 +33,16 @@ func (s Service) FilterPlace(w http.ResponseWriter, r *http.Request) {
 		filters.CityID = &id
 	}
 
-	if distributorID := strings.TrimSpace(q.Get("distributor_id")); distributorID != "" {
+	if distributorID := strings.TrimSpace(q.Get("place_id")); distributorID != "" {
 		id, err := uuid.Parse(distributorID)
 		if err != nil {
-			s.log.WithError(err).Error("invalid distributor_id")
+			s.log.WithError(err).Error("invalid place_id")
 			ape.RenderErr(w, problems.BadRequest(validation.Errors{
-				"query": fmt.Errorf("failed to parse distributor_id: %w", err),
+				"query": fmt.Errorf("failed to parse place_id: %w", err),
 			})...)
 			return
 		}
-		filters.DistributorID = &id
+		filters.CompanyID = &id
 	}
 
 	if name := strings.TrimSpace(q.Get("name")); name != "" {

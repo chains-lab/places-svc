@@ -440,7 +440,7 @@ components:
           description: city id
           format: uuid
           type: string
-        distributor_id:
+        place_id:
           description: distributor id
           format: uuid
           type: string
@@ -519,7 +519,7 @@ components:
           description: city id
           format: uuid
           type: string
-        distributor_id:
+        place_id:
           description: distributor id
           format: uuid
           type: string

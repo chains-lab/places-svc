@@ -29,8 +29,8 @@ func Place(m models.Place) resources.Place {
 		},
 	}
 
-	if m.DistributorID != nil {
-		resp.Data.Attributes.DistributorId = m.DistributorID
+	if m.CompanyID != nil {
+		resp.Data.Attributes.DistributorId = m.CompanyID
 	}
 	if m.Website != nil {
 		resp.Data.Attributes.Website = m.Website

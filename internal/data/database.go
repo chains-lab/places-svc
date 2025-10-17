@@ -40,10 +40,10 @@ func modelFromDB(in pgdb.Place) models.Place {
 	t := timetableFromDB(in.Timetable)
 
 	out := models.Place{
-		ID:            p.ID,
-		CityID:        p.CityID,
-		DistributorID: p.DistributorID,
-		Class:         p.Class,
+		ID:        p.ID,
+		CityID:    p.CityID,
+		CompanyID: p.CompanyID,
+		Class:     p.Class,
 
 		Status:    p.Status,
 		Verified:  p.Verified,
@@ -82,8 +82,8 @@ func detailsFromDB(dbPlace pgdb.PlaceRow) models.PlaceDetails {
 		CreatedAt: dbPlace.CreatedAt,
 		UpdatedAt: dbPlace.UpdatedAt,
 	}
-	if dbPlace.DistributorID.Valid {
-		place.DistributorID = &dbPlace.DistributorID.UUID
+	if dbPlace.CompanyID.Valid {
+		place.CompanyID = &dbPlace.CompanyID.UUID
 	}
 	if dbPlace.Website.Valid {
 		place.Website = &dbPlace.Website.String

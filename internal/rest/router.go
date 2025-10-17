@@ -14,8 +14,6 @@ import (
 )
 
 type Handlers interface {
-
-	// Places level controller
 	CreatePlace(w http.ResponseWriter, r *http.Request)
 
 	GetPlace(w http.ResponseWriter, r *http.Request)
@@ -47,17 +45,24 @@ type Handlers interface {
 }
 
 type Middleware interface {
-	CompanyRoleGrant(
-		UserCtxKey interface{},
-		allowedCompanyRoles map[string]bool,
-		allowedSysadminRoles map[string]bool,
-	) func(http.Handler) http.Handler
 	Auth(userCtxKey interface{}, skUser string) func(http.Handler) http.Handler
 	RoleGrant(userCtxKey interface{}, allowedRoles map[string]bool) func(http.Handler) http.Handler
+
+	CompanyMember(
+		UserCtxKey interface{},
+		allowedCompanyRoles map[string]bool,
+	) func(http.Handler) http.Handler
+
+	CompanyMemberOrAdmin(
+		UserCtxKey interface{},
+		allowedCompanyRoles map[string]bool,
+		allowedAdminRoles map[string]bool,
+	) func(http.Handler) http.Handler
 }
 
 func Run(ctx context.Context, cfg internal.Config, log logium.Logger, m Middleware, h Handlers) {
 	auth := m.Auth(meta.UserCtxKey, cfg.JWT.User.AccessToken.SecretKey)
+
 	sysadmin := m.RoleGrant(meta.UserCtxKey, map[string]bool{
 		roles.Admin: true,
 	})
@@ -66,19 +71,14 @@ func Run(ctx context.Context, cfg internal.Config, log logium.Logger, m Middlewa
 		roles.Moder: true,
 	})
 
-	companyAdmin := m.CompanyRoleGrant(meta.UserCtxKey, map[string]bool{
+	companyAdmin := m.CompanyMember(meta.UserCtxKey, map[string]bool{
 		"owner": true,
 		"admin": true,
-	}, map[string]bool{
-		roles.Admin: true,
 	})
-
-	companyModer := m.CompanyRoleGrant(meta.UserCtxKey, map[string]bool{
+	companyModer := m.CompanyMember(meta.UserCtxKey, map[string]bool{
 		"owner": true,
 		"admin": true,
 		"moder": true,
-	}, map[string]bool{
-		roles.Admin: true,
 	})
 
 	r := chi.NewRouter()
@@ -105,10 +105,16 @@ func Run(ctx context.Context, cfg internal.Config, log logium.Logger, m Middlewa
 
 			r.Route("/places", func(r chi.Router) {
 				r.Get("/", h.FilterPlace)
+
 				r.With(auth).Post("/", h.CreatePlace)
+				r.With(auth, companyModer).Put("/", h.UpdatePlace)
+				r.With(auth, companyAdmin).Delete("/", h.DeletePlace)
 
 				r.Route("/{place_id}", func(r chi.Router) {
 					r.Get("/", h.GetPlace)
+
+					r.With(auth, sysmoder).Put("/verify", h.UpdateVerifiedPlace)
+					r.With(auth, companyAdmin).Put("/status", h.UpdatePlaceStatus)
 
 					r.Route("/locales", func(r chi.Router) {
 						r.Get("/", h.GetLocalesForPlace)
@@ -124,21 +130,6 @@ func Run(ctx context.Context, cfg internal.Config, log logium.Logger, m Middlewa
 							r.Put("/", h.SetTimetable)
 							r.Delete("/", h.DeleteTimetable)
 						})
-					})
-
-					r.Group(func(r chi.Router) {
-						r.Use(auth)
-
-						r.With(companyModer).Put("/", h.UpdatePlace)
-						r.With(companyAdmin).Delete("/", h.DeletePlace)
-
-						r.With(companyAdmin).Put("/status", h.UpdatePlaceStatus)
-					})
-
-					r.Group(func(r chi.Router) {
-						r.Use(auth)
-
-						r.With(sysmoder).Put("/verify", h.UpdateVerifiedPlace)
 					})
 				})
 			})

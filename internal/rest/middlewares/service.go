@@ -1,19 +1,28 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/chains-lab/logium"
+	"github.com/chains-lab/places-svc/internal/domain/models"
 	"github.com/chains-lab/restkit/mdlv"
+	"github.com/google/uuid"
 )
 
-type Service struct {
-	log logium.Logger
+type PlaceSvc interface {
+	Get(ctx context.Context, placeID uuid.UUID, locale string) (models.Place, error)
 }
 
-func New(log logium.Logger) Service {
+type Service struct {
+	place PlaceSvc
+	log   logium.Logger
+}
+
+func New(log logium.Logger, svc PlaceSvc) Service {
 	return Service{
-		log: log,
+		place: svc,
+		log:   log,
 	}
 }
 

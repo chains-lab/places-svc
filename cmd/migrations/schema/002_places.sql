@@ -9,21 +9,21 @@ CREATE TYPE "place_statuses" AS ENUM (
 );
 
 CREATE TABLE "places" (
-    "id"             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "city_id"        UUID NOT NULL,
-    "distributor_id" UUID,
-    "class"          VARCHAR(32) NOT NULL REFERENCES place_classes(code) ON DELETE RESTRICT ON UPDATE CASCADE,
+    "id"         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "city_id"    UUID NOT NULL,
+    "company_id" UUID,
+    "class"      VARCHAR(32) NOT NULL REFERENCES place_classes(code) ON DELETE RESTRICT ON UPDATE CASCADE,
 
-    "status"         place_statuses         NOT NULL,
-    "verified"       BOOLEAN                NOT NULL DEFAULT FALSE,
-    "point"          geography(POINT, 4326) NOT NULL,
-    "address"        VARCHAR(255)           NOT NULL,
+    "status"     place_statuses         NOT NULL,
+    "verified"   BOOLEAN                NOT NULL DEFAULT FALSE,
+    "point"      geography(POINT, 4326) NOT NULL,
+    "address"    VARCHAR(255)           NOT NULL,
 
-    "website"        VARCHAR(255),
-    "phone"          VARCHAR(32),
+    "website"    VARCHAR(255),
+    "phone"      VARCHAR(32),
 
-    "created_at"     TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
-    "updated_at"     TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC'),
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT (now() AT TIME ZONE 'UTC')
 );
 
 CREATE TABLE place_i18n (

@@ -47,7 +47,7 @@ func (s Service) Create(
 		UpdatedAt: now,
 	}
 	if params.DistributorID != nil {
-		place.DistributorID = params.DistributorID
+		place.CompanyID = params.DistributorID
 	}
 	if params.Website != nil {
 		place.Website = params.Website
@@ -119,7 +119,7 @@ func (s Service) Create(
 		Timetable:   models.Timetable{},
 	}
 	if params.DistributorID != nil {
-		res.DistributorID = params.DistributorID
+		res.CompanyID = params.DistributorID
 	}
 	if params.Website != nil {
 		res.Website = params.Website

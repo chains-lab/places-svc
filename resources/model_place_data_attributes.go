@@ -26,7 +26,7 @@ type PlaceDataAttributes struct {
 	// city id
 	CityId uuid.UUID `json:"city_id"`
 	// distributor id
-	DistributorId *uuid.UUID `json:"distributor_id,omitempty"`
+	DistributorId *uuid.UUID `json:"place_id,omitempty"`
 	// place class
 	Class string `json:"class"`
 	// place status
@@ -454,7 +454,7 @@ func (o PlaceDataAttributes) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["city_id"] = o.CityId
 	if !IsNil(o.DistributorId) {
-		toSerialize["distributor_id"] = o.DistributorId
+		toSerialize["place_id"] = o.DistributorId
 	}
 	toSerialize["class"] = o.Class
 	toSerialize["status"] = o.Status

@@ -16,10 +16,10 @@ import (
 const placesTable = "places"
 
 type PlaceRow struct {
-	ID            uuid.UUID     `storage:"id"`
-	CityID        uuid.UUID     `storage:"city_id"`
-	DistributorID uuid.NullUUID `storage:"distributor_id"`
-	Class         string        `storage:"class"`
+	ID        uuid.UUID     `storage:"id"`
+	CityID    uuid.UUID     `storage:"city_id"`
+	CompanyID uuid.NullUUID `storage:"company_id"`
+	Class     string        `storage:"class"`
 
 	Status   string    `storage:"Status"`
 	Verified bool      `storage:"Verified"`
@@ -58,7 +58,7 @@ func NewPlacesQ(db *sql.DB) PlacesQ {
 		selector: b.Select(
 			"p.id",
 			"p.city_id",
-			"p.distributor_id",
+			"p.company_id",
 			"p.class",
 			"p.status",
 			"p.verified",
@@ -85,7 +85,7 @@ func scanPlaceRow(scanner interface{ Scan(dest ...any) error }) (PlaceRow, error
 	if err := scanner.Scan(
 		&p.ID,
 		&p.CityID,
-		&p.DistributorID,
+		&p.CompanyID,
 		&p.Class,
 		&p.Status,
 		&p.Verified,
@@ -118,7 +118,7 @@ func scanPlaceWihDetails(scanner interface{ Scan(dest ...any) error }) (Place, e
 	if err := scanner.Scan(
 		&p.ID,
 		&p.CityID,
-		&p.DistributorID,
+		&p.CompanyID,
 		&p.Class,
 		&p.Status,
 		&p.Verified,
@@ -161,22 +161,22 @@ func (q PlacesQ) New() PlacesQ {
 
 func (q PlacesQ) Insert(ctx context.Context, in PlaceRow) error {
 	stmt := map[string]interface{}{
-		"id":             in.ID,
-		"city_id":        in.CityID,
-		"class":          in.Class,
-		"status":         in.Status,
-		"verified":       in.Verified,
-		"point":          sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Point[0], in.Point[1]),
-		"address":        in.Address,
-		"created_at":     in.CreatedAt,
-		"updated_at":     in.UpdatedAt,
-		"distributor_id": in.DistributorID,
+		"id":         in.ID,
+		"city_id":    in.CityID,
+		"class":      in.Class,
+		"status":     in.Status,
+		"verified":   in.Verified,
+		"point":      sq.Expr("ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography", in.Point[0], in.Point[1]),
+		"address":    in.Address,
+		"created_at": in.CreatedAt,
+		"updated_at": in.UpdatedAt,
+		"company_id": in.CompanyID,
 	}
 
-	if in.DistributorID.Valid {
-		stmt["distributor_id"] = in.DistributorID.UUID
+	if in.CompanyID.Valid {
+		stmt["company_id"] = in.CompanyID.UUID
 	} else {
-		stmt["distributor_id"] = nil
+		stmt["company_id"] = nil
 	}
 	if in.Website.Valid {
 		stmt["website"] = in.Website.String
@@ -340,11 +340,11 @@ func (q PlacesQ) FilterCityID(cityID ...uuid.UUID) PlacesQ {
 	return q
 }
 
-func (q PlacesQ) FilterDistributorID(distributorID ...uuid.UUID) PlacesQ {
-	q.selector = q.selector.Where(sq.Eq{"p.distributor_id": distributorID})
-	q.counter = q.counter.Where(sq.Eq{"p.distributor_id": distributorID})
-	q.updater = q.updater.Where(sq.Eq{"p.distributor_id": distributorID})
-	q.deleter = q.deleter.Where(sq.Eq{"p.distributor_id": distributorID})
+func (q PlacesQ) FilterCompanyID(companyID ...uuid.UUID) PlacesQ {
+	q.selector = q.selector.Where(sq.Eq{"p.company_id": companyID})
+	q.counter = q.counter.Where(sq.Eq{"p.company_id": companyID})
+	q.updater = q.updater.Where(sq.Eq{"p.company_id": companyID})
+	q.deleter = q.deleter.Where(sq.Eq{"p.company_id": companyID})
 
 	return q
 }
@@ -444,7 +444,7 @@ func (q PlacesQ) FilterNameLike(name string) PlacesQ {
 	pattern := "%" + name + "%"
 	sub := sq.Select("1").
 		From(placeLocalizationTable+" pd").
-		Where("pd.place_id = p.id").
+		Where("pd.company_id = p.id").
 		Where("pd.name ILIKE ?", pattern)
 
 	q.selector = q.selector.Where(sq.Expr("EXISTS (?)", sub))
@@ -487,7 +487,7 @@ func (q PlacesQ) FilterTimetableBetween(start, end int) PlacesQ {
 
 	sub := sq.Select("1").
 		From(placeTimetablesTable + " pt").
-		Where("pt.place_id = p.id").
+		Where("pt.company_id = p.id").
 		Where(buildOverlap("pt"))
 
 	q.selector = q.selector.Where(sq.Expr("EXISTS (?)", sub))
@@ -505,7 +505,7 @@ func (q PlacesQ) WithLocale(locale string) PlacesQ {
 			`COALESCE(
 			   (SELECT i.`+field+`
 			      FROM `+placeLocalizationTable+` i
-			     WHERE i.place_id = p.id
+			     WHERE i.company_id = p.id
 			     ORDER BY CASE
 			       WHEN i.locale = ?     THEN 0
 			       WHEN i.locale = 'en'  THEN 1
@@ -530,9 +530,9 @@ func (q PlacesQ) WithTimetable() PlacesQ {
 	q.selector = q.selector.
 		LeftJoin("LATERAL (" +
 			"SELECT json_agg(json_build_object(" +
-			" 'id', pt.id, 'place_id', pt.place_id, 'start_min', pt.start_min, 'end_min', pt.end_min" +
+			" 'id', pt.id, 'company_id', pt.company_id, 'start_min', pt.start_min, 'end_min', pt.end_min" +
 			") ORDER BY pt.start_min) AS tt_json " +
-			"FROM " + placeTimetablesTable + " pt WHERE pt.place_id = p.id" +
+			"FROM " + placeTimetablesTable + " pt WHERE pt.company_id = p.id" +
 			") tt ON TRUE").
 		Column("COALESCE(tt.tt_json, '[]'::json) AS tt_json")
 	return q

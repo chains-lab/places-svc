@@ -48,8 +48,8 @@ func (d Database) FilterPlaces(
 	if filter.CityID != nil {
 		query = query.FilterCityID(*filter.CityID)
 	}
-	if filter.DistributorID != nil {
-		query = query.FilterDistributorID(*filter.DistributorID)
+	if filter.CompanyID != nil {
+		query = query.FilterCompanyID(*filter.CompanyID)
 	}
 	if filter.Verified != nil {
 		query = query.FilterVerified(*filter.Verified)
@@ -161,8 +161,8 @@ func placeModelToSchema(model models.PlaceDetails) pgdb.PlaceRow {
 		CreatedAt: model.CreatedAt,
 		UpdatedAt: model.UpdatedAt,
 	}
-	if model.DistributorID != nil {
-		res.DistributorID = uuid.NullUUID{UUID: *model.DistributorID, Valid: true}
+	if model.CompanyID != nil {
+		res.CompanyID = uuid.NullUUID{UUID: *model.CompanyID, Valid: true}
 	}
 	if model.Website != nil {
 		res.Website = sql.NullString{String: *model.Website, Valid: true}
@@ -186,8 +186,8 @@ func placeDetailsSchemaToModel(schema pgdb.PlaceRow) models.Place {
 		CreatedAt: schema.CreatedAt,
 		UpdatedAt: schema.UpdatedAt,
 	}
-	if schema.DistributorID.Valid {
-		res.DistributorID = &schema.DistributorID.UUID
+	if schema.CompanyID.Valid {
+		res.CompanyID = &schema.CompanyID.UUID
 	}
 	if schema.Website.Valid {
 		res.Website = &schema.Website.String
@@ -214,8 +214,8 @@ func placeSchemaToModel(schema pgdb.Place) models.Place {
 		CreatedAt:   schema.CreatedAt,
 		UpdatedAt:   schema.UpdatedAt,
 	}
-	if schema.DistributorID.Valid {
-		res.DistributorID = &schema.DistributorID.UUID
+	if schema.CompanyID.Valid {
+		res.CompanyID = &schema.CompanyID.UUID
 	}
 	if schema.Website.Valid {
 		res.Website = &schema.Website.String
@@ -253,8 +253,8 @@ func placeWithDetailsSchemaToModel(schema pgdb.Place) models.Place {
 		CreatedAt: schema.CreatedAt,
 		UpdatedAt: schema.UpdatedAt,
 	}
-	if schema.DistributorID.Valid {
-		res.DistributorID = &schema.DistributorID.UUID
+	if schema.CompanyID.Valid {
+		res.CompanyID = &schema.CompanyID.UUID
 	}
 	if schema.Website.Valid {
 		res.Website = &schema.Website.String

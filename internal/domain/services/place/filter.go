@@ -11,13 +11,13 @@ import (
 )
 
 type FilterParams struct {
-	Classes       []string
-	Statuses      []string
-	CityID        *uuid.UUID
-	DistributorID *uuid.UUID
-	Verified      *bool
-	Name          *string
-	Address       *string
+	Classes   []string
+	Statuses  []string
+	CityID    *uuid.UUID
+	CompanyID *uuid.UUID
+	Verified  *bool
+	Name      *string
+	Address   *string
 
 	Time     *models.TimeInterval
 	Location *FilterDistance

@@ -16,7 +16,7 @@ properties:
     type: string
     format: uuid
     description: "city id"
-  distributor_id:
+  company_id:
     type: string
     format: uuid
     description: "distributor id"
